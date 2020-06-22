@@ -1,0 +1,60 @@
+<div class="modal fade" id="importLinksModal" role="dialog" tabindex="-1" aria-labelledby="importNodesModalLabel">
+   <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="importLocationModalLabel">Data Import</h5>
+         </div>
+         <div class="modal-body" id="importLocationLayerBody">
+            <div class="row">
+               <div class="col-md-12">
+                  <label>Flows data, csv file</label>
+                  <div class="custom-file">
+                     <label id="LinksFileLabel" class="custom-file-label" for="LinksImportFile">Flows data file</label>
+                     <input type="file"  id="LinksImportFile" class="custom-file-input" >
+                  </div>
+               </div>
+             </div>
+           <hr>
+           <span id="LinksFileError"></span>
+           <div id="LinksFeaturesSelects" class="row" style="visibility:hidden">
+             <div class="col-md-12">
+             <p>Set flows features, and aggregation opperator:</p>
+              </div>
+               <div class="col-md-6">
+                 <p>
+                   <label for="select">Flow origine ID</label>
+                   <select class="custom-select" id="LinksImportOrigineID" ></select>
+                 </p>
+               </div>
+               <div class="col-md-6" >
+                 <p>
+                   <label  for="select" >Flow destination ID</label>
+                   <select class="custom-select" id="LinksImportDestinationID" ></select>
+                 </p>
+               </div>
+               <div class="col-md-6" >
+                 <p>
+                   <label for="select">Flow volume</label>
+                   <select class="custom-select" id="LinksImportVolume"></select>
+                 </p>
+               </div>
+               <div class="col-md-6" >
+                 <p>
+                   <label for="select">Flows aggregation</label>
+                   <select class="custom-select" id="LinksImportAggr">
+                     <option value="sum" selected>Sum</option>
+                     <option value="mean">Mean</option>
+                     <option value="median">Median</option>
+                     <option value="max">Max</option>
+                     <option value="min">Min</option></select>
+                 </p>
+               </div>
+             </div>
+           </div>
+          <hr>
+         <div class ="modal-footer">
+            <button class="btn btn-dark btn-block justify-content-center mt-2" type="button" id="ImportLinks" data-dismiss="modal" disabled>Next</button>
+         </div>
+      </div>
+   </div>
+</div>

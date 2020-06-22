@@ -1,0 +1,4 @@
+# Functionnalities
+
+In order to test the differents functionnalities provided by Arabesque, we will use the Swiss Migration showcase. 
+Please find it in the Showcase section and clic on the `Try it !` button.

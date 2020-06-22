@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+      <title>Arabesque</title>
+   </head>
+   <body id="arabesque-top">
+       <div id="content">
+        <header>
+         <nav class="navbar navbar-expand-lg navbar-light" id="main-navbar">
+           <a class="navbar-brand" href="#arabesque-top">Arabesque</a>
+           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+             <span class="navbar-toggler-icon"></span>
+           </button>
+           <div class="collapse navbar-collapse" id="navbar-menu">
+             <ul class="navbar-nav align-self-end">
+               <li class="nav-item">
+                 <a class="nav-link" href="./docs/">Help</a>
+               </li>
+               <li class="nav-item">
+                 <a class="nav-link" href="#contact">About</a>
+               </li>
+             </ul>
+             <img src="./public/ifsttar.png" id="logo-ifsttar" class="d-inline-block align-top nav-image" alt="">
+           </div>
+         </nav>
+       </header>
+       <section id="home">
+           <div class="container" >
+             <div class="row justify-content-around">
+               <div classe="col-md-6" id="maintitle">
+                 <h1 class="home-title"> Arabesque </h1>
+                 <h3 class="home-subtitle">a web application for thematic flow mapping</h3>
+               </div>
+             </div>
+             <div class="row justify-content-around">
+               <div class="col-md-3">
+                 <div class="card" >
+                   <div class="card-body">
+                     <h5 class="card-title">New map</h5>
+                      <button type="button" id="ImportData" class="btn btn-dark btn-block">
+                       Start
+                      </button>
+                    </div>
+                </div>
+              </br>
+                <div class="card" >
+                  <div class="card-body">
+                    <h5 class="card-title">Saved map</h5>
+                      <div class="custom-file">
+                        <input type="file"  id="ImportZip" class="custom-file-input" />
+                          <label class="custom-file-label" id="label_ImportZip" for="ImportZip">map.zip</label>
+                        </div>
+                    </div>
+                 </div>
+              </div>
+
+
+              <div class="col-md-3">
+              <div class="card mb-3 box-shadow">
+                <img class="card-img-top" data-src="holder.js/100px225?theme=thumb&amp;bg=55595c&amp;fg=eceeef&amp;text=Thumbnail" alt="Thumbnail [100%x225]" style="height: 225px; width: 100%; display: block;" src="data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22348%22%20height%3D%22225%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20348%20225%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_16eda8abad7%20text%20%7B%20fill%3A%23eceeef%3Bfont-weight%3Abold%3Bfont-family%3AArial%2C%20Helvetica%2C%20Open%20Sans%2C%20sans-serif%2C%20monospace%3Bfont-size%3A17pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_16eda8abad7%22%3E%3Crect%20width%3D%22348%22%20height%3D%22225%22%20fill%3D%22%2355595c%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22116.2265625%22%20y%3D%22120.3%22%3EThumbnail%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E" data-holder-rendered="true">
+                <div class="card-body">
+                  <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-outline-secondary">Source</button>
+                    </div>
+                    <small class="text-muted">9 mins</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+           </div>
+          </div>
+      </section>
+      <section id="map" style='display:none'>
+        <div class="container-fluid">
+          <div class="row"  >
+            <div class="col-sm-2" >
+              <div class="form-group">
+                <label for="projection">Projection</label>
+                <select class="form-control" id="projection">
+                </select>
+              </div>
+              <div class="row p-0 mt-3" id="layerControlList" data-toggle="tooltip" data-placement="right" data-delay="0" title="Drag and Drop layers to change z-index" data-animation="false">
+                <ul id="accordionLayerControl" class="list-unstyled col-md-12 align-items-center ui-sortable">
+                <li class="card mt-2 border-dark" id="cardnode" value="node">
+                  <div class="card-header text-dark h-5 panel-heading" id="panelnode">
+                    node
+                    <button type="button" id="buttonChangeLayernode" class="close center-block ml-1" aria-label="Close" data-target="#changeSemioModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change style of the layer">
+                      <img class="icon" src="assets/svg/si-glyph-brush-1.svg">
+                    </button>
+                    <button type="button" id="buttonHideLayernode" class="close center-block ml-1" aria-label="Close" data-toggle="tooltip" data-placement="right" title="Hide the layer" data-animation="false">
+                      <img class="icon" src="assets/svg/si-glyph-view.svg">
+                    </button>
+                  </div>
+                </li>
+                <li class="card mt-2 border-dark" id="cardlink" value="link">
+                  <div class="card-header text-dark h-5 panel-heading" id="panellink">
+                    link
+                    <button type="button" id="buttonChangeGeoLayerlink" class="close center-block ml-1" aria-label="Close" data-target="#changeGeometryModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change shape of the links">
+                      <img class="icon" src="assets/svg/si-glyph-ruler.svg">
+                    </button>
+                    <button type="button" id="buttonChangeLayerlink" class="close center-block ml-1" aria-label="Close" data-target="#changeSemioLinkModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change style of the links">
+                      <img class="icon" src="assets/svg/si-glyph-brush-1.svg">
+                    </button>
+                    <button type="button" id="buttonHideLayerlink" class="close center-block ml-1" aria-label="Close" rel="tooltip" data-placement="right" title="Hide the layer">
+                      <img class="icon" src="assets/svg/si-glyph-view.svg">
+                    </button>
+                  </div>
+                </li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-sm-8 map-column" ><div id="Mapcontainer"> </div></div>
+            <div class="col-sm-2" >
+              <div id="Filters" class="filters">
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+      <div id="ModalImportNodes"> </div>
+      <div id="ModalImportLinks"> </div>
+      <div id="ModalImportStats"> </div>
+      <div id="ModalSemioNodes"> </div>
+    </div>
+    <link href="main.css" rel="stylesheet">
+    <script src="bundle.js"></script>
+   </body>
+</html>
