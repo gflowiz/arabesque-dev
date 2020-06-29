@@ -1,0 +1,50 @@
+<div class="modal fade" id="importNodesModal" role="dialog" tabindex="-1" aria-labelledby="importNodesModalLabel">
+   <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="importLocationModalLabel">Data Import</h5>
+         </div>
+         <div class="modal-body" id="importLocationLayerBody">
+            <div class="row">
+               <div class="col-md-12">
+                  <label>Nodes Data as a csv or geojson file</label>
+                  <div class="custom-file">
+                     <label id="NodesFileLabel" class="custom-file-label" for="NodesImportFile">Nodes data file</label>
+                     <input type="file"  id="NodesImportFile" class="custom-file-input" >
+                  </div>
+               </div>
+             </div>
+           <hr>
+           <span id="NodesFileError"></span>
+           <div id="NodesFeaturesSelects" class="row" style="visibility:hidden">
+             <div class="col-md-12">
+             <p>Set nodes features:</p>
+              </div>
+               <div class="col-md-4">
+                 <p>
+                   <label for="select">Node's ID</label>
+                   <select class="custom-select" id="NodeImportID" ></select>
+                 </p>
+               </div>
+               <div class="col-md-4" id="NodesLatSelect"  style="visibility:hidden">
+
+                 <p>
+                   <label  for="select" >Node's Latitude</label>
+                   <select class="custom-select" id="NodeImportLat" ></select>
+                 </p>
+               </div>
+               <div class="col-md-4" id="NodesLongSelect"  style="visibility:hidden">
+                 <p>
+                   <label for="select">Node's Longitude</label>
+                   <select class="custom-select" id="NodeImportLong" ></select>
+                 </p>
+               </div>
+             </div>
+           </div>
+          <hr>
+         <div class ="modal-footer">
+            <button class="btn btn-dark btn-block justify-content-center mt-2" type="button" id="ImportNodes" data-dismiss="modal" disabled>Next</button>
+         </div>
+      </div>
+   </div>
+</div>

@@ -1,0 +1,175 @@
+:root {
+  --navbar-bg-color: #cccccc;
+}
+
+
+@font-face {
+font-family: "arabesque";
+src: url("./font/freebooterscript.ttf");
+}
+
+
+body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+html {
+  height: 100%;
+}
+
+header{
+  height:7%;
+}
+
+body h1{
+  text-align: center;
+}
+
+
+p {
+  text-align: justify;
+}
+
+h4 {
+  text-align: justify;
+  font-size: 1.5em
+}
+
+h3 {
+  text-align: justify;
+}
+
+nav{
+  background-color: var(--navbar-bg-color);
+  min-height:100%;
+  max-height:100%;
+}
+
+
+.navbar-brand{
+  font-size: 1.5em;
+  font-family: 'arabesque';
+  font-weight: bolder;
+}
+
+.home-title{
+  font-size: 6em;
+  font-family: 'arabesque';
+  padding-bottom: 0.5em;
+}
+
+.subheader-title{
+  text-align: center;
+  font-size:25px;
+}
+
+.map-column{
+  padding:0px;
+}
+#logo-ifsttar{
+  display: block;
+  max-width:230px;
+  max-height:50px;
+  width: auto;
+  height: auto;
+}
+#maintitle{
+  margin-bottom:2em;
+}
+#content{
+  height:100%;
+}
+#home{
+  margin-top:6em;
+}
+#map{
+  height:93%;
+}
+
+#map div.col-sm-2{
+  height:100%;
+}
+#map div.col-sm-8{
+  height:100%;
+}
+#map div.row{
+  height:100%;
+}
+#map .container-fluid{
+  height:100%;
+}
+#Mapcontainer{
+  height:100%;
+}
+
+.icon-button-ol {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: none;
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+}
+
+.icon-info {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+}
+
+/* Map Controls */
+
+.ol-zoom .ol-zoom-in{
+  background-color:#000000;
+}
+.ol-zoom .ol-zoom-in:hover{
+  background-color:#343a40;
+}
+.ol-zoom .ol-zoom-out{
+  background-color:#000000;
+}
+.ol-zoom .ol-zoom-out:hover{
+  background-color:#343a40;
+}
+
+.custom-control {
+  margin : 1px;
+  width: 1.375em;
+  height: 1.375em;
+  font-size: 1.14em;
+  position: absolute;
+  
+}
+#ExportMap {
+  top:5em;
+  left:0.5em;
+  background-image:url("/assets/svg/si-glyph-end-page.svg")
+}
+
+.chart {
+   display: inline-block;
+   height: 151px;
+   margin-bottom: 20px;
+ }
+ .reset {
+   padding-left: 1em;
+   font-size: smaller;
+   color: #ccc;
+ }
+ .background.bar {
+   fill: #ccc;
+ }
+ .foreground.bar {
+   fill: steelblue;
+ }
+ .brush-handle {
+   fill: #eee;
+   stroke: #666;
+ }

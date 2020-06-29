@@ -1,0 +1,27 @@
+<div class="modal fade" id="importStatsModal" role="dialog" tabindex="-1" aria-labelledby="importStatsModalLabel">
+   <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title">Data Import Statistics</h5>
+         </div>
+         <div class="modal-body">
+            <div class="row">
+               <div class="col-md-12">
+                  <ul>
+                    <li> Number of imported nodes:  {{nb_nodes}} </li>
+                    <li> Number of imported links:  {{nb_links}} </li>
+                    <li> Number of nodes removed (no links):  {{nb_removed_nodes}} </li>
+                    <li> Number of links removed (missing nodes):  {{nb_removed_links}} </li>
+                    <li> Number of links after aggregation: {{nb_aggregated_links}}</li>
+                  </ul>
+               </div>
+             </div>
+
+           </div>
+          <hr>
+         <div class ="modal-footer">
+            <button class="btn btn-dark btn-block justify-content-center mt-2" type="button" id="Launch" data-dismiss="modal">Ok</button>
+         </div>
+      </div>
+   </div>
+</div>
