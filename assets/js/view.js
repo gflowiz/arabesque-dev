@@ -128,6 +128,7 @@ export default class View{
     this.renderer.fresh();
     this.renderer.add_nodes(nodes);
     this.renderer.add_links(links);
+
   }
   set_projection(proj,nodes,links){
     this.renderer.set_projection(proj,nodes,links)

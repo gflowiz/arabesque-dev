@@ -15,6 +15,8 @@ export default class BarChart{
     this.group = group;
     this.render_all = render_all
     this.brush.on('brush.chart',this.brush_listener(this));
+    console.log('BarChartFilter');
+    console.log(this)
 
 
 

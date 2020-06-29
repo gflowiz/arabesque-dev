@@ -11,7 +11,7 @@ export default class Model {
 
     this.config = { varnames : { } , aggrop : "sum" , filters : [] ,proj : "Mercator / EPSG:3857",styles : { nodes : nstyle, links : {} } }
 
-    // working data strcuture
+    // working data structure
     this.data = {nodes:[],links:[],nodes_hash:{},filters:{}}
   }
 
@@ -187,7 +187,7 @@ export default class Model {
 
     // extract nodes ids from links
     let nodes_ids_o = this.data.links.map(l=> l[this.config.varnames.linkID[0]] );
-    let nodes_ids_d = this.data.links.map(l=> l[this.config.varnames.linkID[1]] )
+    let nodes_ids_d = this.data.links.map(l=> l[this.config.varnames.linkID[1]] );
 
     // convert to set to remove duplicates
     let links_ids_distincts = new Set(nodes_ids_o.concat(nodes_ids_d));
@@ -216,6 +216,7 @@ export default class Model {
 
     // crossfilter creation
     this.data.crossfilters = crossfilter(this.data.links);
+  
 
     // create dimension on o,d for links aggregation
     this.data.od_dim =  this.data.crossfilters.dimension(l => l[this.config.varnames.linkID[0]]+"->"+l[this.config.varnames.linkID[1]]);
@@ -248,13 +249,12 @@ export default class Model {
   }
 
   async import_zip(file,callback){
-    console.log(file)
     var that = this;
     JSZip.loadAsync(file).then(function (zip) {
       return zip.file("arabesque.json").async("string");
     }).then(function(data) {
       let saved_data = JSON.parse(data)
-      console.log(saved_data)
+
       that.config = saved_data.config;
       that.data.nodes = saved_data.nodes;
       that.data.links = saved_data.links;
@@ -265,29 +265,36 @@ export default class Model {
 
       // crossfilter creation
       that.data.crossfilters = crossfilter(that.data.links);
+      console.log(that.data.crossfilters.all())
+
 
       // create dimension on o,d for links aggregation
       that.data.od_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[0]]+"->"+l[that.config.varnames.linkID[1]]);
-      that.data.links_aggregated = that.data.od_dim.group().reduce(that.reduceAddC(that),that.reduceRemC(that),that.reduceIniC(that))
+      that.data.links_aggregated = that.data.od_dim.group().reduce(that.reduceAddC(that),that.reduceRemC(that),that.reduceIniC(that));
+
 
       // create dimension on links origins for nodes out stats
       that.data.from_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[0]])
       that.data.nodes_from_aggregated = that.data.from_dim.group().reduce(that.reduceAddNodeC(that),that.reduceRemNodeC(that),that.reduceIniNodeC(that))
+      console.log(that.data.from_dim.group().top(Infinity))
 
       // create dimension on links destinations for nodes in stats
       that.data.to_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[1]])
       that.data.nodes_to_aggregated = that.data.to_dim.group().reduce(that.reduceAddNodeC(that),that.reduceRemNodeC(that),that.reduceIniNodeC(that))
 
-      // update nodes stats degree, wheighted degree, balance,...
+      // update nodes stats degree, weighted degree, balance,...
       that.init_nodes_stats();
       that.update_nodes_stats();
+
+      //Adding a filter on flows volume
+      that.config.filters.push({id:that.config.varnames.vol})
 
       let filters = that.config.filters;
       that.config.filters=[];
       let dimensions = filters.map( f => that.create_filter(f.id))
       let groups = dimensions.map( d => d.group())
 
-      console.log(" Import end")
+      console.log("Import end")
       let res = {
         nb_nodes:that.data.nodes.length,
         nb_links:that.data.links.length,
@@ -295,7 +302,7 @@ export default class Model {
         nb_removed_links:0,
         nb_aggregated_links:that.data.links_aggregated.all().length
       };
-      callback(res,that.config.filters,dimensions,groups)
+      callback(res,that.config.filters,dimensions,groups);
     });
   }
 
@@ -308,6 +315,7 @@ export default class Model {
     return this.data.links_aggregated.all().filter(l => l.value > 0);
   }
 
+  //Updates nodes stats from incoming and outcoming flows
   update_nodes_stats(){
     let nto = this.data.nodes_to_aggregated.all();
     for(let i=0;i<nto.length;i++){
@@ -379,9 +387,12 @@ export default class Model {
   }
 
   create_filter(vname){
-    let dim = this.data.crossfilters.dimension(l => +l[vname])
+    console.log(this.data)
+    let dim = this.data.crossfilters.dimension( l => +l[vname])
     this.data.filters[vname]= dim;
-    this.config.filters.push({id:vname,range:[+dim.group().all()[0].key,+dim.group().top(1)[0].key]})
+    console.log(dim.group().all())
+    this.config.filters.push({id:vname,range:[+dim.group().all()[0].key,+dim.group().all()[dim.group().all().length-1].key]})
+    console.log(this.config)
     return dim
   }
 

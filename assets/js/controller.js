@@ -17,8 +17,8 @@ export default class Controller {
     document.getElementById("projection").addEventListener("change", this.set_projection.bind(this))
     document.getElementById("buttonChangeLayernode").addEventListener("click",this.show_nodes_semio.bind(this))
     this.charts = []
-    console.log("controller")
-    console.log(this)
+    console.log("controller1")
+    console.log(this.model.data)
   }
 
   import_handler(){
@@ -71,6 +71,7 @@ export default class Controller {
         let div= document.createElement("div")
         div.id=`filter-${filters[i].id}`
         document.getElementById("Filters").append(div)
+        //Create chart
         f.chart(div)
         this.charts.push(f)
     }
@@ -108,6 +109,7 @@ export default class Controller {
     let proj_sel = document.getElementById("projection")
     let proj = proj_sel.options[proj_sel.selectedIndex].value
     console.log(proj)
+    console.log(this.model.get_nodes(),this.model.get_links())
     this.view.renderer.render(this.model.get_nodes(),this.model.get_links())
   }
 }
