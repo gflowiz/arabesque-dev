@@ -7,9 +7,10 @@ import crossfilter from 'crossfilter2'
 export default class Model {
   constructor() {
     // app configuration
-    let nstyle = {color:{ fixed : "#000000"},size:{varied:{var:"degree",scale:"Sqrt",maxval:100}},text:{fixed:"none"},opacity:{fixed:0.7}}
+    let nstyle = {color:{ fixed : "#F6C270"},size:{varied:{var:"degree",scale:"Sqrt",maxval:100}},text:{fixed:"none"},opacity:{fixed:0.7}}
+    let lstyle = {}
 
-    this.config = { varnames : { } , aggrop : "sum" , filters : [] ,proj : "Mercator / EPSG:3857",styles : { nodes : nstyle, links : {} } }
+    this.config = { varnames : { } , aggrop : "sum" , filters : [] ,proj : "Mercator / EPSG:3857",styles : { nodes : nstyle, links : lstyle } }
 
     // working data structure
     this.data = {nodes:[],links:[],nodes_hash:{},filters:{}}
@@ -37,6 +38,13 @@ export default class Model {
   get_nodes_style(){
     return this.config.styles.nodes;
   }
+  update_nodes_style(nstyle) {
+    this.config.styles.nodes = nstyle;
+
+  }
+  get_links_style(){
+    return this.config.styles.links;
+  }
 
   // export app state
   export(){
@@ -55,7 +63,7 @@ export default class Model {
 
   // extract varname from csv or geojson and check filetype
   async preprocess_nodes(file,callback){
-    console.log(file.type)
+
     if (file.type!="text/csv" & file.type!="application/json" & file.type!="application/geo+json"){
       throw "unsupported file type";
     }else{
@@ -108,7 +116,6 @@ export default class Model {
   }
   // extract varname from csv a
   async preprocess_links(file,callback){
-    console.log(file.type)
     if (file.type!="text/csv"){
       throw "unsupported file type";
     }else{
@@ -129,6 +136,7 @@ export default class Model {
         let links = papaparse(reader.result,{'header':true,	'skipEmptyLines': true});
         that.data.links = links.data
         var import_resume = that.import()
+        console.log(that.config)
         callback(import_resume,that.get_nodes(),that.get_links(),that.config);
       }
       reader.readAsText(file);
@@ -178,7 +186,7 @@ export default class Model {
 
   import(){
 
-    console.log(this)
+
     // list of nodes ids. Convert to string so there is no type confusions
     let nodes_ids = this.data.nodes.map(n=>n.properties[this.config.varnames.nodeID]);
 
@@ -265,7 +273,7 @@ export default class Model {
 
       // crossfilter creation
       that.data.crossfilters = crossfilter(that.data.links);
-      console.log(that.data.crossfilters.all())
+
 
 
       // create dimension on o,d for links aggregation
@@ -276,7 +284,7 @@ export default class Model {
       // create dimension on links origins for nodes out stats
       that.data.from_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[0]])
       that.data.nodes_from_aggregated = that.data.from_dim.group().reduce(that.reduceAddNodeC(that),that.reduceRemNodeC(that),that.reduceIniNodeC(that))
-      console.log(that.data.from_dim.group().top(Infinity))
+
 
       // create dimension on links destinations for nodes in stats
       that.data.to_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[1]])
@@ -295,6 +303,7 @@ export default class Model {
       let groups = dimensions.map( d => d.group())
 
       console.log("Import end")
+      console.log(that.config)
       let res = {
         nb_nodes:that.data.nodes.length,
         nb_links:that.data.links.length,
@@ -302,7 +311,7 @@ export default class Model {
         nb_removed_links:0,
         nb_aggregated_links:that.data.links_aggregated.all().length
       };
-      callback(res,that.config.filters,dimensions,groups);
+      callback(res,that.config.filters,dimensions,groups,that.config);
     });
   }
 
@@ -387,12 +396,12 @@ export default class Model {
   }
 
   create_filter(vname){
-    console.log(this.data)
+
     let dim = this.data.crossfilters.dimension( l => +l[vname])
     this.data.filters[vname]= dim;
-    console.log(dim.group().all())
+
     this.config.filters.push({id:vname,range:[+dim.group().all()[0].key,+dim.group().all()[dim.group().all().length-1].key]})
-    console.log(this.config)
+
     return dim
   }
 

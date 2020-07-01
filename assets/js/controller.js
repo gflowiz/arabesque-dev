@@ -1,10 +1,12 @@
-import barChart from "./barchartfilter.js"
+import barChart from "./barchartfilter.js";
+
 
 
 export default class Controller {
   constructor(model, view) {
     this.model = model
     this.view = view
+
     document.getElementById("ImportData").addEventListener("click",this.import_handler.bind(this))
     document.getElementById("NodesImportFile").addEventListener("change", this.import_nodes_file.bind(this))
     document.getElementById("ImportNodes").addEventListener("click", this.import_nodes.bind(this))
@@ -14,9 +16,13 @@ export default class Controller {
     document.getElementById("ExportMap").addEventListener("click",this.model.export.bind(this.model))
 
     this.load_projections()
-    document.getElementById("projection").addEventListener("change", this.set_projection.bind(this))
+    document.getElementById("projection").addEventListener("change", this.set_projection.bind(this));
+    //Change node semio
     document.getElementById("buttonChangeLayernode").addEventListener("click",this.show_nodes_semio.bind(this))
+
+
     this.charts = []
+
     console.log("controller1")
     console.log(this.model.data)
   }
@@ -36,10 +42,22 @@ export default class Controller {
     
     let nodesfile = document.getElementById("NodesImportFile").files[0];
 
+    let id,lat,long;
+    if (nodesfile.type === "text/csv") {
+      id = document.getElementById("NodeImportID").value.replace(/\"/g,'')
+      lat = document.getElementById("NodeImportLat").value.replace(/\"/g,'')
+      long = document.getElementById("NodeImportLong").value.replace(/\"/g,'')
+
+    }
+    //If nodes is in geojson format, there is no proper varname
+    else {
+      id = document.getElementById("NodeImportID").value.replace(/\"/g,'')
+      lat = null;
+      long = null;
+    }
+
     //Delete "" from values (they are already strings)
-    let id = document.getElementById("NodeImportID").value.replace(/\"/g,'')
-    let lat = document.getElementById("NodeImportLat").value.replace(/\"/g,'')
-    let long = document.getElementById("NodeImportLong").value.replace(/\"/g,'')
+
     this.model.set_nodes_varnames(id,lat,long)
     this.model.import_nodes(nodesfile,this.view.import_links).catch(this.view.error_nodes_file());
   }
@@ -55,7 +73,7 @@ export default class Controller {
     let origin_id = document.getElementById("LinksImportOrigineID").value.replace(/\"/g,'');
     let dest_id = document.getElementById("LinksImportDestinationID").value.replace(/\"/g,'');
     let volume_id = document.getElementById("LinksImportVolume").value.replace(/\"/g,'');
-    console.log(origin_id,dest_id,volume_id)
+    console.log(origin_id,dest_id,volume_id);
 
     this.model.set_links_varnames(origin_id,dest_id,volume_id)
     this.model.set_links_aggr(document.getElementById("LinksImportOrigineID").value)
@@ -65,7 +83,7 @@ export default class Controller {
     let zipfile = document.getElementById("ImportZip").files[0];
     this.model.import_zip(zipfile,this.post_import_zip.bind(this)).catch(this.view.error_zip_file());
   }
-  post_import_zip(res,filters,dimensions,groups){
+  post_import_zip(res,filters,dimensions,groups,config){
     for(let i=0;i<filters.length;i++){
         let f=new barChart(filters[i].id,dimensions[i],groups[i],this.render_all.bind(this));
         let div= document.createElement("div")
@@ -75,16 +93,17 @@ export default class Controller {
         f.chart(div)
         this.charts.push(f)
     }
-    this.view.import_end(res,this.model.get_nodes(),this.model.get_links())
+    this.view.import_end(res,this.model.get_nodes(),this.model.get_links(),config)
     document.getElementById("projection-"+this.model.get_projection()).selected=true;
-    this.view.set_projection(this.model.get_projection(),this.model.get_nodes(),this.model.get_links());
+    this.view.set_projection(this.model.get_projection(),this.model.get_nodes(),this.model.get_links(),config);
   }
   set_projection(){
     let proj_sel = document.getElementById("projection")
     let proj = proj_sel.options[proj_sel.selectedIndex].value
     console.log(proj)
     this.model.set_projection(proj);
-    this.view.set_projection(proj,this.model.get_nodes(),this.model.get_links());
+    let config = this.model.config;
+    this.view.set_projection(proj,this.model.get_nodes(),this.model.get_links(),config);
   }
   load_projections(){
     let projs = Object.keys(global.projections)
@@ -99,17 +118,34 @@ export default class Controller {
     this.charts.push(f)
   }
   show_nodes_semio(){
-    this.view.update_nodes_semio(this.model.get_nodes_style())
+
+    let nstyle = this.model.get_nodes_style();
+    //We need them in the modal to be able to chose according to which property the color will vary
+    let nodes_properties = Object.keys(this.model.data.nodes[0].properties);
+
+    this.view.update_nodes_semio(nstyle, nodes_properties);
+    console.log(this.model.config)
+    // let validate_semio_button = document.getElementById("addSemioButtonNode");
+    // validate_semio_button.addEventListener("click",this.save_nodes_semio.bind(this));
   }
   save_nodes_semio(){
-    console.log("save")
-    console.log(this)
+
+    console.log("save semio")
+    let nstyle = this.model.config.styles.nodes;
+    // let fixedColor = document.getElementById('singleColorPicker').value;
+    console.log(fixedColor)
+    nstyle.color.fixed = fixedColor;
+
+    //Update the model config
+    this.model.update_nodes_style(nstyle);
+
+    //Re-render the nodes with new color
+    this.view.renderer.update_nodes(this.model.get_nodes(),this.model.get_nodes_style())
   }
   render_all(){
     let proj_sel = document.getElementById("projection")
     let proj = proj_sel.options[proj_sel.selectedIndex].value
     console.log(proj)
-    console.log(this.model.get_nodes(),this.model.get_links())
-    this.view.renderer.render(this.model.get_nodes(),this.model.get_links())
+    this.view.renderer.render(this.model.get_nodes(),this.model.get_links(), this.model.get_nodes_style(),this.model.get_links_style())
   }
 }

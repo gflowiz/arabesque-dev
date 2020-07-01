@@ -1,4 +1,8 @@
 
+import React from "react"
+import ReactDOM from "react-dom";
+import {NodesSemioModalComponent} from '../react/semio_modal'
+
 export default class View{
   constructor(renderer) {
     this.renderer = renderer;
@@ -23,8 +27,8 @@ export default class View{
 
     // modal node semio
     this.ModalSemioNodes = document.getElementById("ModalSemioNodes");
-    this.semio_nodes_modal = require("../hbs/semio-nodes-modal.hbs");
-
+    // this.semio_nodes_modal = require("../hbs/semio-nodes-modal.hbs");
+    // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal();
   }
 
   import_nodes(){
@@ -126,18 +130,24 @@ export default class View{
     this.home.style.display="none";
     this.map_container.style.display="block";
     this.renderer.fresh();
-    this.renderer.add_nodes(nodes);
-    this.renderer.add_links(links);
+    
+    let nstyle = config.styles.nodes;
+    console.log(nstyle)
+    let lstyle = config.styles.links;
+    this.renderer.add_nodes(nodes, nstyle);
+    this.renderer.add_links(links, lstyle);
 
   }
-  set_projection(proj,nodes,links){
-    this.renderer.set_projection(proj,nodes,links)
+  set_projection(proj,nodes,links,config){
+    this.renderer.set_projection(proj,nodes,links,config)
   }
 
-  update_nodes_semio(semio){
-    console.log(semio)
-    this.ModalSemioNodes.innerHTML = this.semio_nodes_modal(semio)
-    $("#semioNodes").modal()
+  update_nodes_semio(semio, nodes_properties){
+
+    ReactDOM.render(<NodesSemioModalComponent semio = {semio} nodes_properties = {nodes_properties}/>,document.getElementById('ModalSemioNodes'));
+    // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal(semio);
+
+    $("#semioNodes").modal();
   }
 
 }

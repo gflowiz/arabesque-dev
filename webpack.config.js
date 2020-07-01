@@ -16,10 +16,14 @@ var config = {
     rules: [
         {
           use: {
-            loader: "babel-loader"
+            loader: "babel-loader",
+            options: {
+              presets: ['@babel/preset-react']
+            }
             },
-          test: /\.js$/,
-          exclude: /node_modules/
+          test: /\.(js|jsx)$/,
+          exclude: /node_modules/,
+
       },
        { test: /\.hbs$/, loader: "handlebars-loader"},
 

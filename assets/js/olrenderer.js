@@ -56,14 +56,15 @@ export default class OlRenderer {
     this.map.render();
   }
 
-  nodeStyle(feature){
+  nodeStyle(nstyle){
+    console.log(nstyle)
     return new Style({
               stroke: new Stroke({
               color: 'white',
               width: 0
           }),
           fill: new Fill({
-              color: 'rgba(0,0,0,0.7)'
+              color: nstyle.color.fixed
           })
     })
   }
@@ -71,7 +72,8 @@ export default class OlRenderer {
     return this._scale_node_size(+node.properties[this._node_size_var]);
   }
 
-  add_nodes(nodes){
+  add_nodes(nodes, nstyle){
+    console.log(nstyle)
     var map = this.map;
     // nettoyage
     this.map.removeLayer(this.get_layer("nodes"));
@@ -107,7 +109,7 @@ export default class OlRenderer {
         name: "nodes",
         source: nodes_vector,
         renderMode: 'image',
-        style: this.nodeStyle.bind(this)
+        style: this.nodeStyle(nstyle)
     })
     // ajout de la couche 
     this.map.addLayer(nodesLayer);
@@ -115,7 +117,8 @@ export default class OlRenderer {
     //  
     this.map.getView().fit(boundingExtent(proj_nodes.map(co => co.center)))
   }
-  update_nodes(nodes){
+  update_nodes(nodes,nstyle){
+    console.log(nstyle)
   	console.log("up")
       var map = this.map;
       map.removeLayer(this.get_layer("nodes"));
@@ -135,13 +138,13 @@ export default class OlRenderer {
           name: "nodes",
           source: nodes_vector,
           renderMode: 'image',
-          style: this.nodeStyle.bind(this)
+          style: this.nodeStyle(nstyle)
       })
       this.map.addLayer(nodesLayer);
   }
 
 
-  linkStyle(feature){
+  linkStyle(lstyle){
     return new Style({
           fill: new Fill({
               color: 'rgba(0,0,0,0.1)'
@@ -150,7 +153,7 @@ export default class OlRenderer {
   }
 
 
-  add_links(links){
+  add_links(links, lstyle){
     this.map.removeLayer(this.get_layer("links"));
 
     let style = {geometry :{head :{ height:0.3,width:0.5}},ratioBounds:0.9};
@@ -174,14 +177,14 @@ export default class OlRenderer {
     this.linksLayer = new VectorLayer({
         name: "links",
         source: this.links,
-        style: this.linkStyle.bind(this),
+        style: this.linkStyle(lstyle),
         renderMode: 'image'
     });
     this.map.addLayer(this.linksLayer);
   }
 
 
-  update_links(links){
+  update_links(links,lstyle){
     this.map.removeLayer(this.get_layer("links"));
 
     let style = {geometry :{head :{ height:0.3,width:0.5}},ratioBounds:0.9};
@@ -203,12 +206,12 @@ export default class OlRenderer {
     let linksLayer = new VectorLayer({
         name: "links",
         source: links_vector,
-        style: this.linkStyle.bind(this),
+        style: this.linkStyle(lstyle),
         renderMode: 'image'
     });
     this.map.addLayer(linksLayer);
   }
-  set_projection(proj,nodes,links){
+  set_projection(proj,nodes,links,config){
     let olproj = getProjection(proj)
     console.log(olproj)
     this.map.setView(new View({
@@ -218,13 +221,15 @@ export default class OlRenderer {
       minZoom:-3,
       multiWorld:false
     }))
-    this.add_nodes(nodes)
-    this.add_links(links)
+    let nstyle = config.styles.nodes
+    let lstyle = config.styles.links;
+    this.add_nodes(nodes,nstyle)
+    this.add_links(links,lstyle)
   }
 
-  render(nodes,links){
-    this.update_nodes(nodes)
-    this.update_links(links)
+  render(nodes,links,nstyle,lstyle){
+    this.update_nodes(nodes,nstyle)
+    this.update_links(links,lstyle)
   }
 
   get_layer(name){
