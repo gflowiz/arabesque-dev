@@ -2,9 +2,10 @@ import React, { useState } from "react";
 
 export const ColorContainerComponent = (props) => {
   //Works exactly like a class state
-  let [color_mode, set_color_mode] = useState(props.color_mode);
+  let [color_mode, set_color_mode] = useState("fixed");
   let [color_type, set_color_type] = useState("quantitative");
-  console.log(color_mode, color_type);
+  let nodes_properties = props.nodes_properties;
+  console.log(props.nodes_properties);
 
   //Put a border when the ramp is clicked (or one of its children nodes)
   function selectColorRamp(e) {
@@ -23,8 +24,17 @@ export const ColorContainerComponent = (props) => {
     }
   }
 
+  //Parses a string and returns NaN if it's not convertible into a float (stricter than parseFloat())
+  function filter_float(value) {
+    if (/^(\-|\+)?([0-9]+(\.[0-9]+)?|Infinity)$/.test(value))
+      return Number(value);
+    return NaN;
+  }
+
+  //Both color menu and container change according to the color mode (fixed or varied)
   let color_menu, color_container;
   if (color_mode === "fixed") {
+    props.notify_state_change("fixed");
     color_menu = (
       <select
         class="custom-select"
@@ -37,6 +47,7 @@ export const ColorContainerComponent = (props) => {
     );
     color_container = <input id="singleColorPicker" type="color"></input>;
   } else if (color_mode === "varied") {
+    props.notify_state_change("varied");
     color_menu = (
       <>
         <label class="text-muted h5" for="colorMode">
@@ -58,9 +69,18 @@ export const ColorContainerComponent = (props) => {
         </label>
         <select class="custom-select" id="colorVariable">
           {/* We can iterate on the nodes properties to fill the select div  */}
-          {props.nodes_properties.map((p) => (
-            <option value={p}>{p}</option>
-          ))}
+          {Object.keys(nodes_properties)
+            .filter((p) => {
+              //Checking if the property is a number
+              if (color_type === "quantitative") {
+                return isNaN(filter_float(nodes_properties[p])) === false;
+              } else if (color_type === "qualitative") {
+                return isNaN(filter_float(nodes_properties[p])) === true;
+              }
+            })
+            .map((p) => (
+              <option value={p}>{p}</option>
+            ))}
         </select>
 
         <label class="text-muted h5" for="colorType">
@@ -81,18 +101,12 @@ export const ColorContainerComponent = (props) => {
         </select>
 
         <div class="form-check mt-2">
-          <label
-            class="form-check-label text-muted h5"
-            for="inversedColorPalette"
-          >
-            {" "}
-            Inverse
-          </label>
           <input
             class="form-check-input position-static"
             type="checkbox"
             id="inversedColorPalette"
           ></input>
+          <div class="form-check-label text-muted h6"> Inverse</div>
         </div>
       </>
     );
@@ -2725,7 +2739,7 @@ export const ColorContainerComponent = (props) => {
   }
 
   return (
-    <div class="row">
+    <div class="row" id="NodesSemioColorRow">
       <div class="col-md-2">{color_menu}</div>
       {color_container}
     </div>

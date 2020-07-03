@@ -192,5 +192,23 @@ nav {
   flex-direction: column;
 }
 .selectedRamp {
-  border: solid rgb(59, 47, 47) 2px;
+  border: solid rgb(112, 98, 98) 2px;
+}
+
+.form-check-input {
+  position: relative !important;
+  margin-right: 0.5em;
+}
+.form-check-label {
+  padding-top: 0.1em;
+}
+.form-check {
+  display: flex;
+  flex-wrap: wrap;
+}
+.small-icon {
+  width: 0.8em;
+}
+#NodesSemioColorRow {
+  align-items: center;
 }

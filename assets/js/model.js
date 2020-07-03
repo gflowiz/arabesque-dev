@@ -1,360 +1,494 @@
-import JSZip from "jszip"
+import JSZip from "jszip";
 import saveAs from "file-saver";
-import {parse as papaparse} from "papaparse"
-import * as turf from "@turf/turf"
-import crossfilter from 'crossfilter2'
+import { parse as papaparse } from "papaparse";
+import * as turf from "@turf/turf";
+import crossfilter from "crossfilter2";
 
 export default class Model {
   constructor() {
     // app configuration
-    let nstyle = {color:{ fixed : "#F6C270"},size:{varied:{var:"degree",scale:"Sqrt",maxval:100}},text:{fixed:"none"},opacity:{fixed:0.7}}
-    let lstyle = {}
+    let nstyle = {
+      color: {
+        mode: "fixed",
+        fixed: "#F6C270",
+        varied: {
+          colors: [
+            "rgb(255, 247, 243)",
+            "rgb(253, 224, 221)",
+            "rgb(252, 197, 192)",
+            "rgb(250, 159, 181)",
+            "rgb(247, 104, 161)",
+            "rgb(221, 52, 151)",
+            "rgb(174, 1, 126)",
+            "rgb(122, 1, 119)",
+          ],
+          inverted: false,
+        },
+      },
+      size: {
+        mode: "varied",
+        varied: { var: "degree", scale: "Sqrt", maxval: 100 },
+        fixed: 10,
+      },
+      text: { fixed: "none" },
+      opacity: {
+        mode: "fixed",
+        fixed: 0.7,
+        varied: { var: "", scale: "Linear", min: 0, max: 1 },
+      },
+    };
+    let lstyle = {};
 
-    this.config = { varnames : { } , aggrop : "sum" , filters : [] ,proj : "Mercator / EPSG:3857",styles : { nodes : nstyle, links : lstyle } }
+    this.config = {
+      varnames: {},
+      aggrop: "sum",
+      filters: [],
+      proj: "Mercator / EPSG:3857",
+      styles: { nodes: nstyle, links: lstyle },
+    };
 
     // working data structure
-    this.data = {nodes:[],links:[],nodes_hash:{},filters:{}}
+    this.data = { nodes: [], links: [], nodes_hash: {}, filters: {} };
   }
 
-  set_nodes_varnames(id,lat,long){
-    this.config.varnames.nodeID=id;
-    this.config.varnames.lat=lat;
-    this.config.varnames.long=long;
+  set_nodes_varnames(id, lat, long) {
+    this.config.varnames.nodeID = id;
+    this.config.varnames.lat = lat;
+    this.config.varnames.long = long;
   }
 
-  set_links_varnames(oid,did,vol){
+  set_links_varnames(oid, did, vol) {
     this.config.varnames.linkID = [oid, did];
-    this.config.varnames.vol=vol
+    this.config.varnames.vol = vol;
   }
-  set_links_aggr(aggr){
-    this.config.aggrop=aggr;
+  set_links_aggr(aggr) {
+    this.config.aggrop = aggr;
   }
-  set_projection(proj){
-    this.config.proj=proj;
+  set_projection(proj) {
+    this.config.proj = proj;
   }
-  get_projection(proj){
+  get_projection(proj) {
     return this.config.proj;
   }
-  get_nodes_style(){
+  get_nodes_style() {
     return this.config.styles.nodes;
   }
   update_nodes_style(nstyle) {
     this.config.styles.nodes = nstyle;
-
   }
-  get_links_style(){
+  get_links_style() {
     return this.config.styles.links;
   }
 
   // export app state
-  export(){
+  export() {
     var zip = new JSZip();
     // delete this.config.legend
-    zip.file("arabesque.json", JSON.stringify({nodes:this.data.nodes,links:this.data.links,config:this.config}));
-    zip.generateAsync({
-        type: "blob"
+    zip.file(
+      "arabesque.json",
+      JSON.stringify({
+        nodes: this.data.nodes,
+        links: this.data.links,
+        config: this.config,
+      })
+    );
+    zip
+      .generateAsync({
+        type: "blob",
       })
       .then(function (content) {
         // see FileSaver.js
         saveAs(content, "export_arabesque.zip");
       });
-
   }
 
   // extract varname from csv or geojson and check filetype
-  async preprocess_nodes(file,callback){
-
-    if (file.type!="text/csv" & file.type!="application/json" & file.type!="application/geo+json"){
+  async preprocess_nodes(file, callback) {
+    if (
+      (file.type != "text/csv") &
+      (file.type != "application/json") &
+      (file.type != "application/geo+json")
+    ) {
       throw "unsupported file type";
-    }else{
-      if(file.type=="text/csv"){
+    } else {
+      if (file.type == "text/csv") {
         const reader = new FileReader();
-        reader.onload = (event) => callback(reader.result.split("\n")[0].split(","));
-        reader.readAsText(file.slice(0,8000));
-      }else{
+        reader.onload = (event) =>
+          callback(reader.result.split("\n")[0].split(","));
+        reader.readAsText(file.slice(0, 8000));
+      } else {
         const reader = new FileReader();
-        reader.onload = (event) => callback(Object.keys(JSON.parse(reader.result).features[0].properties));
+        reader.onload = (event) =>
+          callback(
+            Object.keys(JSON.parse(reader.result).features[0].properties)
+          );
         reader.readAsText(file);
       }
     }
   }
 
   // import nodes and convert to geojson points
-  async import_nodes(file,callback){
-    console.log("Importing nodes")
-    if (file.type!="text/csv" & file.type!="application/json"  & file.type!="application/geo+json"){
+  async import_nodes(file, callback) {
+    console.log("Importing nodes");
+    if (
+      (file.type != "text/csv") &
+      (file.type != "application/json") &
+      (file.type != "application/geo+json")
+    ) {
       throw "unsupported file type";
-    }else{
+    } else {
       var that = this;
-      if(file.type=="text/csv"){
+      if (file.type == "text/csv") {
         const reader = new FileReader();
-        reader.onload = function(event){
-          that.data.nodes = that.create_geojson(papaparse(reader.result,{'header':true,'skipEmptyLines': true }).data);
+        reader.onload = function (event) {
+          that.data.nodes = that.create_geojson(
+            papaparse(reader.result, { header: true, skipEmptyLines: true })
+              .data
+          );
           callback();
-        }
+        };
         reader.readAsText(file);
-      }else{
+      } else {
         const reader = new FileReader();
-        reader.onload = function(event){
+        reader.onload = function (event) {
           let data = JSON.parse(reader.result);
-          data.features.forEach(f => {
+          data.features.forEach((f) => {
             f.geometry = turf.centroid(f.geometry).geometry;
             //reverse long and lat
-            let long = f.geometry.coordinates[0]
-            let lat = f.geometry.coordinates[1]
-            f.geometry.coordinates = [lat,long]
+            let long = f.geometry.coordinates[0];
+            let lat = f.geometry.coordinates[1];
+            f.geometry.coordinates = [lat, long];
 
             //Convert node id to string to avoid type confusion when filtering
-            f.properties[that.config.varnames.nodeID] = f.properties[that.config.varnames.nodeID].toString();
-          })
-          that.data.nodes = data.features
+            f.properties[that.config.varnames.nodeID] = f.properties[
+              that.config.varnames.nodeID
+            ].toString();
+          });
+          that.data.nodes = data.features;
           callback();
-        }
+        };
         reader.readAsText(file);
       }
     }
   }
   // extract varname from csv a
-  async preprocess_links(file,callback){
-    if (file.type!="text/csv"){
+  async preprocess_links(file, callback) {
+    if (file.type != "text/csv") {
       throw "unsupported file type";
-    }else{
+    } else {
       const reader = new FileReader();
-      reader.onload = (event) => callback(reader.result.split("\n")[0].split(","))// callback(reader.result.split("\n")[0].split(","));
-      reader.readAsText(file.slice(0,8000));
+      reader.onload = (event) =>
+        callback(reader.result.split("\n")[0].split(",")); // callback(reader.result.split("\n")[0].split(","));
+      reader.readAsText(file.slice(0, 8000));
     }
   }
 
-  async import_links(file,callback){
-    console.log("Importing links")
-    if (file.type!="text/csv" ){
+  async import_links(file, callback) {
+    console.log("Importing links");
+    if (file.type != "text/csv") {
       throw "unsupported file type";
-    }else{
+    } else {
       var that = this;
       const reader = new FileReader();
-      reader.onload = function(event){
-        let links = papaparse(reader.result,{'header':true,	'skipEmptyLines': true});
-        that.data.links = links.data
-        var import_resume = that.import()
-        console.log(that.config)
-        callback(import_resume,that.get_nodes(),that.get_links(),that.config);
-      }
+      reader.onload = function (event) {
+        let links = papaparse(reader.result, {
+          header: true,
+          skipEmptyLines: true,
+        });
+        that.data.links = links.data;
+        var import_resume = that.import();
+        console.log(that.config);
+        callback(
+          import_resume,
+          that.get_nodes(),
+          that.get_links(),
+          that.config
+        );
+      };
       reader.readAsText(file);
     }
   }
 
-
-  reduceAddC(that){
-    return function(p,v){
-        return p+(+v[that.config.varnames.vol])
-    }
+  reduceAddC(that) {
+    return function (p, v) {
+      return p + +v[that.config.varnames.vol];
+    };
   }
 
-  reduceRemC(that){
-    return  function(p,v){
-        return p-(+v[that.config.varnames.vol])
-    }
+  reduceRemC(that) {
+    return function (p, v) {
+      return p - +v[that.config.varnames.vol];
+    };
   }
 
-  reduceIniC(that){
-    return function(){
-        return 0
-    }
+  reduceIniC(that) {
+    return function () {
+      return 0;
+    };
   }
 
-  reduceAddNodeC(that,vname){
-    return function(p,v){
+  reduceAddNodeC(that, vname) {
+    return function (p, v) {
       p.n = p.n + 1;
-      p.w = p.w + (+v[that.config.varnames.vol]);
-      return p
-    }
+      p.w = p.w + +v[that.config.varnames.vol];
+      return p;
+    };
   }
 
-  reduceRemNodeC(that){
-    return  function(p,v){
-      p.n = p.n-1
-      p.w = p.w - (+v[that.config.varnames.vol]);
-      return p
-    }
+  reduceRemNodeC(that) {
+    return function (p, v) {
+      p.n = p.n - 1;
+      p.w = p.w - +v[that.config.varnames.vol];
+      return p;
+    };
   }
 
-  reduceIniNodeC(that){
-    return function(){
-        return {n:0,w:0}
-    }
+  reduceIniNodeC(that) {
+    return function () {
+      return { n: 0, w: 0 };
+    };
   }
 
-  import(){
-
-
+  import() {
     // list of nodes ids. Convert to string so there is no type confusions
-    let nodes_ids = this.data.nodes.map(n=>n.properties[this.config.varnames.nodeID]);
+    let nodes_ids = this.data.nodes.map(
+      (n) => n.properties[this.config.varnames.nodeID]
+    );
 
     // convert to set to remove duplicates
     let nodes_ids_distincts = new Set(nodes_ids);
 
     // extract nodes ids from links
-    let nodes_ids_o = this.data.links.map(l=> l[this.config.varnames.linkID[0]] );
-    let nodes_ids_d = this.data.links.map(l=> l[this.config.varnames.linkID[1]] );
+    let nodes_ids_o = this.data.links.map(
+      (l) => l[this.config.varnames.linkID[0]]
+    );
+    let nodes_ids_d = this.data.links.map(
+      (l) => l[this.config.varnames.linkID[1]]
+    );
 
     // convert to set to remove duplicates
     let links_ids_distincts = new Set(nodes_ids_o.concat(nodes_ids_d));
 
     // keep nodes that are present in links
-    let final_nodes = new Set([...nodes_ids_distincts].filter(n => links_ids_distincts.has(n)));
+    let final_nodes = new Set(
+      [...nodes_ids_distincts].filter((n) => links_ids_distincts.has(n))
+    );
 
     // remove links with unkwown origine or destination
     let nb_links_beforecleanning = this.data.links.length;
-    this.data.links = this.data.links.filter(l => final_nodes.has(l[this.config.varnames.linkID[0]]) & final_nodes.has( l[this.config.varnames.linkID[1]] ));
+    this.data.links = this.data.links.filter(
+      (l) =>
+        final_nodes.has(l[this.config.varnames.linkID[0]]) &
+        final_nodes.has(l[this.config.varnames.linkID[1]])
+    );
 
     // build the final nodes kept the first in case of duplicates
     // build the node hash for quick node access
     let kept_nodes = [];
-    for (let p=0;p<nodes_ids.length;p++){
-          if(!(nodes_ids[p] in this.data.nodes_hash)){
-            this.data.nodes[p].id=nodes_ids[p];
-            this.data.nodes_hash[nodes_ids[p]]=this.data.nodes[p];
-            kept_nodes.push(this.data.nodes[p]);
-          }
+    for (let p = 0; p < nodes_ids.length; p++) {
+      if (!(nodes_ids[p] in this.data.nodes_hash)) {
+        this.data.nodes[p].id = nodes_ids[p];
+        this.data.nodes_hash[nodes_ids[p]] = this.data.nodes[p];
+        kept_nodes.push(this.data.nodes[p]);
+      }
     }
-    this.data.nodes=kept_nodes;
+    this.data.nodes = kept_nodes;
 
     // add distance in links
     this.add_links_stats();
 
     // crossfilter creation
     this.data.crossfilters = crossfilter(this.data.links);
-  
 
     // create dimension on o,d for links aggregation
-    this.data.od_dim =  this.data.crossfilters.dimension(l => l[this.config.varnames.linkID[0]]+"->"+l[this.config.varnames.linkID[1]]);
-    this.data.links_aggregated = this.data.od_dim.group().reduce(this.reduceAddC(this),this.reduceRemC(this),this.reduceIniC(this))
+    this.data.od_dim = this.data.crossfilters.dimension(
+      (l) =>
+        l[this.config.varnames.linkID[0]] +
+        "->" +
+        l[this.config.varnames.linkID[1]]
+    );
+    this.data.links_aggregated = this.data.od_dim
+      .group()
+      .reduce(
+        this.reduceAddC(this),
+        this.reduceRemC(this),
+        this.reduceIniC(this)
+      );
 
     // create dimension on links origins for nodes out stats
-    this.data.from_dim =  this.data.crossfilters.dimension(l => l[this.config.varnames.linkID[0]])
-    this.data.nodes_from_aggregated = this.data.from_dim.group().reduce(this.reduceAddNodeC(this),this.reduceRemNodeC(this),this.reduceIniNodeC(this))
+    this.data.from_dim = this.data.crossfilters.dimension(
+      (l) => l[this.config.varnames.linkID[0]]
+    );
+    this.data.nodes_from_aggregated = this.data.from_dim
+      .group()
+      .reduce(
+        this.reduceAddNodeC(this),
+        this.reduceRemNodeC(this),
+        this.reduceIniNodeC(this)
+      );
 
     // create dimension on links destinations for nodes in stats
-    this.data.to_dim =  this.data.crossfilters.dimension(l => l[this.config.varnames.linkID[1]])
-    this.data.nodes_to_aggregated = this.data.to_dim.group().reduce(this.reduceAddNodeC(this),this.reduceRemNodeC(this),this.reduceIniNodeC(this))
+    this.data.to_dim = this.data.crossfilters.dimension(
+      (l) => l[this.config.varnames.linkID[1]]
+    );
+    this.data.nodes_to_aggregated = this.data.to_dim
+      .group()
+      .reduce(
+        this.reduceAddNodeC(this),
+        this.reduceRemNodeC(this),
+        this.reduceIniNodeC(this)
+      );
 
     // update nodes stats degree, wheighted degree, balance,...
     this.init_nodes_stats();
     this.update_nodes_stats();
 
-    console.log("Model")
-    console.log(this)
+    console.log("Model");
+    console.log(this);
 
     // import statistics
     return {
-      nb_nodes:final_nodes.size,
-      nb_links:this.data.links.length,
-      nb_removed_nodes:nodes_ids.length-final_nodes.size,
-      nb_removed_links:nb_links_beforecleanning-this.data.links.length,
-      nb_aggregated_links:this.data.links_aggregated.all().length
+      nb_nodes: final_nodes.size,
+      nb_links: this.data.links.length,
+      nb_removed_nodes: nodes_ids.length - final_nodes.size,
+      nb_removed_links: nb_links_beforecleanning - this.data.links.length,
+      nb_aggregated_links: this.data.links_aggregated.all().length,
     };
-
   }
 
-  async import_zip(file,callback){
+  async import_zip(file, callback) {
     var that = this;
-    JSZip.loadAsync(file).then(function (zip) {
-      return zip.file("arabesque.json").async("string");
-    }).then(function(data) {
-      let saved_data = JSON.parse(data)
+    JSZip.loadAsync(file)
+      .then(function (zip) {
+        return zip.file("arabesque.json").async("string");
+      })
+      .then(function (data) {
+        let saved_data = JSON.parse(data);
 
-      that.config = saved_data.config;
-      that.data.nodes = saved_data.nodes;
-      that.data.links = saved_data.links;
-      for (let p=0;p<that.data.nodes.length;p++){
-              that.data.nodes_hash[that.data.nodes[p].id]=that.data.nodes[p];
-      }
+        that.config = saved_data.config;
+        that.data.nodes = saved_data.nodes;
+        that.data.links = saved_data.links;
+        for (let p = 0; p < that.data.nodes.length; p++) {
+          that.data.nodes_hash[that.data.nodes[p].id] = that.data.nodes[p];
+        }
 
+        // crossfilter creation
+        that.data.crossfilters = crossfilter(that.data.links);
 
-      // crossfilter creation
-      that.data.crossfilters = crossfilter(that.data.links);
+        // create dimension on o,d for links aggregation
+        that.data.od_dim = that.data.crossfilters.dimension(
+          (l) =>
+            l[that.config.varnames.linkID[0]] +
+            "->" +
+            l[that.config.varnames.linkID[1]]
+        );
+        that.data.links_aggregated = that.data.od_dim
+          .group()
+          .reduce(
+            that.reduceAddC(that),
+            that.reduceRemC(that),
+            that.reduceIniC(that)
+          );
 
+        // create dimension on links origins for nodes out stats
+        that.data.from_dim = that.data.crossfilters.dimension(
+          (l) => l[that.config.varnames.linkID[0]]
+        );
+        that.data.nodes_from_aggregated = that.data.from_dim
+          .group()
+          .reduce(
+            that.reduceAddNodeC(that),
+            that.reduceRemNodeC(that),
+            that.reduceIniNodeC(that)
+          );
 
+        // create dimension on links destinations for nodes in stats
+        that.data.to_dim = that.data.crossfilters.dimension(
+          (l) => l[that.config.varnames.linkID[1]]
+        );
+        that.data.nodes_to_aggregated = that.data.to_dim
+          .group()
+          .reduce(
+            that.reduceAddNodeC(that),
+            that.reduceRemNodeC(that),
+            that.reduceIniNodeC(that)
+          );
 
-      // create dimension on o,d for links aggregation
-      that.data.od_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[0]]+"->"+l[that.config.varnames.linkID[1]]);
-      that.data.links_aggregated = that.data.od_dim.group().reduce(that.reduceAddC(that),that.reduceRemC(that),that.reduceIniC(that));
+        // update nodes stats degree, weighted degree, balance,...
+        that.init_nodes_stats();
+        that.update_nodes_stats();
 
+        //Adding a filter on flows volume
+        that.config.filters.push({ id: that.config.varnames.vol });
 
-      // create dimension on links origins for nodes out stats
-      that.data.from_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[0]])
-      that.data.nodes_from_aggregated = that.data.from_dim.group().reduce(that.reduceAddNodeC(that),that.reduceRemNodeC(that),that.reduceIniNodeC(that))
+        let filters = that.config.filters;
+        that.config.filters = [];
+        let dimensions = filters.map((f) => that.create_filter(f.id));
+        let groups = dimensions.map((d) => d.group());
 
-
-      // create dimension on links destinations for nodes in stats
-      that.data.to_dim =  that.data.crossfilters.dimension(l => l[that.config.varnames.linkID[1]])
-      that.data.nodes_to_aggregated = that.data.to_dim.group().reduce(that.reduceAddNodeC(that),that.reduceRemNodeC(that),that.reduceIniNodeC(that))
-
-      // update nodes stats degree, weighted degree, balance,...
-      that.init_nodes_stats();
-      that.update_nodes_stats();
-
-      //Adding a filter on flows volume
-      that.config.filters.push({id:that.config.varnames.vol})
-
-      let filters = that.config.filters;
-      that.config.filters=[];
-      let dimensions = filters.map( f => that.create_filter(f.id))
-      let groups = dimensions.map( d => d.group())
-
-      console.log("Import end")
-      console.log(that.config)
-      let res = {
-        nb_nodes:that.data.nodes.length,
-        nb_links:that.data.links.length,
-        nb_removed_nodes:0,
-        nb_removed_links:0,
-        nb_aggregated_links:that.data.links_aggregated.all().length
-      };
-      callback(res,that.config.filters,dimensions,groups,that.config);
-    });
+        console.log("Import end");
+        console.log(that.config);
+        let res = {
+          nb_nodes: that.data.nodes.length,
+          nb_links: that.data.links.length,
+          nb_removed_nodes: 0,
+          nb_removed_links: 0,
+          nb_aggregated_links: that.data.links_aggregated.all().length,
+        };
+        callback(res, that.config.filters, dimensions, groups, that.config);
+      });
   }
 
-  get_nodes(){
-    this.update_nodes_stats()
+  get_nodes() {
+    this.update_nodes_stats();
     return this.data.nodes;
   }
 
-  get_links(){
-    return this.data.links_aggregated.all().filter(l => l.value > 0);
+  get_links() {
+    return this.data.links_aggregated.all().filter((l) => l.value > 0);
   }
 
   //Updates nodes stats from incoming and outcoming flows
-  update_nodes_stats(){
+  update_nodes_stats() {
     let nto = this.data.nodes_to_aggregated.all();
-    for(let i=0;i<nto.length;i++){
+    for (let i = 0; i < nto.length; i++) {
       this.data.nodes_hash[nto[i].key].properties["indegree"] = nto[i].value.n;
-      this.data.nodes_hash[nto[i].key].properties["weighted indegree"] = nto[i].value.w;
+      this.data.nodes_hash[nto[i].key].properties["weighted indegree"] =
+        nto[i].value.w;
     }
     let nfrom = this.data.nodes_from_aggregated.all();
-    for(let i=0;i<nfrom.length;i++){
-       this.data.nodes_hash[nfrom[i].key].properties["outdegree"] = nfrom[i].value.n;
-       this.data.nodes_hash[nfrom[i].key].properties["weighted outdegree"] = nfrom[i].value.w;
+    for (let i = 0; i < nfrom.length; i++) {
+      this.data.nodes_hash[nfrom[i].key].properties["outdegree"] =
+        nfrom[i].value.n;
+      this.data.nodes_hash[nfrom[i].key].properties["weighted outdegree"] =
+        nfrom[i].value.w;
     }
-    for(let i=0;i<this.data.nodes.length;i++){
-      this.data.nodes[i].properties["degree"] = this.data.nodes[i].properties["indegree"]+this.data.nodes[i].properties["outdegree"];
-      this.data.nodes[i].properties["weighted degree"] = this.data.nodes[i].properties["weighted indegree"]+this.data.nodes[i].properties["weighted outdegree"];
-      this.data.nodes[i].properties["balance"] = this.data.nodes[i].properties["indegree"]-this.data.nodes[i].properties["outdegree"];
-      this.data.nodes[i].properties["weighted balance"] = this.data.nodes[i].properties["weighted indegree"]-this.data.nodes[i].properties["weighted outdegree"];
+    for (let i = 0; i < this.data.nodes.length; i++) {
+      this.data.nodes[i].properties["degree"] =
+        this.data.nodes[i].properties["indegree"] +
+        this.data.nodes[i].properties["outdegree"];
+      this.data.nodes[i].properties["weighted degree"] =
+        this.data.nodes[i].properties["weighted indegree"] +
+        this.data.nodes[i].properties["weighted outdegree"];
+      this.data.nodes[i].properties["balance"] =
+        this.data.nodes[i].properties["indegree"] -
+        this.data.nodes[i].properties["outdegree"];
+      this.data.nodes[i].properties["weighted balance"] =
+        this.data.nodes[i].properties["weighted indegree"] -
+        this.data.nodes[i].properties["weighted outdegree"];
     }
   }
 
-
-  init_nodes_stats(){
-    for (let p=0;p<this.data.nodes.length;p++){
-      this.data.nodes[p].properties["weighted indegree"]=0;
-      this.data.nodes[p].properties["weighted outdegree"]=0;
-      this.data.nodes[p].properties["weighted degree"]=0;
-      this.data.nodes[p].properties["weighted balance"]=0;
-      this.data.nodes[p].properties["indegree"]=0;
-      this.data.nodes[p].properties["outdegree"]=0;
-      this.data.nodes[p].properties["balance"]=0;
-      this.data.nodes[p].properties["degree"]=0;
+  init_nodes_stats() {
+    for (let p = 0; p < this.data.nodes.length; p++) {
+      this.data.nodes[p].properties["weighted indegree"] = 0;
+      this.data.nodes[p].properties["weighted outdegree"] = 0;
+      this.data.nodes[p].properties["weighted degree"] = 0;
+      this.data.nodes[p].properties["weighted balance"] = 0;
+      this.data.nodes[p].properties["indegree"] = 0;
+      this.data.nodes[p].properties["outdegree"] = 0;
+      this.data.nodes[p].properties["balance"] = 0;
+      this.data.nodes[p].properties["degree"] = 0;
     }
     //let links = this.data.links_aggregated.all();
     //for(let i=0;i<links.length;i++){
@@ -371,38 +505,50 @@ export default class Model {
     //}
   }
 
-
-  add_links_stats(){
-    for(let i =0;i<this.data.links.length;i++){
-      let from = this.data.links[i][this.config.varnames.linkID[0]]
-      let to   = this.data.links[i][this.config.varnames.linkID[1]]
-      this.data.links[i]["distance"]= turf.distance(this.data.nodes_hash[from],this.data.nodes_hash[to]);
+  add_links_stats() {
+    for (let i = 0; i < this.data.links.length; i++) {
+      let from = this.data.links[i][this.config.varnames.linkID[0]];
+      let to = this.data.links[i][this.config.varnames.linkID[1]];
+      this.data.links[i]["distance"] = turf.distance(
+        this.data.nodes_hash[from],
+        this.data.nodes_hash[to]
+      );
     }
   }
 
   // utils to convert csv to geojson
   create_geojson(data) {
-    var len = data.length
+    var len = data.length;
     var points = [];
     for (var p = 0; p < len; p++) {
-      try{
-        var point = turf.point([Number(data[p][this.config.varnames.lat]), Number(data[p][this.config.varnames.long])], data[p]);
-        points.push(point)
-      }catch{
-        console.log("some nodes not parsed")
+      try {
+        var point = turf.point(
+          [
+            Number(data[p][this.config.varnames.lat]),
+            Number(data[p][this.config.varnames.long]),
+          ],
+          data[p]
+        );
+        points.push(point);
+      } catch {
+        console.log("some nodes not parsed");
       }
     }
-    return points
+    return points;
   }
 
-  create_filter(vname){
+  create_filter(vname) {
+    let dim = this.data.crossfilters.dimension((l) => +l[vname]);
+    this.data.filters[vname] = dim;
 
-    let dim = this.data.crossfilters.dimension( l => +l[vname])
-    this.data.filters[vname]= dim;
+    this.config.filters.push({
+      id: vname,
+      range: [
+        +dim.group().all()[0].key,
+        +dim.group().all()[dim.group().all().length - 1].key,
+      ],
+    });
 
-    this.config.filters.push({id:vname,range:[+dim.group().all()[0].key,+dim.group().all()[dim.group().all().length-1].key]})
-
-    return dim
+    return dim;
   }
-
 }
