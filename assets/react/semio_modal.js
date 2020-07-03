@@ -9,9 +9,15 @@ export const NodesSemioModalComponent = (props) => {
   let nodes_properties = props.nodes_properties;
   let semio = props.semio;
   //Works exactly like a class state
-  let modes = { color: "fixed", size: "fixed", opacity: "fixed" };
+  let modes = {
+    color: "fixed",
+    color_type: null,
+    size: "fixed",
+    opacity: "fixed",
+  };
 
   function extract_colors(semio) {
+    //Extract colors
     if (modes.color === "fixed") {
       semio.color.mode = "fixed";
       let color_picker = document.getElementById("singleColorPicker");
@@ -21,7 +27,7 @@ export const NodesSemioModalComponent = (props) => {
       let color_ramp = document.getElementsByClassName("selectedRamp")[0];
       if (color_ramp === undefined) {
         alert("Pick a color");
-        return;
+        return false;
       }
       let colors = [];
       color_ramp.childNodes[0].childNodes.forEach((el) =>
@@ -37,6 +43,12 @@ export const NodesSemioModalComponent = (props) => {
       } else {
         semio.color.varied.inverted = false;
       }
+      //Extract discretization variable
+      let variable = document.getElementById("colorVariable").value;
+      semio.color.varied.var = variable;
+      //Extract color discretization type
+      let color_type = document.getElementById("colorType").value;
+      semio.color.varied.type = color_type;
     }
   }
   function extract_size(semio) {
@@ -46,76 +58,80 @@ export const NodesSemioModalComponent = (props) => {
 
       if (width === "") {
         alert("Enter a width");
-        return;
+        return false;
       }
-      let width_int = parseFloat(width);
 
-      semio.size.fixed = width_int;
+      semio.size.fixed = parseFloat(width);
     } else if (modes.size === "varied") {
       semio.size.mode = "varied";
       let variable = document.getElementById("semioSelectorSizeChangenode")
         .value;
       let scale = document.getElementById("typeSizeChangenode").value;
-      let ratio = parseFloat(
-        document.getElementById("ratioMinMaxSizeChangenode").value
-      );
-      if (ratio === NaN) {
+      let ratio = document.getElementById("ratioMinMaxSizeChangenode").value;
+
+      if (ratio === "") {
         alert("Enter a ratio");
-        return;
+        return false;
       }
-      semio.size.varied = { var: variable, scale: scale, maxval: ratio };
+      semio.size.varied = {
+        var: variable,
+        scale: scale,
+        maxval: parseFloat(ratio),
+      };
     }
   }
   function extract_opacity(semio) {
     if (modes.opacity === "fixed") {
       semio.opacity.mode = "fixed";
-      let opacity = parseFloat(
-        document.getElementById("ratioMaxOpaChangenode").value
-      );
-      if (opacity === NaN) {
+      let opacity = document.getElementById("ratioMaxOpaChangenode").value;
+      if (opacity === "") {
         alert("Enter opacity");
-        return;
+        return false;
       }
       if (opacity < 0 || opacity > 1) {
         alert("Opacity must be between 0 and 1 ");
-        return;
+        return false;
       }
-      semio.opacity.fixed = opacity;
+      semio.opacity.fixed = parseFloat(opacity);
     } else if (modes.opacity === "varied") {
       semio.opacity.mode = "varied";
       let variable = document.getElementById("semioSelectorOpaChangenode")
         .value;
       let scale = document.getElementById("typeOpaChangenode").value;
-      let min = parseFloat(
-        document.getElementById("ratioMinOpaChangenode").value
-      );
-      let max = parseFloat(
-        document.getElementById("ratioMaxOpaChangenode").value
-      );
-      if (min === NaN || max === NaN) {
+      let min = document.getElementById("ratioMinOpaChangenode").value;
+
+      let max = document.getElementById("ratioMaxOpaChangenode").value;
+
+      if (min === "" || max === "") {
         alert("Enter opacity minimum and maximum");
-        return;
+        return false;
       }
       if (min < 0 || min > 1 || max < 0 || max > 1) {
         alert("Minimum and maximum opacity must be between 0 and 1");
-        return;
+        return false;
       }
       semio.opacity.varied = {
         var: variable,
         scale: scale,
-        min: min,
-        max: max,
+        min: parseFloat(min),
+        max: parseFloat(max),
       };
     }
   }
   //Extract color, size, text and opacity from the modal and send it back to view
   function save_and_close() {
-    extract_colors(semio);
-    extract_size(semio);
+    let ext_colors = extract_colors(semio);
+
+    let ext_size = extract_size(semio);
     semio.text.fixed = document.getElementById(
       "semioSelectorTextChangenode"
     ).value;
-    extract_opacity(semio);
+    let ext_opacity = extract_opacity(semio);
+
+    //We block the extraction if a field is missing or not filled properly
+    if (ext_colors === false || ext_size === false || ext_opacity === false) {
+      return;
+    }
 
     //Send new semio to controller
     props.update_semio(semio);
@@ -142,7 +158,10 @@ export const NodesSemioModalComponent = (props) => {
           <div class="modal-body">
             {/* Call the colorcontainer with nodes_properties for displaying in a select div */}
             <ColorContainerComponent
+              //Allow to notify is mode is fixed or varied
               notify_state_change={(newState) => (modes.color = newState)}
+              //Allow to notify if discretisation type is quantitative or qualitative
+              notify_type_change={(newState) => (modes.color_type = newState)}
               nodes_properties={nodes_properties}
             />
 

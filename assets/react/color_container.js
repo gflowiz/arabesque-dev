@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { color } from "d3";
 
 export const ColorContainerComponent = (props) => {
   //Works exactly like a class state
@@ -35,6 +36,7 @@ export const ColorContainerComponent = (props) => {
   let color_menu, color_container;
   if (color_mode === "fixed") {
     props.notify_state_change("fixed");
+    props.notify_type_change(null);
     color_menu = (
       <select
         class="custom-select"
@@ -48,6 +50,7 @@ export const ColorContainerComponent = (props) => {
     color_container = <input id="singleColorPicker" type="color"></input>;
   } else if (color_mode === "varied") {
     props.notify_state_change("varied");
+    props.notify_type_change(color_type);
     color_menu = (
       <>
         <label class="text-muted h5" for="colorMode">

@@ -19,13 +19,17 @@ export default class OlRenderer {
     projs.forEach((p) => proj4.defs(p, global.projections[p].proj4));
     register(proj4);
 
-    var myElement = document.createElement("div");
-    myElement.id = "ExportMap";
-    myElement.className = "custom-control";
-    var myControl = new Control({ element: myElement });
+    //Create export button
+    var exportButtonDiv = document.createElement("div");
+    exportButtonDiv.id = "ExportMap";
+    exportButtonDiv.className = "custom-control";
+    var exportButtonControl = new Control({ element: exportButtonDiv });
 
     this.map = new Map({
-      controls: defaultControls().extend([myControl, new FullScreen()]),
+      controls: defaultControls().extend([
+        exportButtonControl,
+        new FullScreen(),
+      ]),
       target: "Mapcontainer",
       layers: [
         new TileLayer({
@@ -44,7 +48,12 @@ export default class OlRenderer {
 
     this._extent_size = 10000000;
     this._scale_node_size = d3.scaleSqrt();
-    this._node_size_var = "degree";
+    this._node_var = {
+      color: "degree",
+      size: "degree",
+      text: "degree",
+      opacity: "degree",
+    };
     this._node_size_ratio = 100;
 
     this._scale_node_color = d3.scaleLinear();
@@ -56,6 +65,9 @@ export default class OlRenderer {
   fresh() {
     this.map.updateSize();
     this.map.render();
+  }
+  getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max));
   }
 
   nodeStyle(node, nstyle) {
@@ -70,27 +82,52 @@ export default class OlRenderer {
         }),
       });
     } else if (nstyle.color.mode === "varied") {
-      // Valeur entre 0 et 8 arrondi à l'entier inférieur
-      let color_index = Math.floor(
-        this._scale_node_color(+node.properties[this._node_size_var])
-      );
+      //If the type is quantitative, we affect to each node a color of the gradient (equal intervals discretization method)
+      if (nstyle.color.varied.type === "quantitative") {
+        // Valeur entre 0 et 8 arrondi à l'entier inférieur
+        let color_index = Math.floor(
+          this._scale_node_color(+node.properties[this._node_var.color])
+        );
 
-      let color_array = nstyle.color.varied.colors;
-      return new Style({
-        stroke: new Stroke({
-          color: "white",
-          width: 0,
-        }),
-        fill: new Fill({
-          color: color_array[color_index],
-        }),
-      });
+        let color_array = nstyle.color.varied.colors;
+        return new Style({
+          stroke: new Stroke({
+            color: "white",
+            width: 0,
+          }),
+          fill: new Fill({
+            color: color_array[color_index],
+          }),
+        });
+      }
+      //If it's qualitative, we just affect a random color of the palette to each node
+      else if (nstyle.color.varied.type === "qualitative") {
+        let color_array = nstyle.color.varied.colors;
+        return new Style({
+          stroke: new Stroke({
+            color: "white",
+            width: 0,
+          }),
+          fill: new Fill({
+            color: color_array[this.getRandomInt(7)],
+          }),
+        });
+      }
+    }
+  }
+
+  nodeSize(node, nstyle) {
+    if (nstyle.size.mode === "fixed") {
+      return nstyle.size.fixed;
+    } else if (nstyle.size.mode === "varied") {
+      var ns = this.nodeSizeScale.bind(this);
+      return ns(node);
     }
   }
 
   //For one node, this returns the corresponding value in the _node_scale scale, according to its degree
   nodeSizeScale(node) {
-    return this._scale_node_size(+node.properties[this._node_size_var]);
+    return this._scale_node_size(+node.properties[this._node_var.size]);
   }
 
   add_nodes(nodes, nstyle) {
@@ -120,21 +157,8 @@ export default class OlRenderer {
     ];
     this._extent_size = Math.min(xs[0] - xs[1], ys[0] - ys[1]);
 
-    // recherche du max pour l'échelle
-    let mval = d3.max(nodes, (n) => n.properties[this._node_size_var]);
-    let minval = d3.min(nodes, (n) => n.properties[this._node_size_var]);
-
-    // definition de l'échelle pour la taille
-    this._scale_node_size
-      .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
-      .domain([0, mval]);
+    this.update_nodes_scales(nodes);
     var ns = this.nodeSizeScale.bind(this);
-
-    //Définition de l'échelle pour les couleurs
-    this._scale_node_color
-      //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
-      .range([0, 7.99])
-      .domain([minval, mval]);
 
     // calcul des rayon et stockage des noeuds dans une hash
     proj_nodes = proj_nodes.map(function (n) {
@@ -173,7 +197,11 @@ export default class OlRenderer {
     this.map.getView().fit(boundingExtent(proj_nodes.map((co) => co.center)));
   }
   update_nodes(nodes, nstyle) {
-    console.log("up");
+    console.log("updating nodes");
+    //Update nodes_var with discretization variables
+    this.update_nodes_var(nstyle);
+    this.update_nodes_scales(nodes);
+
     var map = this.map;
     map.removeLayer(this.get_layer("nodes"));
     let proj_nodes = nodes.map(function (n) {
@@ -188,15 +216,16 @@ export default class OlRenderer {
       };
     });
     //Dealing with the size of the nodes
-    var ns = this.nodeSizeScale.bind(this);
+
     proj_nodes = proj_nodes.map(function (n) {
       return {
         center: n.center,
-        radius: ns(n),
+        radius: this.nodeSize(n, nstyle),
         properties: n.properties,
         id: n.id,
       };
-    });
+    }, this);
+
     this.proj_nodes = proj_nodes;
     this.proj_nodes_hash = {};
     proj_nodes.forEach((n) => (this.proj_nodes_hash[n.id] = n));
@@ -215,6 +244,51 @@ export default class OlRenderer {
       // style: this.nodeStyle(nstyle),
     });
     this.map.addLayer(nodesLayer);
+  }
+
+  update_nodes_var(nstyle) {
+    if (nstyle.color.mode === "varied") {
+      this._node_var.color = nstyle.color.varied.var;
+    }
+    if (nstyle.size.mode === "varied") {
+      this._node_var.size = nstyle.size.varied.var;
+      this._node_size_ratio = nstyle.size.varied.maxval;
+    }
+
+    this._node_var.text = nstyle.text.fixed;
+
+    if (nstyle.opacity.mode === "varied") {
+      this._node_var.opacity = nstyle.opacity.varied.var;
+    }
+  }
+  //Updates scales according to node_vars
+  update_nodes_scales(nodes) {
+    // recherche du max pour l'échelle des tailles
+    let max_size = d3.max(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.size])
+    );
+    let min_size = d3.min(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.size])
+    );
+
+    // definition de l'échelle pour la taille
+    this._scale_node_size
+      .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
+      .domain([min_size, max_size]);
+
+    //Pour l'échelle des couleurs
+    let max_col = d3.max(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.color])
+    );
+    let min_col = d3.min(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.color])
+    );
+
+    this._scale_node_color = d3
+      .scaleLinear()
+      //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
+      .range([0, 7.99])
+      .domain([min_col, max_col]);
   }
 
   linkStyle(lstyle) {
