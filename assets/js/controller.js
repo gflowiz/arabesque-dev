@@ -36,6 +36,10 @@ export default class Controller {
       .getElementById("buttonChangeLayernode")
       .addEventListener("click", this.show_nodes_semio.bind(this));
 
+    document
+      .getElementById("buttonChangeLayerlink")
+      .addEventListener("click", this.show_links_semio.bind(this));
+
     this.charts = [];
 
     console.log("controller1");
@@ -98,7 +102,6 @@ export default class Controller {
     let volume_id = document
       .getElementById("LinksImportVolume")
       .value.replace(/\"/g, "");
-    console.log(origin_id, dest_id, volume_id);
 
     this.model.set_links_varnames(origin_id, dest_id, volume_id);
     this.model.set_links_aggr(
@@ -115,6 +118,7 @@ export default class Controller {
       .catch(this.view.error_zip_file());
   }
   post_import_zip(res, filters, dimensions, groups, config) {
+    //Create filters
     for (let i = 0; i < filters.length; i++) {
       let f = new barChart(
         filters[i].id,
@@ -129,6 +133,11 @@ export default class Controller {
       f.chart(div);
       this.charts.push(f);
     }
+    //Updating styles
+    let nstyle = config.styles.nodes;
+    let lstyle = config.styles.links;
+    this.model.update_nodes_style(nstyle);
+
     this.view.import_end(
       res,
       this.model.get_nodes(),
@@ -184,29 +193,63 @@ export default class Controller {
   show_nodes_semio() {
     let nstyle = this.model.get_nodes_style();
     //We need them in the modal to be able to chose according to which property the color will vary
+    //We take the first line to be able to identify data types for each property
     let nodes_properties = this.model.data.nodes[0].properties;
 
+    //To open the semio modal
     this.view.update_nodes_semio(
       nstyle,
       nodes_properties,
+      //This is the callback function when the modal is closed
       this.save_nodes_semio.bind(this)
     );
-
-    // let validate_semio_button = document.getElementById("addSemioButtonNode");
-    // validate_semio_button.addEventListener("click",this.save_nodes_semio.bind(this));
   }
   save_nodes_semio(new_semio) {
-    console.log("save semio");
-    console.log(new_semio);
+    console.log("save nodes semio");
 
     //Update the model config
     this.model.update_nodes_style(new_semio);
 
-    //Re-render the nodes with new color
+    //Re-render the nodes with new style
     this.view.renderer.update_nodes(
       this.model.get_nodes(),
       this.model.get_nodes_style()
     );
+
+    //Re-render the links because the depend on nodes size
+    this.view.renderer.update_links(
+      this.model.get_links(),
+      this.model.get_links_style()
+    );
+  }
+  show_links_semio() {
+    console.log("show links semio");
+
+    let lstyle = this.model.get_links_style();
+    //We need them in the modal to be able to chose according to which property the color will vary
+    //We take the first line to be able to identify data types for each property
+    let links_properties = this.model.data.links[0];
+    console.log(links_properties);
+
+    //To open the semio modal
+    this.view.update_nodes_semio(
+      lstyle,
+      links_properties,
+      //This is the callback function when the modal is closed
+      this.save_links_semio.bind(this)
+    );
+  }
+  save_links_semio(new_semio) {
+    console.log("save link semio");
+    console.log(new_semio);
+    //Update the model config
+    this.model.update_links_style(new_semio);
+
+    this.view.renderer.update_links(
+      this.model.get_links(),
+      this.model.get_links_style()
+    );
+    $("#semioNodes").modal("toggle");
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

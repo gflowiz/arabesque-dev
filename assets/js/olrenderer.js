@@ -4,6 +4,7 @@ import FullScreen from "ol/control/FullScreen";
 import TileLayer from "ol/layer/Tile";
 import { Polygon, Circle } from "ol/geom.js";
 import { Fill, Stroke, Text, Style } from "ol/style.js";
+import CircleStyle from "ol/style/Circle";
 import { Tile, Vector as VectorLayer } from "ol/layer.js";
 import { OSM, Vector as VectorSource, XYZ } from "ol/source.js";
 import { transform } from "ol/proj";
@@ -47,7 +48,14 @@ export default class OlRenderer {
     });
 
     this._extent_size = 10000000;
-    this._scale_node_size = d3.scaleSqrt();
+    this._scale_types = { size: "Sqrt", opacity: "Linear" };
+    this._scales = {
+      Sqrt: d3.scaleSqrt(),
+      Pow: d3.scalePow(),
+      Log: d3.scaleLog(),
+      Linear: d3.scaleLinear(),
+    };
+
     this._node_var = {
       color: "degree",
       size: "degree",
@@ -57,6 +65,9 @@ export default class OlRenderer {
     this._node_size_ratio = 100;
 
     this._scale_node_color = d3.scaleLinear();
+    this._scale_node_size = d3.scaleLinear();
+    this._scale_node_opacity = d3.scaleLinear();
+    this._color_groups = {};
 
     this._scale_link_size = d3.scaleSqrt();
     this._link_size_ratio = 100;
@@ -69,18 +80,57 @@ export default class OlRenderer {
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
+  rgb_to_hex(color) {
+    let rgb = color
+      .slice(4, color.length - 2)
+      .replace(/\ /g, "")
+      .split(",")
+      .map((c) => {
+        let col = parseInt(c).toString(16);
+        if (col.length === 1) {
+          col = "0" + col;
+        }
+        return col;
+      });
 
+    return "#" + rgb[0] + rgb[1] + rgb[2];
+  }
+
+  add_opacity_to_color(color, opacity) {
+    if (color.startsWith("rgb")) {
+      color = this.rgb_to_hex(color);
+    }
+    let hex_opacity;
+    if (opacity == 0) {
+      hex_opacity = "00";
+    } else {
+      hex_opacity = Math.floor(opacity * 255).toString(16);
+    }
+
+    return color + hex_opacity;
+  }
   nodeStyle(node, nstyle) {
+    //OPACITY
+    let opacity;
+    if (nstyle.opacity.mode === "fixed") {
+      opacity = nstyle.opacity.fixed;
+    } else if (nstyle.opacity.mode === "varied") {
+      opacity = this.nodeOpacityScale(node);
+    }
+
+    //COLOR
     if (nstyle.color.mode === "fixed") {
-      return new Style({
+      let style = new Style({
         stroke: new Stroke({
-          color: "white",
+          color: "grey",
           width: 0,
         }),
         fill: new Fill({
-          color: nstyle.color.fixed,
+          color: this.add_opacity_to_color(nstyle.color.fixed, opacity),
         }),
       });
+
+      return style;
     } else if (nstyle.color.mode === "varied") {
       //If the type is quantitative, we affect to each node a color of the gradient (equal intervals discretization method)
       if (nstyle.color.varied.type === "quantitative") {
@@ -92,33 +142,78 @@ export default class OlRenderer {
         let color_array = nstyle.color.varied.colors;
         return new Style({
           stroke: new Stroke({
-            color: "white",
+            color: "grey",
             width: 0,
           }),
           fill: new Fill({
-            color: color_array[color_index],
+            color: this.add_opacity_to_color(color_array[color_index], opacity),
           }),
         });
       }
       //If it's qualitative, we just affect a random color of the palette to each node
       else if (nstyle.color.varied.type === "qualitative") {
         let color_array = nstyle.color.varied.colors;
+        let node_group = node.properties[this._node_var.color];
         return new Style({
           stroke: new Stroke({
-            color: "white",
+            color: "grey",
             width: 0,
           }),
           fill: new Fill({
-            color: color_array[this.getRandomInt(7)],
+            color: this.add_opacity_to_color(
+              color_array[this._color_groups[node_group]],
+              opacity
+            ),
           }),
         });
       }
     }
   }
+  nodeOpacity(node, nstyle) {
+    if (nstyle.opacity.mode === "fixed") {
+      return nstyle.opacity.fixed;
+    } else if (nstyle.opacity.mode === "varied") {
+      console.log(this.nodeOpacityScale(node));
+      return this.nodeOpacityScale(node);
+    }
+  }
+  nodeOpacityScale(node) {
+    return this._scale_node_opacity(+node.properties[this._node_var.opacity]);
+  }
+
+  //Creates color groups according to qualitative variable
+  create_color_groups(nodes, nstyle) {
+    this._color_groups = {};
+    let color_groups = {};
+    let indexes = [];
+
+    for (let node of nodes) {
+      //The property according to which the groups are formed
+      let prop = node.properties[this._node_var.color];
+      if (indexes.length === 0) {
+        color_groups[prop] = 0;
+        indexes.push(0);
+      } else {
+        if (color_groups[prop] === undefined) {
+          let last_index = indexes[indexes.length - 1];
+          if (last_index === 7) {
+            color_groups[prop] = 0;
+            indexes.push(0);
+          } else {
+            color_groups[prop] = last_index + 1;
+            indexes.push(last_index + 1);
+          }
+        }
+      }
+    }
+
+    this._color_groups = color_groups;
+  }
 
   nodeSize(node, nstyle) {
     if (nstyle.size.mode === "fixed") {
-      return nstyle.size.fixed;
+      //Arbitrary multiplication
+      return nstyle.size.fixed * (this._extent_size / 1000);
     } else if (nstyle.size.mode === "varied") {
       var ns = this.nodeSizeScale.bind(this);
       return ns(node);
@@ -131,6 +226,12 @@ export default class OlRenderer {
   }
 
   add_nodes(nodes, nstyle) {
+    console.log("adding nodes");
+
+    this.update_nodes_var(nstyle);
+    this.update_scale_types(nstyle);
+    this.update_nodes_scales(nodes);
+
     var map = this.map;
     // nettoyage
     this.map.removeLayer(this.get_layer("nodes"));
@@ -164,14 +265,19 @@ export default class OlRenderer {
     proj_nodes = proj_nodes.map(function (n) {
       return {
         center: n.center,
-        radius: ns(n),
+        radius: this.nodeSize(n, nstyle),
         properties: n.properties,
         id: n.id,
       };
-    });
+    }, this);
     this.proj_nodes = proj_nodes;
     this.proj_nodes_hash = {};
     proj_nodes.forEach((n) => (this.proj_nodes_hash[n.id] = n));
+
+    //Qualitative color grouping
+    if (nstyle.color.varied.type === "qualitative") {
+      this.create_color_groups(nodes, nstyle);
+    }
 
     // création des ronds
     let nodes_vector = new VectorSource({
@@ -200,6 +306,7 @@ export default class OlRenderer {
     console.log("updating nodes");
     //Update nodes_var with discretization variables
     this.update_nodes_var(nstyle);
+    this.update_scale_types(nstyle);
     this.update_nodes_scales(nodes);
 
     var map = this.map;
@@ -226,12 +333,19 @@ export default class OlRenderer {
       };
     }, this);
 
+    //Useful for qualitative color grouping
+    if (nstyle.color.varied.type === "qualitative") {
+      this.create_color_groups(nodes, nstyle);
+    }
+
     this.proj_nodes = proj_nodes;
     this.proj_nodes_hash = {};
     proj_nodes.forEach((n) => (this.proj_nodes_hash[n.id] = n));
     let nodes_vector = new VectorSource({
       features: proj_nodes.map((co) => {
-        let feature = new Feature(new Circle(co.center, co.radius));
+        let circle = new Circle(co.center, co.radius);
+
+        let feature = new Feature(circle);
         feature.setStyle(this.nodeStyle(co, nstyle));
         return feature;
       }),
@@ -241,11 +355,11 @@ export default class OlRenderer {
       name: "nodes",
       source: nodes_vector,
       renderMode: "image",
-      // style: this.nodeStyle(nstyle),
     });
     this.map.addLayer(nodesLayer);
   }
 
+  //Update the variables according to which the color, size, text and opacity will vary
   update_nodes_var(nstyle) {
     if (nstyle.color.mode === "varied") {
       this._node_var.color = nstyle.color.varied.var;
@@ -261,20 +375,16 @@ export default class OlRenderer {
       this._node_var.opacity = nstyle.opacity.varied.var;
     }
   }
-  //Updates scales according to node_vars
+  //Update size and opacity scale types (Linear,Pow etc)
+  update_scale_types(nstyle) {
+    this._scale_types.size = nstyle.size.varied.scale;
+    this._scale_types.opacity = nstyle.opacity.varied.scale;
+  }
+  //Updates scales for sizing elements according to node_var
   update_nodes_scales(nodes) {
-    // recherche du max pour l'échelle des tailles
-    let max_size = d3.max(nodes, (n) =>
-      parseFloat(n.properties[this._node_var.size])
-    );
-    let min_size = d3.min(nodes, (n) =>
-      parseFloat(n.properties[this._node_var.size])
-    );
+    console.log("update scales");
 
-    // definition de l'échelle pour la taille
-    this._scale_node_size
-      .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
-      .domain([min_size, max_size]);
+    //COLORS
 
     //Pour l'échelle des couleurs
     let max_col = d3.max(nodes, (n) =>
@@ -289,12 +399,135 @@ export default class OlRenderer {
       //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
       .range([0, 7.99])
       .domain([min_col, max_col]);
+
+    //SIZE
+
+    // recherche du max pour l'échelle des tailles
+    let max_size = d3.max(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.size])
+    );
+    let min_size = d3.min(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.size])
+    );
+
+    //OPACITY
+    let max_opa = d3.max(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.opacity])
+    );
+    let min_opa = d3.min(nodes, (n) =>
+      parseFloat(n.properties[this._node_var.opacity])
+    );
+
+    //If scale is logarithmic, the range musn't cross zero
+    if (
+      this._scale_types.size === "Log" ||
+      this._scale_types.opacity === "Log"
+    ) {
+      if (
+        this._scale_types.size === "Log" &&
+        this._scale_types.opacity !== "Log"
+      ) {
+        [min_size, max_size] = this.handle_log_scale_size_range(
+          min_size,
+          max_size
+        );
+      } else if (
+        this._scale_types.size !== "Log" &&
+        this._scale_types.opacity === "Log"
+      ) {
+        [min_opa, max_opa] = this.handle_log_scale_opacity_range(
+          min_opa,
+          max_opa
+        );
+      } else if (
+        this._scale_types.size === "Log" &&
+        this._scale_types.opacity === "Log"
+      ) {
+        [min_size, max_size] = this.handle_log_scale_size_range(
+          min_size,
+          max_size,
+          true
+        );
+        [min_opa, max_opa] = this.handle_log_scale_opacity_range(
+          min_opa,
+          max_opa
+        );
+      }
+    } else {
+      $("#semioNodes").modal("toggle");
+    }
+
+    // definition de l'échelle pour la taille
+    this._scale_node_size = this._scales[this._scale_types.size]
+      .copy()
+      .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
+      .domain([min_size, max_size]);
+
+    //Opacité
+    this._scale_node_opacity = this._scales[this._scale_types.opacity]
+      .copy()
+      .range([0, 1])
+      .domain([min_opa, max_opa]);
+  }
+
+  //If the range of a variable intersects zero, we block the rendering and keep the modal open
+  handle_log_scale_size_range(min_size, max_size, do_not_close = false) {
+    if (min_size == 0) {
+      if (max_size > 0) {
+        min_size = 0.01;
+      } else if ((max_size = 0)) {
+        max_size = 0.01;
+        min_size = 0.01;
+      }
+    }
+    if (max_size == 0) {
+      if (min_size < 0) {
+        max_size = -0.01;
+      } else if (min_size == 0) {
+        max_size = -0.01;
+        min_size = -0.01;
+      }
+    }
+    if (min_size < 0 && max_size > 0) {
+      alert(
+        "Size : Can't use logarithmic scale with this data (range must not intersect 0)"
+      );
+    } else {
+      if (do_not_close === false) $("#semioNodes").modal("toggle");
+    }
+    return [min_size, max_size];
+  }
+  handle_log_scale_opacity_range(min_opa, max_opa) {
+    if (min_opa == 0) {
+      if (max_opa > 0) {
+        min_opa = 0.01;
+      } else if ((max_opa = 0)) {
+        max_opa = 0.01;
+        min_opa = 0.01;
+      }
+    }
+    if (max_opa == 0) {
+      if (min_opa < 0) {
+        max_opa = -0.01;
+      } else if (min_opa == 0) {
+        max_opa = -0.01;
+        min_opa = -0.01;
+      }
+    }
+    if (min_opa < 0 && max_opa > 0) {
+      alert(
+        "Opacity : Can't use logarithmic scale with this data (range must not intersect 0"
+      );
+    } else {
+      $("#semioNodes").modal("toggle");
+    }
+    return [min_opa, max_opa];
   }
 
   linkStyle(lstyle) {
     return new Style({
       fill: new Fill({
-        color: "rgba(0,0,0,0.1)",
+        color: lstyle.color.fixed,
       }),
     });
   }

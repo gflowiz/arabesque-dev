@@ -170,11 +170,22 @@ export default class View {
   }
 
   update_nodes_semio(semio, nodes_properties, callback) {
-    console.log(semio);
     ReactDOM.render(
       <NodesSemioModalComponent
         semio={semio}
         nodes_properties={nodes_properties}
+        update_semio={(new_semio) => callback(new_semio)}
+      />,
+      document.getElementById("ModalSemioNodes")
+    );
+    // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal(semio);
+    $("#semioNodes").modal();
+  }
+  update_links_semio(semio, links_properties, callback) {
+    ReactDOM.render(
+      <NodesSemioModalComponent
+        semio={semio}
+        nodes_properties={links_properties}
         update_semio={(new_semio) => callback(new_semio)}
       />,
       document.getElementById("ModalSemioNodes")

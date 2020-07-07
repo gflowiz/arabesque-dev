@@ -23,6 +23,7 @@ export default class Model {
             "rgb(122, 1, 119)",
           ],
           inverted: false,
+          type: "quantitative",
         },
       },
       size: {
@@ -34,10 +35,10 @@ export default class Model {
       opacity: {
         mode: "fixed",
         fixed: 0.7,
-        varied: { var: "", scale: "Linear", min: 0, max: 1 },
+        varied: { var: "degree", scale: "Linear", min: 0, max: 1 },
       },
     };
-    let lstyle = {};
+    let lstyle = nstyle;
 
     this.config = {
       varnames: {},
@@ -74,6 +75,9 @@ export default class Model {
     return this.config.styles.nodes;
   }
   update_nodes_style(nstyle) {
+    this.config.styles.nodes = nstyle;
+  }
+  update_links_style(nstyle) {
     this.config.styles.nodes = nstyle;
   }
   get_links_style() {
@@ -427,7 +431,6 @@ export default class Model {
         let groups = dimensions.map((d) => d.group());
 
         console.log("Import end");
-        console.log(that.config);
         let res = {
           nb_nodes: that.data.nodes.length,
           nb_links: that.data.links.length,

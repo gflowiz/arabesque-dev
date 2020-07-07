@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 export const SizeContainerComponent = (props) => {
   let nodes_properties = props.nodes_properties;
-  let [size_mode, set_size_mode] = useState("fixed");
+  let [size_mode, set_size_mode] = useState(props.semio.size.mode);
 
   //Parses a string and returns NaN if it's not convertible into a float (stricter than parseFloat())
   function filter_float(value) {
@@ -25,10 +25,9 @@ export const SizeContainerComponent = (props) => {
             class="custom-select"
             id="semioSizeBaseTypeChangenode"
             onChange={(e) => set_size_mode(e.target.value)}
+            defaultValue={size_mode}
           >
-            <option selected="" value="fixed">
-              Fixed
-            </option>
+            <option value="fixed">Fixed</option>
             <option value="varied">Varied</option>
           </select>
         </div>
@@ -66,6 +65,7 @@ export const SizeContainerComponent = (props) => {
             class="custom-select"
             id="semioSizeBaseTypeChangenode"
             onChange={(e) => set_size_mode(e.target.value)}
+            defaultValue={size_mode}
           >
             <option value="fixed">Fixed</option>
             <option value="varied">Varied</option>
@@ -73,7 +73,11 @@ export const SizeContainerComponent = (props) => {
         </div>
         <div class="col-md-2">
           <label class="text-muted h5">Variable</label>
-          <select class="custom-select" id="semioSelectorSizeChangenode">
+          <select
+            class="custom-select"
+            id="semioSelectorSizeChangenode"
+            defaultValue={props.semio.size.varied.var}
+          >
             {/* We can iterate on the nodes properties to fill the select div  */}
             {Object.keys(nodes_properties)
               .filter((p) => {
@@ -87,7 +91,11 @@ export const SizeContainerComponent = (props) => {
         </div>
         <div id="semioSizeRatioCatChangenode" class="col-md-4">
           <label class="text-muted h5">Scale</label>
-          <select class="custom-select" id="typeSizeChangenode">
+          <select
+            class="custom-select"
+            id="typeSizeChangenode"
+            defaultValue={props.semio.size.varied.scale}
+          >
             <option value="Pow">Square</option>
             <option value="Sqrt">SquareRoot</option>
             <option value="Log">Logarithmic</option>

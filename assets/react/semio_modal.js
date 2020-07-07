@@ -8,7 +8,8 @@ export const NodesSemioModalComponent = (props) => {
   //Props is what you receive from parent component
   let nodes_properties = props.nodes_properties;
   let semio = props.semio;
-  //Works exactly like a class state
+  console.log(semio, nodes_properties);
+  //Keep track of the different modes in the modal (fixed/varied)
   let modes = {
     color: "fixed",
     color_type: null,
@@ -118,7 +119,8 @@ export const NodesSemioModalComponent = (props) => {
       };
     }
   }
-  //Extract color, size, text and opacity from the modal and send it back to view
+  //When the OK button is clicked, extract color, size, text and opacity from the modal
+  //and send it back to the controller via the view's callback function
   function save_and_close() {
     let ext_colors = extract_colors(semio);
 
@@ -136,7 +138,6 @@ export const NodesSemioModalComponent = (props) => {
     //Send new semio to controller
     props.update_semio(semio);
     //Close modal
-    $("#semioNodes").modal("toggle");
   }
 
   return (
@@ -163,6 +164,7 @@ export const NodesSemioModalComponent = (props) => {
               //Allow to notify if discretisation type is quantitative or qualitative
               notify_type_change={(newState) => (modes.color_type = newState)}
               nodes_properties={nodes_properties}
+              semio={semio}
             />
 
             <hr></hr>
@@ -186,6 +188,7 @@ export const NodesSemioModalComponent = (props) => {
                     <select
                       class="custom-select"
                       id="semioSelectorTextChangenode"
+                      defaultValue={semio.text.fixed}
                     >
                       {/* We can iterate on the nodes properties to fill the select div  */}
                       {Object.keys(nodes_properties).map((p) => (

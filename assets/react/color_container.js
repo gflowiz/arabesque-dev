@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import { color } from "d3";
 
 export const ColorContainerComponent = (props) => {
-  //Works exactly like a class state
-  let [color_mode, set_color_mode] = useState("fixed");
-  let [color_type, set_color_type] = useState("quantitative");
+  //Dynamically updates color mode and type
+  let [color_mode, set_color_mode] = useState(props.semio.color.mode);
+  let [color_type, set_color_type] = useState(props.semio.color.varied.type);
   let nodes_properties = props.nodes_properties;
-  console.log(props.nodes_properties);
+  console.log(color_mode, color_type);
 
   //Put a border when the ramp is clicked (or one of its children nodes)
   function selectColorRamp(e) {
@@ -35,6 +35,7 @@ export const ColorContainerComponent = (props) => {
   //Both color menu and container change according to the color mode (fixed or varied)
   let color_menu, color_container;
   if (color_mode === "fixed") {
+    //Notify SemioModalComponent of the changes
     props.notify_state_change("fixed");
     props.notify_type_change(null);
     color_menu = (
@@ -42,12 +43,19 @@ export const ColorContainerComponent = (props) => {
         class="custom-select"
         id="semioColor"
         onChange={(e) => set_color_mode(e.target.value)}
+        defaultValue={color_mode}
       >
         <option value="fixed">Constant</option>
         <option value="varied">Conditional</option>
       </select>
     );
-    color_container = <input id="singleColorPicker" type="color"></input>;
+    color_container = (
+      <input
+        id="singleColorPicker"
+        type="color"
+        defaultValue={props.semio.color.fixed}
+      ></input>
+    );
   } else if (color_mode === "varied") {
     props.notify_state_change("varied");
     props.notify_type_change(color_type);
@@ -60,21 +68,25 @@ export const ColorContainerComponent = (props) => {
           class="custom-select"
           id="colorMode"
           onChange={(e) => set_color_mode(e.target.value)}
+          defaultValue={color_mode}
         >
           <option value="fixed">Constant</option>
-          <option value="varied" selected>
-            Conditional
-          </option>
+          <option value="varied">Conditional</option>
         </select>
 
         <label class="text-muted h5" for="colorVariable">
           Variable
         </label>
-        <select class="custom-select" id="colorVariable">
+        <select
+          class="custom-select"
+          id="colorVariable"
+          defaultValue={props.semio.color.varied.var}
+        >
           {/* We can iterate on the nodes properties to fill the select div  */}
           {Object.keys(nodes_properties)
             .filter((p) => {
-              //Checking if the property is a number
+              //If we are in quantitative type of discretization, we don't want string
+              //<option> and vice-versa
               if (color_type === "quantitative") {
                 return isNaN(filter_float(nodes_properties[p])) === false;
               } else if (color_type === "qualitative") {
@@ -96,10 +108,9 @@ export const ColorContainerComponent = (props) => {
             console.log(e.target.value);
             set_color_type(e.target.value);
           }}
+          defaultValue={color_type}
         >
-          <option value="quantitative" selected>
-            Quantitative
-          </option>
+          <option value="quantitative">Quantitative</option>
           <option value="qualitative">Qualitative</option>
         </select>
 
@@ -108,6 +119,7 @@ export const ColorContainerComponent = (props) => {
             class="form-check-input position-static"
             type="checkbox"
             id="inversedColorPalette"
+            defaultChecked={props.semio.color.varied.inverted}
           ></input>
           <div class="form-check-label text-muted h6"> Inverse</div>
         </div>

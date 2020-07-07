@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 
 export const OpacityContainerComponent = (props) => {
+  //Getting props from parent
   let nodes_properties = props.nodes_properties;
-  let [opacity_mode, set_opacity_mode] = useState("fixed");
+  let [opacity_mode, set_opacity_mode] = useState(props.semio.opacity.mode);
 
   //Parses a string and returns NaN if it's not convertible into a float (stricter than parseFloat())
   function filter_float(value) {
@@ -25,10 +26,9 @@ export const OpacityContainerComponent = (props) => {
             class="custom-select"
             id="semioOpaBaseTypeChangenode"
             onChange={(e) => set_opacity_mode(e.target.value)}
+            defaultValue={opacity_mode}
           >
-            <option selected="" value="fixed">
-              Fixed
-            </option>
+            <option value="fixed">Fixed</option>
             <option value="varied">Varied</option>
           </select>
         </div>
@@ -59,6 +59,7 @@ export const OpacityContainerComponent = (props) => {
             class="custom-select"
             id="semioOpaBaseTypeChangenode"
             onChange={(e) => set_opacity_mode(e.target.value)}
+            defaultValue={opacity_mode}
           >
             <option selected="" value="fixed">
               Fixed
@@ -68,7 +69,11 @@ export const OpacityContainerComponent = (props) => {
         </div>
         <div class="col-md-2">
           <label class="text-muted h5">Variable</label>
-          <select class="custom-select" id="semioSelectorOpaChangenode">
+          <select
+            class="custom-select"
+            id="semioSelectorOpaChangenode"
+            defaultValue={props.semio.color.varied.var}
+          >
             {/* We can iterate on the nodes properties to fill the select div  */}
             {Object.keys(nodes_properties)
               .filter((p) => {
@@ -82,7 +87,11 @@ export const OpacityContainerComponent = (props) => {
         </div>
         <div id="semioOpaRatioCatChangenode" class="col-md-3">
           <label class="text-muted h5">Scale</label>
-          <select class="custom-select" id="typeOpaChangenode">
+          <select
+            class="custom-select"
+            id="typeOpaChangenode"
+            defaultValue={props.semio.opacity.varied.scale}
+          >
             <option value="Linear">Linear</option>
             <option value="Pow">Square</option>
             <option value="Sqrt">SquareRoot</option>
