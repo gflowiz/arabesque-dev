@@ -206,6 +206,7 @@ export default class Controller {
   }
   save_nodes_semio(new_semio) {
     console.log("save nodes semio");
+    console.log(new_semio);
 
     //Update the model config
     this.model.update_nodes_style(new_semio);
@@ -215,12 +216,10 @@ export default class Controller {
       this.model.get_nodes(),
       this.model.get_nodes_style()
     );
-
+    let lstyle = this.model.get_links_style();
+    console.log(this.model.get_links_style());
     //Re-render the links because the depend on nodes size
-    this.view.renderer.update_links(
-      this.model.get_links(),
-      this.model.get_links_style()
-    );
+    this.view.renderer.update_links(this.model.get_links(), lstyle);
   }
   show_links_semio() {
     console.log("show links semio");
@@ -232,7 +231,7 @@ export default class Controller {
     console.log(links_properties);
 
     //To open the semio modal
-    this.view.update_nodes_semio(
+    this.view.update_links_semio(
       lstyle,
       links_properties,
       //This is the callback function when the modal is closed
@@ -249,7 +248,6 @@ export default class Controller {
       this.model.get_links(),
       this.model.get_links_style()
     );
-    $("#semioNodes").modal("toggle");
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

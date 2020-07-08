@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { NodesSemioModalComponent } from "../react/semio_modal";
+import { NodesSemioModalComponent } from "../react/nodes_semio/node_semio_modal";
+import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal";
 
 export default class View {
   constructor(renderer) {
@@ -182,15 +183,16 @@ export default class View {
     $("#semioNodes").modal();
   }
   update_links_semio(semio, links_properties, callback) {
+    console.log("updatelinkssemio2");
     ReactDOM.render(
-      <NodesSemioModalComponent
+      <LinksSemioModalComponent
         semio={semio}
-        nodes_properties={links_properties}
+        links_properties={links_properties}
         update_semio={(new_semio) => callback(new_semio)}
       />,
-      document.getElementById("ModalSemioNodes")
+      document.getElementById("ModalSemioLinks")
     );
     // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal(semio);
-    $("#semioNodes").modal();
+    $("#semioLinks").modal();
   }
 }

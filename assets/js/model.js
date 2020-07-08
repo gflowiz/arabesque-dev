@@ -34,11 +34,40 @@ export default class Model {
       text: { fixed: "none" },
       opacity: {
         mode: "fixed",
+        fixed: 0.91,
+        varied: { var: "degree", scale: "Linear", min: 0, max: 1 },
+      },
+    };
+    let lstyle = {
+      color: {
+        mode: "fixed",
+        fixed: "#F6C270",
+        varied: {
+          colors: [
+            "rgb(255, 247, 243)",
+            "rgb(253, 224, 221)",
+            "rgb(252, 197, 192)",
+            "rgb(250, 159, 181)",
+            "rgb(247, 104, 161)",
+            "rgb(221, 52, 151)",
+            "rgb(174, 1, 126)",
+            "rgb(122, 1, 119)",
+          ],
+          inverted: false,
+          type: "quantitative",
+        },
+      },
+      size: {
+        mode: "varied",
+        varied: { var: "degree", scale: "Sqrt", maxval: 100 },
+        fixed: 10,
+      },
+      opacity: {
+        mode: "fixed",
         fixed: 0.7,
         varied: { var: "degree", scale: "Linear", min: 0, max: 1 },
       },
     };
-    let lstyle = nstyle;
 
     this.config = {
       varnames: {},
@@ -77,8 +106,8 @@ export default class Model {
   update_nodes_style(nstyle) {
     this.config.styles.nodes = nstyle;
   }
-  update_links_style(nstyle) {
-    this.config.styles.nodes = nstyle;
+  update_links_style(lstyle) {
+    this.config.styles.links = lstyle;
   }
   get_links_style() {
     return this.config.styles.links;

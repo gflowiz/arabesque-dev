@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-import { ColorContainerComponent } from "./color_container";
-import { SizeContainerComponent } from "./size_container";
-import { OpacityContainerComponent } from "./opacity_container";
+import { ColorContainerComponent } from "./node_color_container";
+import { SizeContainerComponent } from "./node_size_container";
+import { OpacityContainerComponent } from "./node_opacity_container";
 
 export const NodesSemioModalComponent = (props) => {
   //Props is what you receive from parent component

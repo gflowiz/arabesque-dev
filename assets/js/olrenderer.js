@@ -48,7 +48,7 @@ export default class OlRenderer {
     });
 
     this._extent_size = 10000000;
-    this._scale_types = { size: "Sqrt", opacity: "Linear" };
+    this._node_scale_types = { size: "Sqrt", opacity: "Linear" };
     this._scales = {
       Sqrt: d3.scaleSqrt(),
       Pow: d3.scalePow(),
@@ -67,10 +67,20 @@ export default class OlRenderer {
     this._scale_node_color = d3.scaleLinear();
     this._scale_node_size = d3.scaleLinear();
     this._scale_node_opacity = d3.scaleLinear();
-    this._color_groups = {};
+    this._node_color_groups = {};
 
+    this._link_var = {
+      color: "degree",
+      size: "degree",
+      opacity: "degree",
+    };
+    this._link_scale_types = { size: "Sqrt", opacity: "Linear" };
     this._scale_link_size = d3.scaleSqrt();
     this._link_size_ratio = 100;
+    this._scale_link_color = d3.scaleLinear();
+    this._scale_link_size = d3.scaleLinear();
+    this._scale_link_opacity = d3.scaleLinear();
+    this._link_color_groups = {};
   }
 
   fresh() {
@@ -82,7 +92,7 @@ export default class OlRenderer {
   }
   rgb_to_hex(color) {
     let rgb = color
-      .slice(4, color.length - 2)
+      .slice(4, color.length - 1)
       .replace(/\ /g, "")
       .split(",")
       .map((c) => {
@@ -182,7 +192,7 @@ export default class OlRenderer {
   }
 
   //Creates color groups according to qualitative variable
-  create_color_groups(nodes, nstyle) {
+  create_node_color_groups(nodes, nstyle) {
     this._color_groups = {};
     let color_groups = {};
     let indexes = [];
@@ -207,7 +217,7 @@ export default class OlRenderer {
       }
     }
 
-    this._color_groups = color_groups;
+    this._node_color_groups = color_groups;
   }
 
   nodeSize(node, nstyle) {
@@ -229,8 +239,7 @@ export default class OlRenderer {
     console.log("adding nodes");
 
     this.update_nodes_var(nstyle);
-    this.update_scale_types(nstyle);
-    this.update_nodes_scales(nodes);
+    this.update_node_scales_types(nstyle);
 
     var map = this.map;
     // nettoyage
@@ -258,7 +267,7 @@ export default class OlRenderer {
     ];
     this._extent_size = Math.min(xs[0] - xs[1], ys[0] - ys[1]);
 
-    this.update_nodes_scales(nodes);
+    this.update_nodes_scales(nodes, nstyle);
     var ns = this.nodeSizeScale.bind(this);
 
     // calcul des rayon et stockage des noeuds dans une hash
@@ -276,7 +285,7 @@ export default class OlRenderer {
 
     //Qualitative color grouping
     if (nstyle.color.varied.type === "qualitative") {
-      this.create_color_groups(nodes, nstyle);
+      this.create_node_color_groups(nodes, nstyle);
     }
 
     // création des ronds
@@ -306,8 +315,8 @@ export default class OlRenderer {
     console.log("updating nodes");
     //Update nodes_var with discretization variables
     this.update_nodes_var(nstyle);
-    this.update_scale_types(nstyle);
-    this.update_nodes_scales(nodes);
+    this.update_node_scales_types(nstyle);
+    this.update_nodes_scales(nodes, nstyle);
 
     var map = this.map;
     map.removeLayer(this.get_layer("nodes"));
@@ -335,7 +344,7 @@ export default class OlRenderer {
 
     //Useful for qualitative color grouping
     if (nstyle.color.varied.type === "qualitative") {
-      this.create_color_groups(nodes, nstyle);
+      this.create_node_color_groups(nodes, nstyle);
     }
 
     this.proj_nodes = proj_nodes;
@@ -376,12 +385,12 @@ export default class OlRenderer {
     }
   }
   //Update size and opacity scale types (Linear,Pow etc)
-  update_scale_types(nstyle) {
-    this._scale_types.size = nstyle.size.varied.scale;
-    this._scale_types.opacity = nstyle.opacity.varied.scale;
+  update_node_scales_types(nstyle) {
+    this._node_scale_types.size = nstyle.size.varied.scale;
+    this._node_scale_types.opacity = nstyle.opacity.varied.scale;
   }
   //Updates scales for sizing elements according to node_var
-  update_nodes_scales(nodes) {
+  update_nodes_scales(nodes, nstyle) {
     console.log("update scales");
 
     //COLORS
@@ -420,58 +429,78 @@ export default class OlRenderer {
 
     //If scale is logarithmic, the range musn't cross zero
     if (
-      this._scale_types.size === "Log" ||
-      this._scale_types.opacity === "Log"
+      this._node_scale_types.size === "Log" ||
+      this._node_scale_types.opacity === "Log"
     ) {
       if (
-        this._scale_types.size === "Log" &&
-        this._scale_types.opacity !== "Log"
-      ) {
-        [min_size, max_size] = this.handle_log_scale_size_range(
-          min_size,
-          max_size
-        );
-      } else if (
-        this._scale_types.size !== "Log" &&
-        this._scale_types.opacity === "Log"
-      ) {
-        [min_opa, max_opa] = this.handle_log_scale_opacity_range(
-          min_opa,
-          max_opa
-        );
-      } else if (
-        this._scale_types.size === "Log" &&
-        this._scale_types.opacity === "Log"
+        this._node_scale_types.size === "Log" &&
+        this._node_scale_types.opacity !== "Log"
       ) {
         [min_size, max_size] = this.handle_log_scale_size_range(
           min_size,
           max_size,
-          true
+          false,
+          "#semioNodes"
+        );
+      } else if (
+        this._node_scale_types.size !== "Log" &&
+        this._node_scale_types.opacity === "Log"
+      ) {
+        [min_opa, max_opa] = this.handle_log_scale_opacity_range(
+          min_opa,
+          max_opa,
+          false,
+          "#semioNodes"
+        );
+      } else if (
+        this._node_scale_types.size === "Log" &&
+        this._node_scale_types.opacity === "Log"
+      ) {
+        [min_size, max_size] = this.handle_log_scale_size_range(
+          min_size,
+          max_size,
+          true,
+          "#semioNodes"
         );
         [min_opa, max_opa] = this.handle_log_scale_opacity_range(
           min_opa,
-          max_opa
+          max_opa,
+          false,
+          "#semioNodes"
         );
       }
     } else {
-      $("#semioNodes").modal("toggle");
+      $("#semioNodes").modal("hide");
     }
 
     // definition de l'échelle pour la taille
-    this._scale_node_size = this._scales[this._scale_types.size]
+    this._scale_node_size = this._scales[this._node_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
       .domain([min_size, max_size]);
 
     //Opacité
-    this._scale_node_opacity = this._scales[this._scale_types.opacity]
+    this._scale_node_opacity = this._scales[this._node_scale_types.opacity]
       .copy()
-      .range([0, 1])
+      .range([
+        parseFloat(nstyle.opacity.varied.min),
+        parseFloat(nstyle.opacity.varied.max),
+      ])
       .domain([min_opa, max_opa]);
+
+    console.log(
+      nstyle.opacity.varied.min,
+      parseFloat(nstyle.opacity.varied.max)
+    );
   }
 
   //If the range of a variable intersects zero, we block the rendering and keep the modal open
-  handle_log_scale_size_range(min_size, max_size, do_not_close = false) {
+  handle_log_scale_size_range(
+    min_size,
+    max_size,
+    do_not_close = false,
+    modal_id
+  ) {
     if (min_size == 0) {
       if (max_size > 0) {
         min_size = 0.01;
@@ -493,11 +522,12 @@ export default class OlRenderer {
         "Size : Can't use logarithmic scale with this data (range must not intersect 0)"
       );
     } else {
-      if (do_not_close === false) $("#semioNodes").modal("toggle");
+      console.log(do_not_close);
+      if (do_not_close === false) $(modal_id).modal("hide");
     }
     return [min_size, max_size];
   }
-  handle_log_scale_opacity_range(min_opa, max_opa) {
+  handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
     if (min_opa == 0) {
       if (max_opa > 0) {
         min_opa = 0.01;
@@ -519,20 +549,223 @@ export default class OlRenderer {
         "Opacity : Can't use logarithmic scale with this data (range must not intersect 0"
       );
     } else {
-      $("#semioNodes").modal("toggle");
+      $(modal_id).modal("toggle");
     }
     return [min_opa, max_opa];
   }
 
-  linkStyle(lstyle) {
-    return new Style({
-      fill: new Fill({
-        color: lstyle.color.fixed,
-      }),
-    });
+  //Creates color groups according to qualitative variable
+  create_link_color_groups(links) {
+    this._color_groups = {};
+    let color_groups = {};
+    let indexes = [];
+
+    for (let link of links) {
+      //The property according to which the groups are formed
+      let prop = link.value;
+      if (indexes.length === 0) {
+        color_groups[prop] = 0;
+        indexes.push(0);
+      } else {
+        if (color_groups[prop] === undefined) {
+          let last_index = indexes[indexes.length - 1];
+          if (last_index === 7) {
+            color_groups[prop] = 0;
+            indexes.push(0);
+          } else {
+            color_groups[prop] = last_index + 1;
+            indexes.push(last_index + 1);
+          }
+        }
+      }
+    }
+
+    this._link_color_groups = color_groups;
+  }
+
+  linkStyle(link, lstyle) {
+    //OPACITY
+    let opacity;
+    if (lstyle.opacity.mode === "fixed") {
+      opacity = lstyle.opacity.fixed;
+    } else if (lstyle.opacity.mode === "varied") {
+      opacity = this.linkOpacityScale(link);
+    }
+    console.log(opacity);
+
+    //COLOR
+
+    if (lstyle.color.mode === "fixed") {
+      return new Style({
+        fill: new Fill({
+          color: this.add_opacity_to_color(lstyle.color.fixed, opacity),
+        }),
+      });
+    } else if (lstyle.color.mode === "varied") {
+      //If the type is quantitative, we affect to each node a color of the gradient (equal intervals discretization method)
+      if (lstyle.color.varied.type === "quantitative") {
+        // Valeur entre 0 et 8 arrondi à l'entier inférieur
+        let color_index = Math.floor(this._scale_link_color(link.value));
+
+        let color_array = lstyle.color.varied.colors;
+
+        return new Style({
+          // stroke: new Stroke({
+          //   color: "grey",
+          //   width: 0,
+          // }),
+          fill: new Fill({
+            color: this.add_opacity_to_color(color_array[color_index], opacity),
+          }),
+        });
+      }
+      //If it's qualitative, we just affect a random color of the palette to each node
+      else if (lstyle.color.varied.type === "qualitative") {
+        let color_array = lstyle.color.varied.colors;
+        let link_group = link.value;
+        return new Style({
+          // stroke: new Stroke({
+          //   color: "grey",
+          //   width: 0,
+          // }),
+          fill: new Fill({
+            color: this.add_opacity_to_color(
+              color_array[this._link_color_groups[link_group]],
+              opacity
+            ),
+          }),
+        });
+      }
+    }
+  }
+
+  linkOpacityScale(link) {
+    return this._scale_link_opacity(+link.value);
+  }
+  //Update the variables according to which the color, size, text and opacity will vary
+  update_links_var(lstyle) {
+    if (lstyle.color.mode === "varied") {
+      this._link_var.color = lstyle.color.varied.var;
+    }
+    if (lstyle.size.mode === "varied") {
+      this._link_var.size = lstyle.size.varied.var;
+      this._link_size_ratio = lstyle.size.varied.maxval;
+    }
+
+    if (lstyle.opacity.mode === "varied") {
+      this._link_var.opacity = lstyle.opacity.varied.var;
+    }
+  }
+  update_link_scales_types(lstyle) {
+    this._link_scale_types.size = lstyle.size.varied.scale;
+    this._link_scale_types.opacity = lstyle.opacity.varied.scale;
+  }
+  //Updates scales for sizing elements according to link_var
+  update_links_scales(links, lstyle) {
+    console.log("update links scales");
+
+    console.log(this._link_var);
+    console.log(links);
+    console.log(this._link_scale_types);
+
+    //COLORS
+
+    //Pour l'échelle des couleurs
+    let max_count = d3.max(links, (n) => parseFloat(n.value));
+    let min_count = d3.min(links, (n) => parseFloat(n.value));
+
+    let [min_count_size, max_count_size] = [min_count, max_count];
+    let [min_count_opa, max_count_opa] = [min_count, max_count];
+
+    this._scale_link_color = d3
+      .scaleLinear()
+      //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
+      .range([0, 7.99])
+      .domain([min_count, max_count]);
+
+    //SIZE
+
+    // recherche du max pour l'échelle des tailles
+    // let max_size = d3.max(links, (n) => parseFloat(n[this._link_var.size]));
+    // let min_size = d3.min(links, (n) => parseFloat(n[this._link_var.size]));
+    // console.log("size:" + min_size + " " + max_size);
+
+    //OPACITY
+    // let max_opa = d3.max(links, (n) => parseFloat(n[this._link_var.opacity]));
+    // let min_opa = d3.min(links, (n) => parseFloat(n[this._link_var.opacity]));
+    // console.log("opa :" + min_opa + " " + max_opa);
+
+    //If scale is logarithmic, the range musn't cross zero
+    if (
+      this._link_scale_types.size === "Log" ||
+      this._link_scale_types.opacity === "Log"
+    ) {
+      if (
+        this._link_scale_types.size === "Log" &&
+        this._link_scale_types.opacity !== "Log"
+      ) {
+        [min_count_size, max_count_size] = this.handle_log_scale_size_range(
+          min_count,
+          max_count,
+          false,
+          "#semioLinks"
+        );
+      } else if (
+        this._link_scale_types.size !== "Log" &&
+        this._link_scale_types.opacity === "Log"
+      ) {
+        [min_count_opa, max_count_opa] = this.handle_log_scale_opacity_range(
+          min_count,
+          max_count,
+          false,
+          "#semioLinks"
+        );
+      } else if (
+        this._link_scale_types.size === "Log" &&
+        this._link_scale_types.opacity === "Log"
+      ) {
+        [min_count_size, max_count_size] = this.handle_log_scale_size_range(
+          min_count,
+          max_count,
+          true,
+          "#semioLinks"
+        );
+        [min_count_opa, max_count_opa] = this.handle_log_scale_opacity_range(
+          min_count,
+          max_count,
+          false,
+          "#semioLinks"
+        );
+      }
+    } else {
+      console.log("in else");
+      $("#semioLinks").modal("hide");
+    }
+
+    // definition de l'échelle pour la taille
+    this._scale_link_size = this._scales[this._link_scale_types.size]
+      .copy()
+      .range([0, (this._extent_size / 100) * (this._link_size_ratio / 100)])
+      .domain([min_count_size, max_count_size]);
+
+    //Opacité
+    this._scale_link_opacity = this._scales[this._link_scale_types.opacity]
+      .copy()
+      .range([lstyle.opacity.varied.min, lstyle.opacity.varied.max])
+      .domain([min_count_opa, max_count_opa]);
+    console.log("opa :" + min_count + " " + max_count);
   }
 
   add_links(links, lstyle) {
+    this.update_links_var(lstyle);
+    this.update_link_scales_types(lstyle);
+    this.update_links_scales(links, lstyle);
+
+    //Useful for qualitative color grouping
+    if (lstyle.color.varied.type === "qualitative") {
+      this.create_link_color_groups(links);
+    }
+
     this.map.removeLayer(this.get_layer("links"));
 
     let style = {
@@ -560,7 +793,12 @@ export default class OlRenderer {
       return arrow;
     });
 
-    let links_shapes = arrow.map((a) => new Feature(new Polygon([a])));
+    let links_shapes = arrow.map((a) => {
+      let polygon = new Polygon([a]);
+      let feature = new Feature(polygon);
+      feature.setStyle(this.linkStyle(a, lstyle));
+      return feature;
+    }, this);
 
     this.links = new VectorSource({
       features: links_shapes,
@@ -568,13 +806,28 @@ export default class OlRenderer {
     this.linksLayer = new VectorLayer({
       name: "links",
       source: this.links,
-      style: this.linkStyle(lstyle),
+      // style: this.linkStyle(lstyle),
       renderMode: "image",
     });
     this.map.addLayer(this.linksLayer);
   }
 
   update_links(links, lstyle) {
+    console.log("update links with lstyle :");
+    console.log(lstyle);
+
+    //Update the discretization variable
+    this.update_links_var(lstyle);
+    //Update scale types for size and opacity (linear, pow etc)
+    this.update_link_scales_types(lstyle);
+    //update the actual scales
+    this.update_links_scales(links, lstyle);
+
+    //Useful for qualitative color grouping
+    if (lstyle.color.varied.type === "qualitative") {
+      this.create_link_color_groups(links);
+    }
+
     this.map.removeLayer(this.get_layer("links"));
 
     let style = {
@@ -598,7 +851,14 @@ export default class OlRenderer {
       return arrow;
     });
 
-    let links_shapes = arrow.map((a) => new Feature(new Polygon([a])));
+    let links_shapes = arrow.map((a) => {
+      let polygon = new Polygon([a]);
+      let feature = new Feature(polygon);
+      let link_index = arrow.indexOf(a);
+      let link = links[link_index];
+      feature.setStyle(this.linkStyle(link, lstyle));
+      return feature;
+    }, this);
 
     let links_vector = new VectorSource({
       features: links_shapes,
@@ -606,7 +866,7 @@ export default class OlRenderer {
     let linksLayer = new VectorLayer({
       name: "links",
       source: links_vector,
-      style: this.linkStyle(lstyle),
+      // style: this.linkStyle(lstyle),
       renderMode: "image",
     });
     this.map.addLayer(linksLayer);
