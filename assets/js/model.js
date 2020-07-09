@@ -67,6 +67,12 @@ export default class Model {
         fixed: 0.7,
         varied: { var: "degree", scale: "Linear", min: 0, max: 1 },
       },
+      shape: {
+        orientation: "oriented",
+        type: "StraightArrow",
+        arrow_head: { height: 0.5, width: 0.5 },
+        arrow_curve: { height: 0.5, center: 0.5 },
+      },
     };
 
     this.config = {

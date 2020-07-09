@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { NodesSemioModalComponent } from "../react/nodes_semio/node_semio_modal";
 import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal";
+import { LinksShapeModalComponent } from "../react/links_shape_semio";
 
 export default class View {
   constructor(renderer) {
@@ -192,7 +193,17 @@ export default class View {
       />,
       document.getElementById("ModalSemioLinks")
     );
-    // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal(semio);
+
     $("#semioLinks").modal();
+  }
+  update_links_shape(lstyle, callback) {
+    console.log("update link shapes");
+    ReactDOM.render(
+      <LinksShapeModalComponent
+        semio={lstyle}
+        update_shape={(new_semio) => callback(new_semio)}
+      />,
+      document.getElementById("ModalShapeLinks")
+    );
   }
 }

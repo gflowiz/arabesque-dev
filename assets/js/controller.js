@@ -39,7 +39,9 @@ export default class Controller {
     document
       .getElementById("buttonChangeLayerlink")
       .addEventListener("click", this.show_links_semio.bind(this));
-
+    document
+      .getElementById("buttonChangeGeoLayerlink")
+      .addEventListener("click", this.show_links_shape.bind(this));
     this.charts = [];
 
     console.log("controller1");
@@ -248,6 +250,16 @@ export default class Controller {
       this.model.get_links(),
       this.model.get_links_style()
     );
+  }
+  show_links_shape() {
+    let lstyle = this.model.get_links_style();
+    this.view.update_links_shape(lstyle, this.save_links_shape.bind(this));
+  }
+  save_links_shape(new_semio) {
+    this.model.update_links_style(new_semio);
+    let links = this.model.get_links();
+    this.view.renderer.update_links(links, new_semio);
+    $("#changeGeometryModal").modal("hide");
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

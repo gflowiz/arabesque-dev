@@ -13,6 +13,7 @@ import { boundingExtent } from "ol/extent";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { get as getProjection } from "ol/proj";
+import smooth from "chaikin-smooth";
 
 export default class OlRenderer {
   constructor(divid) {
@@ -171,7 +172,7 @@ export default class OlRenderer {
           }),
           fill: new Fill({
             color: this.add_opacity_to_color(
-              color_array[this._color_groups[node_group]],
+              color_array[this._node_color_groups[node_group]],
               opacity
             ),
           }),
@@ -183,7 +184,6 @@ export default class OlRenderer {
     if (nstyle.opacity.mode === "fixed") {
       return nstyle.opacity.fixed;
     } else if (nstyle.opacity.mode === "varied") {
-      console.log(this.nodeOpacityScale(node));
       return this.nodeOpacityScale(node);
     }
   }
@@ -487,11 +487,6 @@ export default class OlRenderer {
         parseFloat(nstyle.opacity.varied.max),
       ])
       .domain([min_opa, max_opa]);
-
-    console.log(
-      nstyle.opacity.varied.min,
-      parseFloat(nstyle.opacity.varied.max)
-    );
   }
 
   //If the range of a variable intersects zero, we block the rendering and keep the modal open
@@ -522,7 +517,6 @@ export default class OlRenderer {
         "Size : Can't use logarithmic scale with this data (range must not intersect 0)"
       );
     } else {
-      console.log(do_not_close);
       if (do_not_close === false) $(modal_id).modal("hide");
     }
     return [min_size, max_size];
@@ -591,7 +585,6 @@ export default class OlRenderer {
     } else if (lstyle.opacity.mode === "varied") {
       opacity = this.linkOpacityScale(link);
     }
-    console.log(opacity);
 
     //COLOR
 
@@ -638,6 +631,13 @@ export default class OlRenderer {
       }
     }
   }
+  linkSize(link, lstyle) {
+    if (lstyle.size.mode === "fixed") {
+      return lstyle.size.fixed * (this._extent_size / 1000);
+    } else if (lstyle.size.mode === "varied") {
+      return this._scale_link_size(link.value);
+    }
+  }
 
   linkOpacityScale(link) {
     return this._scale_link_opacity(+link.value);
@@ -663,10 +663,6 @@ export default class OlRenderer {
   //Updates scales for sizing elements according to link_var
   update_links_scales(links, lstyle) {
     console.log("update links scales");
-
-    console.log(this._link_var);
-    console.log(links);
-    console.log(this._link_scale_types);
 
     //COLORS
 
@@ -738,7 +734,6 @@ export default class OlRenderer {
         );
       }
     } else {
-      console.log("in else");
       $("#semioLinks").modal("hide");
     }
 
@@ -753,7 +748,145 @@ export default class OlRenderer {
       .copy()
       .range([lstyle.opacity.varied.min, lstyle.opacity.varied.max])
       .domain([min_count_opa, max_count_opa]);
-    console.log("opa :" + min_count + " " + max_count);
+  }
+
+  create_arrows(links, lstyle) {
+    var nodes_hash = this.proj_nodes_hash;
+    let orientation = lstyle.shape.orientation;
+    let shape_type = lstyle.shape.type;
+    console.log(orientation, shape_type);
+
+    let style = {
+      geometry: {
+        head: {
+          height: lstyle.shape.arrow_head.height,
+          width: lstyle.shape.arrow_head.width,
+        },
+        curve: {
+          height: lstyle.shape.arrow_curve.height,
+          center: lstyle.shape.arrow_curve.center,
+        },
+      },
+      ratioBounds: 0.9,
+    };
+
+    if (orientation === "oriented" && shape_type === "StraightArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = orientedStraightArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      return arrows;
+    } else if (orientation === "noOriented" && shape_type === "StraightArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = noOrientedStraightArrow(
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+
+      return arrows;
+    } else if (
+      orientation === "oriented" &&
+      shape_type === "StraightNoHookArrow"
+    ) {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = orientedStraightNoHookArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      return arrows;
+    } else if (orientation === "oriented" && shape_type === "TriangleArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = orientedTriangleArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      return arrows;
+    } else if (orientation === "oriented" && shape_type === "CurveArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = orientedCurveArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      return arrows;
+    } else if (orientation === "oriented" && shape_type === "CurveOneArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = orientedCurveOneArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      return arrows;
+    } else if (orientation === "noOriented" && shape_type === "CurveArrow") {
+      let arrows = links.map(function (l) {
+        let from = l.key.split("->")[0];
+        let to = l.key.split("->")[1];
+        let width = this.linkSize(l, lstyle);
+        let arrow = noOrientedCurveArrow(
+          style,
+          nodes_hash[from].center,
+          nodes_hash[to].center,
+          nodes_hash[from].radius,
+          nodes_hash[to].radius,
+          width
+        );
+        return arrow;
+      }, this);
+      console.log(arrows);
+      return arrows;
+    }
   }
 
   add_links(links, lstyle) {
@@ -768,32 +901,14 @@ export default class OlRenderer {
 
     this.map.removeLayer(this.get_layer("links"));
 
-    let style = {
-      geometry: { head: { height: 0.3, width: 0.5 } },
-      ratioBounds: 0.9,
-    };
     let mval = d3.max(links, (l) => l.value);
     this._scale_link_size
       .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
       .domain([0, mval]);
-    var link_size = this._scale_link_size;
-    var nodes_hash = this.proj_nodes_hash;
-    let arrow = links.map(function (l) {
-      let from = l.key.split("->")[0];
-      let to = l.key.split("->")[1];
-      let width = link_size(l.value);
-      let arrow = orientedStraightArrow(
-        style,
-        nodes_hash[from].center,
-        nodes_hash[to].center,
-        nodes_hash[from].radius,
-        nodes_hash[to].radius,
-        width
-      );
-      return arrow;
-    });
 
-    let links_shapes = arrow.map((a) => {
+    let arrows = this.create_arrows(links, lstyle);
+
+    let links_shapes = arrows.map((a) => {
       let polygon = new Polygon([a]);
       let feature = new Feature(polygon);
       feature.setStyle(this.linkStyle(a, lstyle));
@@ -830,31 +945,12 @@ export default class OlRenderer {
 
     this.map.removeLayer(this.get_layer("links"));
 
-    let style = {
-      geometry: { head: { height: 0.3, width: 0.5 } },
-      ratioBounds: 0.9,
-    };
-    var link_size = this._scale_link_size;
-    var nodes_hash = this.proj_nodes_hash;
-    let arrow = links.map(function (l) {
-      let from = l.key.split("->")[0];
-      let to = l.key.split("->")[1];
-      let width = link_size(l.value);
-      let arrow = orientedStraightArrow(
-        style,
-        nodes_hash[from].center,
-        nodes_hash[to].center,
-        nodes_hash[from].radius,
-        nodes_hash[to].radius,
-        width
-      );
-      return arrow;
-    });
+    let arrows = this.create_arrows(links, lstyle);
 
-    let links_shapes = arrow.map((a) => {
+    let links_shapes = arrows.map((a) => {
       let polygon = new Polygon([a]);
       let feature = new Feature(polygon);
-      let link_index = arrow.indexOf(a);
+      let link_index = arrows.indexOf(a);
       let link = links[link_index];
       feature.setStyle(this.linkStyle(link, lstyle));
       return feature;
@@ -932,6 +1028,26 @@ function getIntersection(ori, dest, radius) {
 
   return [Math.cos(angle) * radius + startX, Math.sin(angle) * radius + startY];
 }
+function transposePointVerticalyFromLine(point_ori, linePoints, distance) {
+  var startX = linePoints[0][0];
+  var startY = linePoints[0][1];
+  var endX = linePoints[1][0];
+  var endY = linePoints[1][1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+  return [
+    Math.sin(angle) * distance + point_ori[0],
+    -Math.cos(angle) * distance + point_ori[1],
+  ];
+}
+
+function drawLine(path, iteration) {
+  var numIterations = iteration;
+  while (numIterations > 0) {
+    path = smooth(path);
+    numIterations--;
+  }
+  return path;
+}
 
 // create a simple arrow with en triangle head at a given ratio of the distance
 function orientedStraightArrow(style, ori, dest, rad_ori, rad_dest, width) {
@@ -977,4 +1093,406 @@ function orientedStraightArrow(style, ori, dest, rad_ori, rad_dest, width) {
     polyPoint[0],
     baseArrow[0],
   ];
+}
+
+// create a simple arrow with en triangle head at a given ratio of the distance
+function noOrientedStraightArrow(ori, dest, rad_ori, rad_dest, width) {
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+
+  var baseArrow = tranposeLine(reducePointOri, reducePointdest, width / 2);
+  var topArrow = tranposeLine(reducePointdest, reducePointOri, width / 2);
+
+  return baseArrow.concat(topArrow).concat([baseArrow[0]]);
+}
+
+function orientedStraightNoHookArrow(
+  style,
+  ori,
+  dest,
+  rad_ori,
+  rad_dest,
+  width
+) {
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+
+  var heigth_arrow = style.geometry.head.height;
+  var widthArrow = style.geometry.head.width;
+
+  var dist = Math.sqrt(
+    (reducePointdest[0] - reducePointOri[0]) *
+      (reducePointdest[0] - reducePointOri[0]) +
+      (reducePointdest[1] - reducePointOri[1]) *
+        (reducePointdest[1] - reducePointOri[1])
+  );
+  var baseArrow = tranposeLine(
+    reducePointOri,
+    reducePointdest,
+    2.5 * style.ratioBounds
+  );
+
+  // var percentDist = heigth_arrow * Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY))
+  //distance = Math.sqrt( (endX - startX)*(endX - startX )+ (endY - startY)*(endY - startY) ) * ratio_Arrow_Line;
+
+  // var heigth_arrow = Math.min(heigth_arrow *width + width , 0.5* dist)
+  //
+  var testWidth = Math.min(heigth_arrow * width + width, 0.5 * dist);
+  // topArrowpoint = [Math.cos(angle) * distance + startX, Math.sin(angle) * distance + startY]
+  var topArrowpoint = getIntersection(baseArrow[1], baseArrow[0], testWidth);
+  var polyPoint = tranposeLine(baseArrow[0], topArrowpoint, width);
+
+  // topArrowpoint = transposePointVerticalyFromLine(topArrowpoint, [baseArrow[0], baseArrow[1]], width + widthArrow * width )
+
+  return [baseArrow[0], baseArrow[1], polyPoint[1], polyPoint[0], baseArrow[0]];
+}
+
+function orientedTriangleArrow(style, ori, dest, rad_ori, rad_dest, width) {
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+
+  var heigth_arrow = 0.5;
+  // var widthArrow = style.geometry.head.width;
+
+  var dist = Math.sqrt(
+    (reducePointdest[0] - reducePointOri[0]) *
+      (reducePointdest[0] - reducePointOri[0]) +
+      (reducePointdest[1] - reducePointOri[1]) *
+        (reducePointdest[1] - reducePointOri[1])
+  );
+  var baseArrow = tranposeLine(
+    reducePointOri,
+    reducePointdest,
+    style.ratioBounds / 2
+  );
+
+  // var percentDist = heigth_arrow * Math.sqrt((endX - startX) * (endX - startX) + (endY - startY) * (endY - startY))
+  //distance = Math.sqrt( (endX - startX)*(endX - startX )+ (endY - startY)*(endY - startY) ) * ratio_Arrow_Line;
+
+  // var heigth_arrow = Math.min(heigth_arrow *width + width , 0.5* dist)
+
+  var testWidth = Math.min(heigth_arrow * width + width, dist);
+  // topArrowpoint = [Math.cos(angle) * distance + startX, Math.sin(angle) * distance + startY]
+  var topArrowpoint = getIntersection(
+    reducePointdest,
+    reducePointOri,
+    testWidth
+  );
+  var polyPoint = tranposeLine(baseArrow[0], topArrowpoint, width);
+
+  // topArrowpoint = transposePointVerticalyFromLine(topArrowpoint, [baseArrow[0], baseArrow[1]], width + widthArrow * width )
+
+  return [baseArrow[0], baseArrow[1], polyPoint[0], baseArrow[0]];
+}
+
+function orientedCurveArrow(style, ori, dest, rad_ori, rad_dest, width) {
+  var base_curve = style.geometry.curve.center;
+  var height_curve = style.geometry.curve.height;
+  var heigth_arrow = style.geometry.head.height;
+  var widthArrow = style.geometry.head.width;
+
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  // compute the point from
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+
+  var dist =
+    base_curve *
+    Math.sqrt(
+      (reducePointdest[0] - reducePointOri[0]) *
+        (reducePointdest[0] - reducePointOri[0]) +
+        (reducePointdest[1] - reducePointOri[1]) *
+          (reducePointdest[1] - reducePointOri[1])
+    );
+  var base_curve_point = [
+    -Math.cos(angle) * dist + reducePointdest[0],
+    -Math.sin(angle) * dist + reducePointdest[1],
+  ];
+
+  // get Origin from the radius of the current nodes
+  var center_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist
+  );
+  var max_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist + width / 2
+  );
+  var min_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist - width / 2
+  );
+  var newOri = getIntersection(ori, center_curve_point, rad_ori);
+  var heigth_arrow = Math.min(heigth_arrow * width + width, 0.5 * dist);
+  var newDest = getIntersection(
+    dest,
+    center_curve_point,
+    rad_dest + heigth_arrow
+  ); // The height of the arrow is added tested to see the result
+  var pointArrow = getIntersection(dest, center_curve_point, rad_dest);
+  //Compute the base
+  var angleFirst = Math.atan2(
+    center_curve_point[1] - ori[1],
+    center_curve_point[0] - ori[0]
+  );
+  var angleSecond = Math.atan2(
+    center_curve_point[1] - dest[1],
+    center_curve_point[0] - dest[0]
+  );
+  var extremPointArrow = [
+    transposePointVerticalyFromLine(
+      newDest,
+      [newDest, center_curve_point],
+      width / 2 + widthArrow * (width / 2)
+    ),
+    transposePointVerticalyFromLine(
+      newDest,
+      [newDest, center_curve_point],
+      -(width / 2 + (widthArrow * width) / 2)
+    ),
+  ];
+
+  newOri = [
+    transposePointVerticalyFromLine(
+      newOri,
+      [newOri, center_curve_point],
+      width / 2
+    ),
+    transposePointVerticalyFromLine(
+      newOri,
+      [newOri, center_curve_point],
+      -width / 2
+    ),
+  ];
+  newDest = [
+    transposePointVerticalyFromLine(
+      newDest,
+      [newDest, center_curve_point],
+      width / 2
+    ),
+    transposePointVerticalyFromLine(
+      newDest,
+      [newDest, center_curve_point],
+      -width / 2
+    ),
+  ];
+
+  var pathLow = [newOri[1], min_curve_point, newDest[0]];
+  var pathHigh = [newDest[1], max_curve_point, newOri[0]];
+  // draw the curve line
+  pathLow = drawLine(pathLow, 5);
+  pathHigh = drawLine(pathHigh, 5);
+
+  //draw the arrow .concat([extremPointArrow[1]]).concat([pointArrow]).concat([extremPointArrow[0]])
+
+  var Polygone = pathLow
+    .concat([extremPointArrow[0]])
+    .concat([pointArrow])
+    .concat([extremPointArrow[1]])
+    .concat(pathHigh)
+    .concat([pathLow[0]]);
+  return Polygone;
+}
+
+function orientedCurveOneArrow(style, ori, dest, rad_ori, rad_dest, width) {
+  var base_curve = style.geometry.curve.center;
+  var height_curve = style.geometry.curve.height;
+  var heigth_arrow = style.geometry.head.height;
+  var widthArrow = style.geometry.head.width;
+
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  // compute the point from
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+  var dist =
+    base_curve *
+    Math.sqrt(
+      (reducePointdest[0] - reducePointOri[0]) *
+        (reducePointdest[0] - reducePointOri[0]) +
+        (reducePointdest[1] - reducePointOri[1]) *
+          (reducePointdest[1] - reducePointOri[1])
+    );
+  var base_curve_point = [
+    -Math.cos(angle) * dist + reducePointdest[0],
+    -Math.sin(angle) * dist + reducePointdest[1],
+  ];
+  // get Origin from the radius of the current nodes
+  var center_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist
+  );
+  var max_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist + width / 2
+  );
+  var min_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist - width / 2
+  );
+  var newOri = getIntersection(ori, center_curve_point, rad_ori);
+  // var heigth_arrow = Math.min(heigth_arrow *width + width , 0.5* dist)
+  var newDest = getIntersection(dest, center_curve_point, rad_dest); // The height of the arrow is added tested to see the result
+  var pointArrow = getIntersection(dest, center_curve_point, rad_dest);
+  //Compute the base
+  var angleFirst = Math.atan2(
+    center_curve_point[1] - ori[1],
+    center_curve_point[0] - ori[0]
+  );
+  var angleSecond = Math.atan2(
+    center_curve_point[1] - dest[1],
+    center_curve_point[0] - dest[0]
+  );
+  // var extremPointArrow = [transposePointVerticalyFromLine(newDest, [newDest,center_curve_point], width /2 +widthArrow * (width /2)), transposePointVerticalyFromLine(newDest, [newDest,center_curve_point], -(width /2 +(widthArrow *width/2))) ]
+
+  newOri = [
+    transposePointVerticalyFromLine(
+      newOri,
+      [newOri, center_curve_point],
+      width
+    ),
+    transposePointVerticalyFromLine(
+      newOri,
+      [newOri, center_curve_point],
+      -width
+    ),
+  ];
+  // newDest = [transposePointVerticalyFromLine(newDest, [newDest,center_curve_point], width/2), transposePointVerticalyFromLine(newDest, [newDest,center_curve_point], - width/2) ]
+
+  var pathLow = [newOri[1], min_curve_point, pointArrow];
+  var pathHigh = [pointArrow, max_curve_point, newOri[0]];
+  // draw the curve line
+  pathLow = drawLine(pathLow, 5);
+  pathHigh = drawLine(pathHigh, 5);
+
+  //draw the arrow .concat([extremPointArrow[1]]).concat([pointArrow]).concat([extremPointArrow[0]])
+
+  var Polygone = pathHigh.concat(pathLow);
+  return Polygone;
+}
+
+function noOrientedCurveArrow(style, ori, dest, rad_ori, rad_dest, width) {
+  var base_curve = style.geometry.curve.center;
+  var height_curve = style.geometry.curve.height;
+
+  var startX = ori[0];
+  var startY = ori[1];
+  var endX = dest[0];
+  var endY = dest[1];
+  var angle = Math.atan2(endY - startY, endX - startX);
+
+  // compute the point from
+  var reducePointdest = getIntersection(dest, ori, rad_dest);
+  var reducePointOri = getIntersection(ori, dest, rad_ori);
+
+  var dist =
+    base_curve *
+    Math.sqrt(
+      (reducePointdest[0] - reducePointOri[0]) *
+        (reducePointdest[0] - reducePointOri[0]) +
+        (reducePointdest[1] - reducePointOri[1]) *
+          (reducePointdest[1] - reducePointOri[1])
+    );
+  var base_curve_point = [
+    -Math.cos(angle) * dist + reducePointdest[0],
+    -Math.sin(angle) * dist + reducePointdest[1],
+  ];
+
+  // get Origin from the radius of the current nodes
+  var center_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist
+  );
+  var max_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist + width / 2
+  );
+  var min_curve_point = transposePointVerticalyFromLine(
+    base_curve_point,
+    [ori, dest],
+    height_curve * dist - width / 2
+  );
+  var newOri = getIntersection(ori, center_curve_point, rad_ori);
+  var newDest = getIntersection(dest, center_curve_point, rad_dest); // The height of the arrow is added tested to see the result
+  // var pointArrow = getIntersection(dest,center_curve_point,rad_dest)
+  //Compute the base
+  var angleFirst = Math.atan2(
+    center_curve_point[1] - ori[1],
+    center_curve_point[0] - ori[0]
+  );
+  var angleSecond = Math.atan2(
+    center_curve_point[1] - dest[1],
+    center_curve_point[0] - dest[0]
+  );
+  // var extremPointArrow = [transposePointVerticalyFromLine(newDest, [dest,center_curve_point], width /2 ), transposePointVerticalyFromLine(newDest, [dest,center_curve_point], -(width /2)) ]
+  newOri = [
+    transposePointVerticalyFromLine(
+      newOri,
+      [ori, center_curve_point],
+      width / 2
+    ),
+    transposePointVerticalyFromLine(
+      newOri,
+      [ori, center_curve_point],
+      -width / 2
+    ),
+  ];
+  newDest = [
+    transposePointVerticalyFromLine(
+      newDest,
+      [dest, center_curve_point],
+      width / 2
+    ),
+    transposePointVerticalyFromLine(
+      newDest,
+      [dest, center_curve_point],
+      -width / 2
+    ),
+  ];
+
+  var pathLow = [newOri[1], min_curve_point, newDest[0]];
+  var pathHigh = [newDest[1], max_curve_point, newOri[0]];
+  // draw the curve line
+  pathLow = drawLine(pathLow, 5);
+  pathHigh = drawLine(pathHigh, 5);
+
+  //draw the arrow .concat([extremPointArrow[1]]).concat([pointArrow]).concat([extremPointArrow[0]])
+
+  var Polygone = pathLow.concat(pathHigh).concat([pathLow[0]]);
+  return Polygone;
 }
