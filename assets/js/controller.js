@@ -42,6 +42,10 @@ export default class Controller {
     document
       .getElementById("buttonChangeGeoLayerlink")
       .addEventListener("click", this.show_links_shape.bind(this));
+    document
+      .getElementById("legendButton")
+      .addEventListener("click", this.show_legend.bind(this));
+
     this.charts = [];
 
     console.log("controller1");
@@ -222,6 +226,8 @@ export default class Controller {
     console.log(this.model.get_links_style());
     //Re-render the links because the depend on nodes size
     this.view.renderer.update_links(this.model.get_links(), lstyle);
+
+    this.show_legend();
   }
   show_links_semio() {
     console.log("show links semio");
@@ -250,6 +256,7 @@ export default class Controller {
       this.model.get_links(),
       this.model.get_links_style()
     );
+    this.show_legend();
   }
   show_links_shape() {
     let lstyle = this.model.get_links_style();
@@ -260,6 +267,13 @@ export default class Controller {
     let links = this.model.get_links();
     this.view.renderer.update_links(links, new_semio);
     $("#changeGeometryModal").modal("hide");
+  }
+  show_legend() {
+    let nstyle = this.model.get_nodes_style();
+    let lstyle = this.model.get_links_style();
+    let nodes = this.model.get_nodes();
+    let links = this.model.get_links();
+    this.view.show_legend(nodes, nstyle, links, lstyle);
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

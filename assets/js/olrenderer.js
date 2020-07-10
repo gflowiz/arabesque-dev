@@ -2,11 +2,12 @@ import { Map, View, Feature } from "ol";
 import { defaults as defaultControls, Control } from "ol/control";
 import FullScreen from "ol/control/FullScreen";
 import TileLayer from "ol/layer/Tile";
-import { Polygon, Circle } from "ol/geom.js";
-import { Fill, Stroke, Text, Style } from "ol/style.js";
+import { Polygon, Circle, Point } from "ol/geom.js";
+import { Fill, Stroke, Text, Style, RegularShape } from "ol/style.js";
 import CircleStyle from "ol/style/Circle";
 import { Tile, Vector as VectorLayer } from "ol/layer.js";
 import { OSM, Vector as VectorSource, XYZ } from "ol/source.js";
+import Legend from "ol-ext/control/Legend";
 import { transform } from "ol/proj";
 import * as d3 from "d3";
 import { boundingExtent } from "ol/extent";
@@ -27,10 +28,24 @@ export default class OlRenderer {
     exportButtonDiv.className = "custom-control";
     var exportButtonControl = new Control({ element: exportButtonDiv });
 
+    var legendDiv = document.createElement("div");
+    legendDiv.id = "legendButton";
+    legendDiv.className = "custom-control";
+    var legendButtonControl = new Control({ element: legendDiv });
+
+    // Define a new legend
+    var legend = new Legend({
+      title: "Legend",
+      // style: new Style({ fill: new Fill({ color: "blue" }) }),
+      element: legendDiv,
+      collapsed: false,
+    });
+
     this.map = new Map({
       controls: defaultControls().extend([
         exportButtonControl,
         new FullScreen(),
+        legendButtonControl,
       ]),
       target: "Mapcontainer",
       layers: [
@@ -47,6 +62,7 @@ export default class OlRenderer {
         multiWorld: false,
       }),
     });
+    console.log(this.map);
 
     this._extent_size = 10000000;
     this._node_scale_types = { size: "Sqrt", opacity: "Linear" };
@@ -82,6 +98,48 @@ export default class OlRenderer {
     this._scale_link_size = d3.scaleLinear();
     this._scale_link_opacity = d3.scaleLinear();
     this._link_color_groups = {};
+  }
+
+  // Style function
+  getFeatureStyle(feature) {
+    var st = [];
+    // Shadow style
+    st.push(
+      new ol.style.Style({
+        image: new ol.style.Shadow({
+          radius: 15,
+        }),
+      })
+    );
+    var st1 = [];
+    // Font style
+    st.push(
+      new ol.style.Style({
+        image: new ol.style.FontSymbol({
+          form: "marker",
+          glyph: "fa-car",
+          radius: 15,
+          offsetY: -15,
+          fontSize: 0.7,
+          color: "#fff",
+          fill: new ol.style.Fill({
+            color: "blue",
+          }),
+          stroke: new ol.style.Stroke({
+            color: "#fff",
+            width: 2,
+          }),
+        }),
+        stroke: new ol.style.Stroke({
+          width: 5,
+          color: "#f00",
+        }),
+        fill: new ol.style.Fill({
+          color: [255, 0, 0, 0.6],
+        }),
+      })
+    );
+    return st;
   }
 
   fresh() {
@@ -124,9 +182,9 @@ export default class OlRenderer {
     //OPACITY
     let opacity;
     if (nstyle.opacity.mode === "fixed") {
-      opacity = nstyle.opacity.fixed;
+      opacity = Math.round(nstyle.opacity.fixed * 100) / 100;
     } else if (nstyle.opacity.mode === "varied") {
-      opacity = this.nodeOpacityScale(node);
+      opacity = Math.round(this.nodeOpacityScale(node) * 100) / 100;
     }
 
     //COLOR
@@ -188,6 +246,7 @@ export default class OlRenderer {
     }
   }
   nodeOpacityScale(node) {
+    //We need to round the number
     return this._scale_node_opacity(+node.properties[this._node_var.opacity]);
   }
 
@@ -543,7 +602,7 @@ export default class OlRenderer {
         "Opacity : Can't use logarithmic scale with this data (range must not intersect 0"
       );
     } else {
-      $(modal_id).modal("toggle");
+      $(modal_id).modal("hide");
     }
     return [min_opa, max_opa];
   }
@@ -578,12 +637,12 @@ export default class OlRenderer {
   }
 
   linkStyle(link, lstyle) {
-    //OPACITY
+    //OPACITY (we need to have rounded numbers)
     let opacity;
     if (lstyle.opacity.mode === "fixed") {
-      opacity = lstyle.opacity.fixed;
+      opacity = Math.round(lstyle.opacity.fixed * 100) / 100;
     } else if (lstyle.opacity.mode === "varied") {
-      opacity = this.linkOpacityScale(link);
+      opacity = Math.round(this.linkOpacityScale(link) * 100) / 100;
     }
 
     //COLOR
@@ -616,6 +675,7 @@ export default class OlRenderer {
       else if (lstyle.color.varied.type === "qualitative") {
         let color_array = lstyle.color.varied.colors;
         let link_group = link.value;
+        color_array[this._link_color_groups[link_group]];
         return new Style({
           // stroke: new Stroke({
           //   color: "grey",
@@ -678,6 +738,7 @@ export default class OlRenderer {
       //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
       .range([0, 7.99])
       .domain([min_count, max_count]);
+    console.log(min_count, max_count);
 
     //SIZE
 
@@ -713,7 +774,6 @@ export default class OlRenderer {
         [min_count_opa, max_count_opa] = this.handle_log_scale_opacity_range(
           min_count,
           max_count,
-          false,
           "#semioLinks"
         );
       } else if (
@@ -729,7 +789,6 @@ export default class OlRenderer {
         [min_count_opa, max_count_opa] = this.handle_log_scale_opacity_range(
           min_count,
           max_count,
-          false,
           "#semioLinks"
         );
       }
@@ -884,7 +943,7 @@ export default class OlRenderer {
         );
         return arrow;
       }, this);
-      console.log(arrows);
+
       return arrows;
     }
   }
@@ -911,7 +970,9 @@ export default class OlRenderer {
     let links_shapes = arrows.map((a) => {
       let polygon = new Polygon([a]);
       let feature = new Feature(polygon);
-      feature.setStyle(this.linkStyle(a, lstyle));
+      let link_index = arrows.indexOf(a);
+      let link = links[link_index];
+      feature.setStyle(this.linkStyle(link, lstyle));
       return feature;
     }, this);
 
