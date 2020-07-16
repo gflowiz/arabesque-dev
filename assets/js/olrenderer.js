@@ -62,7 +62,6 @@ export default class OlRenderer {
         multiWorld: false,
       }),
     });
-    console.log(this.map);
 
     this._extent_size = 10000000;
     this._node_scale_types = { size: "Sqrt", opacity: "Linear" };
@@ -174,6 +173,9 @@ export default class OlRenderer {
       hex_opacity = "00";
     } else {
       hex_opacity = Math.floor(opacity * 255).toString(16);
+      if (hex_opacity.length === 1) {
+        hex_opacity = "0" + hex_opacity;
+      }
     }
 
     return color + hex_opacity;
@@ -185,6 +187,10 @@ export default class OlRenderer {
       opacity = Math.round(nstyle.opacity.fixed * 100) / 100;
     } else if (nstyle.opacity.mode === "varied") {
       opacity = Math.round(this.nodeOpacityScale(node) * 100) / 100;
+      //As log(0) = -Infinity, we affect zero in this case
+      if (opacity === -Infinity) {
+        opacity = 0;
+      }
     }
 
     //COLOR
@@ -247,7 +253,9 @@ export default class OlRenderer {
   }
   nodeOpacityScale(node) {
     //We need to round the number
-    return this._scale_node_opacity(+node.properties[this._node_var.opacity]);
+    var node_value = node.properties[this._node_var.opacity];
+
+    return this._scale_node_opacity(node_value);
   }
 
   //Creates color groups according to qualitative variable
@@ -508,7 +516,6 @@ export default class OlRenderer {
         [min_opa, max_opa] = this.handle_log_scale_opacity_range(
           min_opa,
           max_opa,
-          false,
           "#semioNodes"
         );
       } else if (
@@ -521,10 +528,12 @@ export default class OlRenderer {
           true,
           "#semioNodes"
         );
+        if ([min_size, max_size] === false) {
+          return;
+        }
         [min_opa, max_opa] = this.handle_log_scale_opacity_range(
           min_opa,
           max_opa,
-          false,
           "#semioNodes"
         );
       }
@@ -575,6 +584,7 @@ export default class OlRenderer {
       alert(
         "Size : Can't use logarithmic scale with this data (range must not intersect 0)"
       );
+      return false;
     } else {
       if (do_not_close === false) $(modal_id).modal("hide");
     }
@@ -643,6 +653,9 @@ export default class OlRenderer {
       opacity = Math.round(lstyle.opacity.fixed * 100) / 100;
     } else if (lstyle.opacity.mode === "varied") {
       opacity = Math.round(this.linkOpacityScale(link) * 100) / 100;
+      if (opacity === -Infinity) {
+        opacity = 0;
+      }
     }
 
     //COLOR
@@ -738,7 +751,6 @@ export default class OlRenderer {
       //Nombre de couleurs (7.99 car ayant 8 couleurs, l'indice finale ne doit pas dépasser 7)
       .range([0, 7.99])
       .domain([min_count, max_count]);
-    console.log(min_count, max_count);
 
     //SIZE
 
@@ -811,9 +823,9 @@ export default class OlRenderer {
 
   create_arrows(links, lstyle) {
     var nodes_hash = this.proj_nodes_hash;
+    console.log(nodes_hash);
     let orientation = lstyle.shape.orientation;
     let shape_type = lstyle.shape.type;
-    console.log(orientation, shape_type);
 
     let style = {
       geometry: {

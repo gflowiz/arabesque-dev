@@ -6,9 +6,8 @@ export const LegendComponent = (props) => {
   let linksColorMode = props.lstyle.color.mode;
   let linksSizeMode = props.lstyle.size.mode;
   let important_values = extract_important_values();
-  console.log(important_values);
-  console.log(nodesColorMode, nodesSizeMode, linksColorMode, linksSizeMode);
-
+  console.log(props.nodes_hash);
+  //Defining and filling the different containers of the legend
   let [
     nodesColorDiv,
     nodesSizeDiv,
@@ -16,6 +15,20 @@ export const LegendComponent = (props) => {
     linksSizeDiv,
   ] = set_containers_style();
 
+  //Round values and transform them into exponential notation if they are too long
+  //(to prevent legend displaying problems)
+  function round_and_shorten(number) {
+    let rounded = Math.round(number * 10) / 10;
+
+    let nb_digits = String(rounded).replace(".", "").length;
+
+    if (nb_digits > 5) {
+      return rounded.toExponential(1);
+    }
+    return rounded;
+  }
+
+  //Extract useful values for the legend (max, min)
   function extract_important_values() {
     let node_size_var = props.nstyle.size.varied.var;
     let node_color_var = props.nstyle.color.varied.var;
@@ -23,31 +36,88 @@ export const LegendComponent = (props) => {
     //Getting min and max of links and nodes data so we can display it in the legend
 
     //First we look at the color variable
-    let min_node_color_data = parseFloat(
-      d3.min(props.nodes.map((n) => n.properties[node_color_var]))
+
+    let min_node_color_data = round_and_shorten(
+      d3.min(
+        props.nodes
+          .filter((n) => parseFloat(n.properties[node_color_var]) !== NaN)
+          .map((n) => parseFloat(n.properties[node_color_var]))
+      )
     );
-    let max_node_color_data = parseFloat(
-      d3.max(props.nodes.map((n) => n.properties[node_color_var]))
+
+    let max_node_color_data = round_and_shorten(
+      d3.max(
+        props.nodes
+          .filter((n) => parseFloat(n.properties[node_color_var]) !== NaN)
+          .map((n) => parseFloat(n.properties[node_color_var]))
+      )
     );
 
     //Then at the size variable
-    let min_node_size_data = parseFloat(
-      d3.min(props.nodes.map((n) => n.properties[node_size_var]))
+    let min_node_size_data = round_and_shorten(
+      parseFloat(
+        d3.min(
+          props.nodes
+            .filter((n) => parseFloat(n.properties[node_size_var]) !== NaN)
+            .map((n) => parseFloat(n.properties[node_size_var]))
+        )
+      )
     );
-    let max_node_size_data = parseFloat(
-      d3.max(props.nodes.map((n) => n.properties[node_size_var]))
+    let max_node_size_data = round_and_shorten(
+      parseFloat(
+        d3.max(
+          props.nodes
+            .filter((n) => parseFloat(n.properties[node_size_var]) !== NaN)
+            .map((n) => parseFloat(n.properties[node_size_var]))
+        )
+      )
+    );
+
+    let mid_node_size_data = round_and_shorten(
+      parseFloat(
+        d3.median(
+          props.nodes
+            .filter((n) => parseFloat(n.properties[node_size_var]) !== NaN)
+            .map((n) => parseFloat(n.properties[node_size_var]))
+        )
+      )
     );
 
     //For the links, there is only one variable, which is value/count/volume
-    let min_link_data = parseFloat(d3.min(props.links.map((l) => l.value)));
-    let max_link_data = parseFloat(d3.max(props.links.map((l) => l.value)));
+    let min_link_data = round_and_shorten(
+      d3.min(
+        props.links
+          .filter((l) => parseFloat(l.value) !== NaN)
+          .map((l) => parseFloat(l.value))
+      )
+    );
+
+    let max_link_data = round_and_shorten(
+      d3.max(
+        props.links
+          .filter((l) => parseFloat(l.value) !== NaN)
+          .map((l) => parseFloat(l.value))
+      )
+    );
+
+    let mid_link_data = round_and_shorten(
+      d3.median(
+        props.links
+          .filter((l) => parseFloat(l.value) !== NaN)
+          .map((l) => parseFloat(l.value))
+      )
+    );
 
     return {
       nodes: {
         color: { min: min_node_color_data, max: max_node_color_data },
-        size: { min: min_node_size_data, max: max_node_size_data },
+        size: {
+          min: min_node_size_data,
+          mid: mid_node_size_data,
+          max: max_node_size_data,
+        },
       },
-      links: { min: min_link_data, max: max_link_data },
+      links: { min: min_link_data, mid: mid_link_data, max: max_link_data },
     };
   }
 
@@ -57,20 +127,29 @@ export const LegendComponent = (props) => {
     let links_colors = props.lstyle.color.varied.colors;
     if (nodesColorMode === "varied") {
       nodesColorDiv = (
-        <div id="nodesColorLegend" class="legendSubSubContainer">
-          {color_ramp(
-            nodes_colors,
-            important_values.nodes.color.min,
-            important_values.nodes.color.max
-          )}
-        </div>
+        <>
+          <div id="nodesColorLegend" class="legendSubSubContainer">
+            {color_ramp(
+              nodes_colors,
+              important_values.nodes.color.min,
+              important_values.nodes.color.max,
+              "nodes"
+            )}
+          </div>
+        </>
       );
     } else {
       nodesColorDiv = <div></div>;
     }
     if (nodesSizeMode === "varied") {
       nodesSizeDiv = (
-        <div id="nodesSizeLegend" class="legendSubSubContainer"></div>
+        <div id="nodesSizeLegend" class="legendSubSubContainer">
+          {node_size_ramp(
+            important_values.nodes.size.min,
+            important_values.nodes.size.mid,
+            important_values.nodes.size.max
+          )}
+        </div>
       );
     } else {
       nodesSizeDiv = <div></div>;
@@ -82,7 +161,8 @@ export const LegendComponent = (props) => {
           {color_ramp(
             links_colors,
             important_values.links.min,
-            important_values.links.max
+            important_values.links.max,
+            "links"
           )}
         </div>
       );
@@ -99,14 +179,21 @@ export const LegendComponent = (props) => {
     return [nodesColorDiv, nodesSizeDiv, linksColorDiv, linksSizeDiv];
   }
 
-  function color_ramp(colors, min, max) {
-    console.log(min, max);
+  function color_ramp(colors, min, max, data_type) {
     let max_or_min = max;
     let visibility;
+    let variable;
+    if (data_type === "links") {
+      variable = props.lstyle.color.varied.var;
+    } else if (data_type === "nodes") {
+      variable = props.nstyle.color.varied.var;
+    }
+
     return (
       <div class="legendColorRamp">
+        <div style={{ paddingBottom: "5%" }}>{variable.substring(0, 12)}</div>
+
         {colors.reverse().map((col) => {
-          console.log(colors.indexOf(col));
           if (colors.indexOf(col) < 7 && colors.indexOf(col) > 0) {
             visibility = "hidden";
           }
@@ -120,8 +207,8 @@ export const LegendComponent = (props) => {
               <div
                 id="legendColorRectangle"
                 style={{
-                  width: "2em",
-                  height: "1.2em",
+                  width: "28%",
+                  height: "100%",
                   background: col,
                 }}
               ></div>
@@ -131,6 +218,91 @@ export const LegendComponent = (props) => {
             </div>
           );
         })}
+      </div>
+    );
+  }
+  function node_size_ramp(min, mid, max) {
+    let max_radius = d3.max(
+      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+    );
+    //For log scale, we musn't have values equal to zero
+    if (max_radius === 0 || max_radius === -Infinity) {
+      max_radius = 0.01;
+    }
+    let min_radius = d3.min(
+      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+    );
+    if (min_radius === 0 || min_radius === -Infinity) {
+      min_radius = 0.01;
+    }
+    let median_radius = d3.median(
+      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+    );
+    if (median_radius === 0 || median_radius === -Infinity) {
+      median_radius = 0.01;
+    }
+
+    console.log(min_radius, median_radius, max_radius);
+    let scale_type = props.nstyle.size.varied.scale;
+
+    let size_scale;
+    if (scale_type === "Linear") {
+      size_scale = d3.scaleLinear();
+    } else if (scale_type === "Sqrt") {
+      size_scale = d3.scaleSqrt();
+    } else if (scale_type === "Pow") {
+      size_scale = d3.scalePow();
+    } else if (scale_type === "Log") {
+      size_scale = d3.scaleLog();
+    }
+
+    size_scale.range([1, 17]).domain([min_radius, max_radius]);
+
+    return (
+      <div class="legendSizeRamp">
+        <div style={{ position: "absolute", top: "2em", left: "1%" }}>
+          {props.nstyle.size.varied.var.substring(0, 12)}
+        </div>
+        <div class="legendCircles">
+          <svg class="circleAndLabel">
+            <circle
+              class="legendSizeDrawing"
+              cx="25%"
+              cy="50%"
+              r={size_scale(max_radius) + "%"}
+              fill="red"
+            ></circle>
+            <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
+              {round_and_shorten(max)}
+            </text>
+          </svg>
+
+          <svg class="circleAndLabel">
+            <circle
+              class="legendSizeDrawing"
+              cx="25%"
+              cy="50%"
+              r={size_scale(median_radius) + "%"}
+              fill="red"
+            ></circle>
+            <text class="labelMid" x="50%" y="60%" fontSize="0.9em">
+              {round_and_shorten(mid)}
+            </text>
+          </svg>
+
+          <svg class="circleAndLabel">
+            <circle
+              class="legendSizeDrawing"
+              cx="25%"
+              cy="50%"
+              r={size_scale(min_radius) + "%"}
+              fill="red"
+            ></circle>
+            <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
+              {round_and_shorten(min)}
+            </text>
+          </svg>
+        </div>
       </div>
     );
   }

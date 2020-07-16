@@ -214,6 +214,7 @@ export default class View {
         nodes={nodes}
         lstyle={lstyle}
         links={links}
+        nodes_hash={this.renderer.proj_nodes_hash}
       />,
       document.getElementById("legendDiv")
     );

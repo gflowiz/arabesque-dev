@@ -163,7 +163,7 @@ nav {
   bottom: 0;
   width: 70%;
   height: 35%;
-  background: blue;
+  background: rgba(128, 128, 179, 0.397);
   z-index: 50;
   display: flex;
   align-items: center;
@@ -173,14 +173,15 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: brown;
+
   width: 50%;
   height: 100%;
 }
 .legendSubSubContainer {
   width: 50%;
-  height: 100%;
-  background: cornflowerblue;
+  height: 92%;
+  margin-bottom: 7%;
+
   display: flex;
   flex-direction: row;
   justify-content: end;
@@ -196,6 +197,7 @@ nav {
 }
 .colorAndLabel {
   width: 100%;
+  height: 12%;
   display: flex;
   align-items: flex-end;
 }
@@ -203,7 +205,7 @@ nav {
   width: 50%;
   height: 100%;
   text-align: center;
-  font-size: 60%;
+  font-size: 80%;
   justify-content: center;
   display: flex;
   align-items: center;
@@ -215,6 +217,20 @@ nav {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+.legendSizeRamp {
+  display: flex;
+  height: 72%;
+}
+
+.legendCircles {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.circleAndLabel {
+  width: 100%;
+  display: flex;
 }
 chart {
   display: inline-block;
