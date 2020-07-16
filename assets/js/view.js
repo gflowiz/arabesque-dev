@@ -207,14 +207,15 @@ export default class View {
       document.getElementById("ModalShapeLinks")
     );
   }
-  show_legend(nodes, nstyle, links, lstyle) {
+  show_legend(nodes, nodes_hash, nstyle, links, lstyle) {
+    console.log(this.renderer.proj_nodes_hash);
     ReactDOM.render(
       <LegendComponent
         nstyle={nstyle}
         nodes={nodes}
         lstyle={lstyle}
         links={links}
-        nodes_hash={this.renderer.proj_nodes_hash}
+        nodes_hash={nodes_hash}
       />,
       document.getElementById("legendDiv")
     );

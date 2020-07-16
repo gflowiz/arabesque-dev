@@ -193,7 +193,7 @@ export const LegendComponent = (props) => {
       <div class="legendColorRamp">
         <div style={{ paddingBottom: "5%" }}>{variable.substring(0, 12)}</div>
 
-        {colors.reverse().map((col) => {
+        {colors.map((col) => {
           if (colors.indexOf(col) < 7 && colors.indexOf(col) > 0) {
             visibility = "hidden";
           }
@@ -222,89 +222,76 @@ export const LegendComponent = (props) => {
     );
   }
   function node_size_ramp(min, mid, max) {
+    //Circles radius in pixels
     let max_radius = d3.max(
-      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+      Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
     );
-    //For log scale, we musn't have values equal to zero
-    if (max_radius === 0 || max_radius === -Infinity) {
-      max_radius = 0.01;
-    }
+
     let min_radius = d3.min(
-      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+      Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
     );
-    if (min_radius === 0 || min_radius === -Infinity) {
-      min_radius = 0.01;
-    }
+
     let median_radius = d3.median(
-      Object.entries(props.nodes_hash).map((node) => node[1].radius)
+      Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
     );
-    if (median_radius === 0 || median_radius === -Infinity) {
-      median_radius = 0.01;
+
+    //Compute the size of the direct parent of the circles, in order to prevent
+    //Overflowing. We can't directly compute its width as it's not rendered yet
+    let container_width =
+      (document.getElementById("Mapcontainer").clientWidth * 0.7) / 4;
+    if (max_radius > container_width * 0.4) {
+      return (
+        <div class="zoomOutMessage">
+          Zoom out to see this part of the legend
+        </div>
+      );
     }
 
-    console.log(min_radius, median_radius, max_radius);
-    let scale_type = props.nstyle.size.varied.scale;
+    return [
+      <div style={{ position: "absolute", top: "2em", left: "1%" }}>
+        {props.nstyle.size.varied.var.substring(0, 12)}
+      </div>,
+      <svg id="legendCircles">
+        <circle
+          class="legendSizeDrawing"
+          cx="43%"
+          cy="50%"
+          // r={size_scale(max_radius) + "%"}
+          r={max_radius + "px"}
+          fill="red"
+        ></circle>
+        <circle
+          class="legendSizeDrawing"
+          cx="43%"
+          cy="50%"
+          // r={size_scale(median_radius) + "%"}
+          r={median_radius + "px"}
+          fill="blue"
+        ></circle>
+        <circle
+          class="legendSizeDrawing"
+          cx="43%"
+          cy="50%"
+          // r={size_scale(min_radius) + "%"}
+          r={min_radius + 1 + "px"}
+          fill="black"
+        ></circle>
+      </svg>,
 
-    let size_scale;
-    if (scale_type === "Linear") {
-      size_scale = d3.scaleLinear();
-    } else if (scale_type === "Sqrt") {
-      size_scale = d3.scaleSqrt();
-    } else if (scale_type === "Pow") {
-      size_scale = d3.scalePow();
-    } else if (scale_type === "Log") {
-      size_scale = d3.scaleLog();
-    }
+      /* <svg class="legendLabels">
+          <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
+            {round_and_shorten(max)}
+          </text>
 
-    size_scale.range([1, 17]).domain([min_radius, max_radius]);
+          <text class="labelMid" x="50%" y="60%" fontSize="0.9em">
+            {round_and_shorten(mid)}
+          </text>
 
-    return (
-      <div class="legendSizeRamp">
-        <div style={{ position: "absolute", top: "2em", left: "1%" }}>
-          {props.nstyle.size.varied.var.substring(0, 12)}
-        </div>
-        <div class="legendCircles">
-          <svg class="circleAndLabel">
-            <circle
-              class="legendSizeDrawing"
-              cx="25%"
-              cy="50%"
-              r={size_scale(max_radius) + "%"}
-              fill="red"
-            ></circle>
-            <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
-              {round_and_shorten(max)}
-            </text>
-          </svg>
-
-          <svg class="circleAndLabel">
-            <circle
-              class="legendSizeDrawing"
-              cx="25%"
-              cy="50%"
-              r={size_scale(median_radius) + "%"}
-              fill="red"
-            ></circle>
-            <text class="labelMid" x="50%" y="60%" fontSize="0.9em">
-              {round_and_shorten(mid)}
-            </text>
-          </svg>
-
-          <svg class="circleAndLabel">
-            <circle
-              class="legendSizeDrawing"
-              cx="25%"
-              cy="50%"
-              r={size_scale(min_radius) + "%"}
-              fill="red"
-            ></circle>
-            <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
-              {round_and_shorten(min)}
-            </text>
-          </svg>
-        </div>
-      </div>
-    );
+          <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
+            {round_and_shorten(min)}
+          </text>
+        </svg> */
+    ];
   }
 
   return (

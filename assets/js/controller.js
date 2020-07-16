@@ -46,6 +46,9 @@ export default class Controller {
       .getElementById("legendButton")
       .addEventListener("click", this.show_legend.bind(this));
 
+    //Everytime the zoom level changes, we update the legend
+    this.view.renderer.map.on("moveend", this.show_legend.bind(this));
+
     this.charts = [];
 
     console.log("controller1");
@@ -269,11 +272,15 @@ export default class Controller {
     $("#changeGeometryModal").modal("hide");
   }
   show_legend() {
+    //Update nodes radius in pixel (according to zoom level)
+    this.view.renderer.update_circles_radius();
+    let nodes_hash = this.view.renderer.proj_nodes_hash;
+
     let nstyle = this.model.get_nodes_style();
     let lstyle = this.model.get_links_style();
     let nodes = this.model.get_nodes();
     let links = this.model.get_links();
-    this.view.show_legend(nodes, nstyle, links, lstyle);
+    this.view.show_legend(nodes, nodes_hash, nstyle, links, lstyle);
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

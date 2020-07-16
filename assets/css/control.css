@@ -218,20 +218,18 @@ nav {
   flex-direction: column;
   justify-content: space-between;
 }
-.legendSizeRamp {
-  display: flex;
-  height: 72%;
-}
 
-.legendCircles {
+#legendCircles {
   width: 100%;
   display: flex;
   flex-direction: column;
 }
-.circleAndLabel {
-  width: 100%;
-  display: flex;
+.zoomOutMessage {
+  font-size: 0.7em;
+  margin: auto;
+  width: 90%;
 }
+
 chart {
   display: inline-block;
   height: 151px;

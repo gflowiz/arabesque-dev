@@ -71,6 +71,7 @@ export default class OlRenderer {
       Log: d3.scaleLog(),
       Linear: d3.scaleLinear(),
     };
+    // this.map.on("moveend", this.update_circles.bind(this));
 
     this._node_var = {
       color: "degree",
@@ -97,6 +98,17 @@ export default class OlRenderer {
     this._scale_link_size = d3.scaleLinear();
     this._scale_link_opacity = d3.scaleLinear();
     this._link_color_groups = {};
+  }
+
+  update_circles_radius() {
+    let resolution_m = this.map.getView().getResolution();
+    console.log(this.map.getView().getZoom());
+    for (let node of Object.entries(this.proj_nodes_hash)) {
+      console.log(node);
+      let radius_px = node[1].radius / resolution_m;
+      node[1].radius_px = radius_px;
+    }
+    console.log(this.proj_nodes_hash);
   }
 
   // Style function
