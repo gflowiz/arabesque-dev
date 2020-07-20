@@ -153,6 +153,9 @@ nav {
   left: 0.5em;
   background-image: url("/assets/svg/si-glyph-end-page.svg");
 }
+
+/* LEGEND */
+
 #legendButton {
   top: 7em;
   left: 0.5em;
@@ -224,6 +227,12 @@ nav {
   display: flex;
   flex-direction: column;
 }
+
+.legendLinkSquares {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
 .zoomOutMessage {
   font-size: 0.7em;
   margin: auto;
@@ -277,6 +286,30 @@ chart {
   border: solid rgb(112, 98, 98) 2px;
 }
 
+#colorAlertMessage {
+  color: red;
+  font-weight: bolder;
+}
+#sizeAlertMessage {
+  color: red;
+  font-weight: bolder;
+  padding-bottom: 2%;
+  font-size: 0.8em;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+#opacityAlertMessage {
+  color: red;
+  font-weight: bolder;
+  padding-bottom: 2%;
+  font-size: 0.8em;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+#labelAndAlertMessage {
+  display: grid;
+  grid-template-columns: 30% 70%;
+}
 .form-check-input {
   position: relative !important;
   margin-right: 0.5em;

@@ -27,9 +27,13 @@ export const NodesSemioModalComponent = (props) => {
       semio.color.mode = "varied";
       let color_ramp = document.getElementsByClassName("selectedRamp")[0];
       if (color_ramp === undefined) {
-        alert("Pick a color");
+        document.getElementById("colorAlertMessage").innerHTML = "Pick a color";
         return false;
       }
+
+      //Empty the alert messages
+      document.getElementById("colorAlertMessage").innerHTML = "";
+
       let colors = [];
       color_ramp.childNodes[0].childNodes.forEach((el) =>
         colors.push(el.getAttribute("fill"))
@@ -58,7 +62,7 @@ export const NodesSemioModalComponent = (props) => {
       let width = document.getElementById("ratioMinMaxSizeChangenode").value;
 
       if (width === "") {
-        alert("Enter a width");
+        document.getElementById("sizeAlertMessage").innerHTML = "Enter a width";
         return false;
       }
 
@@ -68,10 +72,14 @@ export const NodesSemioModalComponent = (props) => {
       let variable = document.getElementById("semioSelectorSizeChangenode")
         .value;
       let scale = document.getElementById("typeSizeChangenode").value;
+      //Erase the alert message
+      if (scale !== "Log")
+        document.getElementById("sizeAlertMessage").innerHTML = "";
+
       let ratio = document.getElementById("ratioMinMaxSizeChangenode").value;
 
       if (ratio === "") {
-        alert("Enter a ratio");
+        document.getElementById("sizeAlertMessage").innerHTML = "Enter a ratio";
         return false;
       }
       semio.size.varied = {
@@ -86,11 +94,13 @@ export const NodesSemioModalComponent = (props) => {
       semio.opacity.mode = "fixed";
       let opacity = document.getElementById("ratioMaxOpaChangenode").value;
       if (opacity === "") {
-        alert("Enter opacity");
+        document.getElementById("opacityAlertMessage").innerHTML =
+          "Enter opacity";
         return false;
       }
       if (opacity < 0 || opacity > 1) {
-        alert("Opacity must be between 0 and 1 ");
+        document.getElementById("opacityAlertMessage").innerHTML =
+          "Opacity must be between 0 and 1 ";
         return false;
       }
       semio.opacity.fixed = parseFloat(opacity);
@@ -104,11 +114,13 @@ export const NodesSemioModalComponent = (props) => {
       let max = document.getElementById("ratioMaxOpaChangenode").value;
 
       if (min === "" || max === "") {
-        alert("Enter opacity minimum and maximum");
+        document.getElementById("opacityAlertMessage").innerHTML =
+          "Enter opacity minimum and maximum";
         return false;
       }
       if (min < 0 || min > 1 || max < 0 || max > 1) {
-        alert("Minimum and maximum opacity must be between 0 and 1");
+        document.getElementById("opacityAlertMessage").innerHTML =
+          "Minimum and maximum opacity must be between 0 and 1";
         return false;
       }
       semio.opacity.varied = {
@@ -117,6 +129,7 @@ export const NodesSemioModalComponent = (props) => {
         min: parseFloat(min),
         max: parseFloat(max),
       };
+      document.getElementById("opacityAlertMessage").innerHTML = "";
     }
   }
   //When the OK button is clicked, extract color, size, text and opacity from the modal
@@ -168,9 +181,13 @@ export const NodesSemioModalComponent = (props) => {
             />
 
             <hr></hr>
-            <label for="select" class="h4 strong">
-              Size
-            </label>
+            <div id="labelAndAlertMessage">
+              <label for="select" class="h4 strong">
+                Size
+              </label>
+              <div id="sizeAlertMessage"></div>
+            </div>
+
             <SizeContainerComponent
               notify_state_change={(newState) => (modes.size = newState)}
               nodes_properties={nodes_properties}
@@ -200,9 +217,12 @@ export const NodesSemioModalComponent = (props) => {
               </div>
               <div class="col-md-10">
                 <hr></hr>
-                <label for="select" class="h4 strong">
-                  Opacity
-                </label>
+                <div id="labelAndAlertMessage">
+                  <label for="select" class="h4 strong">
+                    Opacity
+                  </label>
+                  <div id="opacityAlertMessage"></div>
+                </div>
                 <OpacityContainerComponent
                   notify_state_change={(newState) => (modes.opacity = newState)}
                   nodes_properties={nodes_properties}

@@ -102,13 +102,25 @@ export default class OlRenderer {
 
   update_circles_radius() {
     let resolution_m = this.map.getView().getResolution();
-    console.log(this.map.getView().getZoom());
+
     for (let node of Object.entries(this.proj_nodes_hash)) {
-      console.log(node);
       let radius_px = node[1].radius / resolution_m;
       node[1].radius_px = radius_px;
     }
-    console.log(this.proj_nodes_hash);
+  }
+
+  update_links_width(links, lstyle) {
+    let resolution_m = this.map.getView().getResolution();
+
+    for (let link of links) {
+      let width_m = this.linkSize(link, lstyle);
+      let width_px = width_m / resolution_m;
+      this.proj_links_hash[link.key] = {
+        value: link.value,
+        width_m: width_m,
+        width_px: width_px,
+      };
+    }
   }
 
   // Style function
@@ -312,6 +324,66 @@ export default class OlRenderer {
   //For one node, this returns the corresponding value in the _node_scale scale, according to its degree
   nodeSizeScale(node) {
     return this._scale_node_size(+node.properties[this._node_var.size]);
+  }
+  //If the range of a variable intersects zero, we block the rendering and keep the modal open
+  handle_log_scale_size_range(
+    min_size,
+    max_size,
+    do_not_close = false,
+    modal_id
+  ) {
+    if (min_size == 0) {
+      if (max_size > 0) {
+        min_size = 0.01;
+      } else if ((max_size = 0)) {
+        max_size = 0.01;
+        min_size = 0.01;
+      }
+    }
+    if (max_size == 0) {
+      if (min_size < 0) {
+        max_size = -0.01;
+      } else if (min_size == 0) {
+        max_size = -0.01;
+        min_size = -0.01;
+      }
+    }
+    if (min_size < 0 && max_size > 0) {
+      document.getElementById("sizeAlertMessage").innerHTML =
+        "Can't use logarithmic scale with this data (range must not intersect 0)";
+
+      return false;
+    } else {
+      document.getElementById("sizeAlertMessage").innerHTML = "";
+      if (do_not_close === false) $(modal_id).modal("hide");
+    }
+    return [min_size, max_size];
+  }
+  handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
+    if (min_opa == 0) {
+      if (max_opa > 0) {
+        min_opa = 0.01;
+      } else if ((max_opa = 0)) {
+        max_opa = 0.01;
+        min_opa = 0.01;
+      }
+    }
+    if (max_opa == 0) {
+      if (min_opa < 0) {
+        max_opa = -0.01;
+      } else if (min_opa == 0) {
+        max_opa = -0.01;
+        min_opa = -0.01;
+      }
+    }
+    if (min_opa < 0 && max_opa > 0) {
+      document.getElementById("opacityAlertMessage").innerHTML =
+        "Can't use logarithmic scale with this data (range must not intersect 0)";
+    } else {
+      document.getElementById("opacityAlertMessage").innerHTML = "";
+      $(modal_id).modal("hide");
+    }
+    return [min_opa, max_opa];
   }
 
   add_nodes(nodes, nstyle) {
@@ -569,66 +641,6 @@ export default class OlRenderer {
       .domain([min_opa, max_opa]);
   }
 
-  //If the range of a variable intersects zero, we block the rendering and keep the modal open
-  handle_log_scale_size_range(
-    min_size,
-    max_size,
-    do_not_close = false,
-    modal_id
-  ) {
-    if (min_size == 0) {
-      if (max_size > 0) {
-        min_size = 0.01;
-      } else if ((max_size = 0)) {
-        max_size = 0.01;
-        min_size = 0.01;
-      }
-    }
-    if (max_size == 0) {
-      if (min_size < 0) {
-        max_size = -0.01;
-      } else if (min_size == 0) {
-        max_size = -0.01;
-        min_size = -0.01;
-      }
-    }
-    if (min_size < 0 && max_size > 0) {
-      alert(
-        "Size : Can't use logarithmic scale with this data (range must not intersect 0)"
-      );
-      return false;
-    } else {
-      if (do_not_close === false) $(modal_id).modal("hide");
-    }
-    return [min_size, max_size];
-  }
-  handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
-    if (min_opa == 0) {
-      if (max_opa > 0) {
-        min_opa = 0.01;
-      } else if ((max_opa = 0)) {
-        max_opa = 0.01;
-        min_opa = 0.01;
-      }
-    }
-    if (max_opa == 0) {
-      if (min_opa < 0) {
-        max_opa = -0.01;
-      } else if (min_opa == 0) {
-        max_opa = -0.01;
-        min_opa = -0.01;
-      }
-    }
-    if (min_opa < 0 && max_opa > 0) {
-      alert(
-        "Opacity : Can't use logarithmic scale with this data (range must not intersect 0"
-      );
-    } else {
-      $(modal_id).modal("hide");
-    }
-    return [min_opa, max_opa];
-  }
-
   //Creates color groups according to qualitative variable
   create_link_color_groups(links) {
     this._color_groups = {};
@@ -835,9 +847,12 @@ export default class OlRenderer {
 
   create_arrows(links, lstyle) {
     var nodes_hash = this.proj_nodes_hash;
-    console.log(nodes_hash);
+
     let orientation = lstyle.shape.orientation;
     let shape_type = lstyle.shape.type;
+
+    //Attach link width (in px) for the scalability in the legend
+    this.update_links_width(links, lstyle);
 
     let style = {
       geometry: {
@@ -874,6 +889,7 @@ export default class OlRenderer {
         let from = l.key.split("->")[0];
         let to = l.key.split("->")[1];
         let width = this.linkSize(l, lstyle);
+
         let arrow = noOrientedStraightArrow(
           nodes_hash[from].center,
           nodes_hash[to].center,
@@ -976,6 +992,8 @@ export default class OlRenderer {
     this.update_links_var(lstyle);
     this.update_link_scales_types(lstyle);
     this.update_links_scales(links, lstyle);
+    //Initializing a hash link object to store radius in px
+    this.proj_links_hash = {};
 
     //Useful for qualitative color grouping
     if (lstyle.color.varied.type === "qualitative") {

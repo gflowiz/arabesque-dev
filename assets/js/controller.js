@@ -272,15 +272,19 @@ export default class Controller {
     $("#changeGeometryModal").modal("hide");
   }
   show_legend() {
-    //Update nodes radius in pixel (according to zoom level)
-    this.view.renderer.update_circles_radius();
-    let nodes_hash = this.view.renderer.proj_nodes_hash;
-
     let nstyle = this.model.get_nodes_style();
     let lstyle = this.model.get_links_style();
     let nodes = this.model.get_nodes();
     let links = this.model.get_links();
-    this.view.show_legend(nodes, nodes_hash, nstyle, links, lstyle);
+    //Update nodes radius in pixel (according to zoom level)
+    this.view.renderer.update_circles_radius();
+    let nodes_hash = this.view.renderer.proj_nodes_hash;
+
+    //Same for links
+    this.view.renderer.update_links_width(links, lstyle);
+    let links_hash = this.view.renderer.proj_links_hash;
+
+    this.view.show_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle);
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

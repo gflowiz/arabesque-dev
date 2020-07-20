@@ -6,7 +6,7 @@ export const LegendComponent = (props) => {
   let linksColorMode = props.lstyle.color.mode;
   let linksSizeMode = props.lstyle.size.mode;
   let important_values = extract_important_values();
-  console.log(props.nodes_hash);
+
   //Defining and filling the different containers of the legend
   let [
     nodesColorDiv,
@@ -171,7 +171,13 @@ export const LegendComponent = (props) => {
     }
     if (linksSizeMode === "varied") {
       linksSizeDiv = (
-        <div id="linksSizeLegend" class="legendSubSubContainer"></div>
+        <div id="linksSizeLegend" class="legendSubSubContainer">
+          {link_size_ramp(
+            important_values.links.min,
+            important_values.links.mid,
+            important_values.links.max
+          )}
+        </div>
       );
     } else {
       linksSizeDiv = <div></div>;
@@ -291,6 +297,75 @@ export const LegendComponent = (props) => {
             {round_and_shorten(min)}
           </text>
         </svg> */
+    ];
+  }
+  function link_size_ramp(min, mid, max) {
+    for (let a of Object.entries(props.links_hash)) {
+    }
+    //Circles radius in pixels
+    let max_width = d3.max(
+      Object.entries(props.links_hash).map((link) => link[1].width_px)
+    );
+
+    let min_width = d3.min(
+      Object.entries(props.links_hash).map((link) => link[1].width_px)
+    );
+
+    let median_width = d3.median(
+      Object.entries(props.links_hash).map((link) => link[1].width_px)
+    );
+
+    //Compute the size of the direct parent of the circles, in order to prevent
+    //Overflowing. We can't directly compute its width as it's not rendered yet
+    let container_height =
+      document.getElementById("Mapcontainer").clientHeight * 0.35 * 0.723;
+    if (max_width > container_height * 0.25) {
+      return (
+        <div class="zoomOutMessage">
+          Zoom out to see this part of the legend
+        </div>
+      );
+    }
+
+    return [
+      <div style={{ position: "absolute", top: "2em", left: "60%" }}>
+        {props.lstyle.size.varied.var.substring(0, 12)}
+      </div>,
+      <svg id="legendLinkSquares">
+        <rect
+          class="legendSizeDrawing"
+          x="40%"
+          y="25%"
+          // r={size_scale(max_radius) + "%"}
+          height={max_width + "px"}
+          width="40%"
+          fill="none"
+          stroke="black"
+          strokeWidth="1px"
+        ></rect>
+        <rect
+          class="legendSizeDrawing"
+          x="40%"
+          y="55%"
+          // r={size_scale(median_width) + "%"}
+          height={median_width + 1 + "px"}
+          width="40%"
+          fill="none"
+          stroke="black"
+          strokeWidth="1px"
+        ></rect>
+        <rect
+          class="legendSizeDrawing"
+          x="40%"
+          y="85%"
+          // r={size_scale(min_width) + "%"}
+          height={min_width + 1 + "px"}
+          width="40%"
+          fill="none"
+          stroke="black"
+          strokeWidth="1px"
+        ></rect>
+      </svg>,
     ];
   }
 

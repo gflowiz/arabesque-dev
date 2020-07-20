@@ -421,6 +421,7 @@ export default class Model {
             "->" +
             l[that.config.varnames.linkID[1]]
         );
+
         that.data.links_aggregated = that.data.od_dim
           .group()
           .reduce(
@@ -433,6 +434,7 @@ export default class Model {
         that.data.from_dim = that.data.crossfilters.dimension(
           (l) => l[that.config.varnames.linkID[0]]
         );
+
         that.data.nodes_from_aggregated = that.data.from_dim
           .group()
           .reduce(
@@ -463,6 +465,7 @@ export default class Model {
         let filters = that.config.filters;
         that.config.filters = [];
         let dimensions = filters.map((f) => that.create_filter(f.id));
+
         let groups = dimensions.map((d) => d.group());
 
         console.log("Import end");
@@ -473,6 +476,7 @@ export default class Model {
           nb_removed_links: 0,
           nb_aggregated_links: that.data.links_aggregated.all().length,
         };
+        console.log(that.config.filters);
         callback(res, that.config.filters, dimensions, groups, that.config);
       });
   }
