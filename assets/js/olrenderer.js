@@ -349,12 +349,12 @@ export default class OlRenderer {
       }
     }
     if (min_size < 0 && max_size > 0) {
-      document.getElementById("sizeAlertMessage").innerHTML =
-        "Can't use logarithmic scale with this data (range must not intersect 0)";
+      let scaleDiv = document.getElementById("typeSizeChangenode");
+      scaleDiv.classList.add("is-invalid");
+      scaleDiv.onchange = () => scaleDiv.classList.remove("is-invalid");
 
       return false;
     } else {
-      document.getElementById("sizeAlertMessage").innerHTML = "";
       if (do_not_close === false) $(modal_id).modal("hide");
     }
     return [min_size, max_size];
@@ -377,10 +377,10 @@ export default class OlRenderer {
       }
     }
     if (min_opa < 0 && max_opa > 0) {
-      document.getElementById("opacityAlertMessage").innerHTML =
-        "Can't use logarithmic scale with this data (range must not intersect 0)";
+      let scaleDiv = document.getElementById("typeOpaChangenode");
+      scaleDiv.classList.add("is-invalid");
+      scaleDiv.onchange = () => scaleDiv.classList.remove("is-invalid");
     } else {
-      document.getElementById("opacityAlertMessage").innerHTML = "";
       $(modal_id).modal("hide");
     }
     return [min_opa, max_opa];

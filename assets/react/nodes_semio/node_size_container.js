@@ -11,6 +11,16 @@ export const SizeContainerComponent = (props) => {
     return NaN;
   }
 
+  function enablePopup() {
+    if (document.getElementById("sizeRatioIcon") !== null) {
+      $("#sizeRatioIcon").popover();
+    }
+
+    if (document.getElementById("sizeWidthIcon") !== null) {
+      $("#sizeWidthIcon").popover();
+    }
+  }
+
   //The size container changes according to the size mode (fixed or varied)
   let size_container;
   if (size_mode === "fixed") {
@@ -33,15 +43,17 @@ export const SizeContainerComponent = (props) => {
         </div>
         <div id="semioSizeRatioChangenode" class="col-md-4">
           <label class="text-muted h5">
-            Width{" "}
+            Radius{" "}
             <img
+              id="sizeWidthIcon"
               class="small-icon"
               src="assets/svg/si-glyph-circle-info.svg"
               data-html="true"
               data-container="body"
               data-toggle="popover"
               data-placement="right"
-              data-content="It is the fixed width in pixel for each links"
+              data-content="This radius is then multiplied by 1000 times the length of the smallest side of the data bounding box"
+              onLoad={enablePopup}
             ></img>{" "}
           </label>
           <input
@@ -50,6 +62,7 @@ export const SizeContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.size.fixed}
           ></input>
+          <div class="invalid-feedback">Enter a width</div>
         </div>
       </div>
     );
@@ -100,20 +113,25 @@ export const SizeContainerComponent = (props) => {
             <option value="Sqrt">SquareRoot</option>
             <option value="Log">Logarithmic</option>
           </select>
+          <div class="invalid-feedback">
+            Error : all values must be inferior to 0
+          </div>
         </div>
         <div id="semioSizeRatioChangenode" class="col-md-4">
           <label class="text-muted h5">
             Ratio{" "}
             <img
+              id="sizeRatioIcon"
               class="small-icon"
               src="assets/svg/si-glyph-circle-info.svg"
               data-html="true"
               data-container="body"
               data-toggle="popover"
               data-placement="right"
-              data-content="it represent the max width in pixel of the visualisation "
+              data-content="This ratio is used to calculate the radius of the biggest node"
               data-original-title=""
               title=""
+              onLoad={enablePopup}
             ></img>
           </label>
           <input
@@ -122,6 +140,7 @@ export const SizeContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.size.varied.maxval}
           ></input>
+          <div class="invalid-feedback">Enter a ratio</div>
         </div>
       </div>
     );

@@ -30,7 +30,6 @@ export const NodesSemioModalComponent = (props) => {
         document.getElementById("colorAlertMessage").innerHTML = "Pick a color";
         return false;
       }
-
       //Empty the alert messages
       document.getElementById("colorAlertMessage").innerHTML = "";
 
@@ -62,7 +61,9 @@ export const NodesSemioModalComponent = (props) => {
       let width = document.getElementById("ratioMinMaxSizeChangenode").value;
 
       if (width === "") {
-        document.getElementById("sizeAlertMessage").innerHTML = "Enter a width";
+        let ratioDiv = document.getElementById("ratioMinMaxSizeChangenode");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
 
@@ -72,14 +73,14 @@ export const NodesSemioModalComponent = (props) => {
       let variable = document.getElementById("semioSelectorSizeChangenode")
         .value;
       let scale = document.getElementById("typeSizeChangenode").value;
-      //Erase the alert message
-      if (scale !== "Log")
-        document.getElementById("sizeAlertMessage").innerHTML = "";
 
       let ratio = document.getElementById("ratioMinMaxSizeChangenode").value;
 
       if (ratio === "") {
-        document.getElementById("sizeAlertMessage").innerHTML = "Enter a ratio";
+        let ratioDiv = document.getElementById("ratioMinMaxSizeChangenode");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+
         return false;
       }
       semio.size.varied = {
@@ -94,13 +95,15 @@ export const NodesSemioModalComponent = (props) => {
       semio.opacity.mode = "fixed";
       let opacity = document.getElementById("ratioMaxOpaChangenode").value;
       if (opacity === "") {
-        document.getElementById("opacityAlertMessage").innerHTML =
-          "Enter opacity";
+        let ratioDiv = document.getElementById("ratioMaxOpaChangenode");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
       if (opacity < 0 || opacity > 1) {
-        document.getElementById("opacityAlertMessage").innerHTML =
-          "Opacity must be between 0 and 1 ";
+        let ratioDiv = document.getElementById("ratioMaxOpaChangenode");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
       semio.opacity.fixed = parseFloat(opacity);
@@ -114,13 +117,30 @@ export const NodesSemioModalComponent = (props) => {
       let max = document.getElementById("ratioMaxOpaChangenode").value;
 
       if (min === "" || max === "") {
-        document.getElementById("opacityAlertMessage").innerHTML =
-          "Enter opacity minimum and maximum";
+        if (min === "") {
+          let ratioDiv = document.getElementById("ratioMinOpaChangenode");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
+        if (max === "") {
+          let ratioDiv = document.getElementById("ratioMaxOpaChangenode");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
         return false;
       }
+
       if (min < 0 || min > 1 || max < 0 || max > 1) {
-        document.getElementById("opacityAlertMessage").innerHTML =
-          "Minimum and maximum opacity must be between 0 and 1";
+        if (min < 0 || min > 1) {
+          let ratioDiv = document.getElementById("ratioMinOpaChangenode");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
+        if (max < 0 || max > 1) {
+          let ratioDiv = document.getElementById("ratioMaxOpaChangenode");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
         return false;
       }
       semio.opacity.varied = {
@@ -129,7 +149,6 @@ export const NodesSemioModalComponent = (props) => {
         min: parseFloat(min),
         max: parseFloat(max),
       };
-      document.getElementById("opacityAlertMessage").innerHTML = "";
     }
   }
   //When the OK button is clicked, extract color, size, text and opacity from the modal
@@ -181,12 +200,10 @@ export const NodesSemioModalComponent = (props) => {
             />
 
             <hr></hr>
-            <div id="labelAndAlertMessage">
-              <label for="select" class="h4 strong">
-                Size
-              </label>
-              <div id="sizeAlertMessage"></div>
-            </div>
+
+            <label for="select" class="h4 strong">
+              Size
+            </label>
 
             <SizeContainerComponent
               notify_state_change={(newState) => (modes.size = newState)}
@@ -217,12 +234,11 @@ export const NodesSemioModalComponent = (props) => {
               </div>
               <div class="col-md-10">
                 <hr></hr>
-                <div id="labelAndAlertMessage">
-                  <label for="select" class="h4 strong">
-                    Opacity
-                  </label>
-                  <div id="opacityAlertMessage"></div>
-                </div>
+
+                <label for="select" class="h4 strong">
+                  Opacity
+                </label>
+
                 <OpacityContainerComponent
                   notify_state_change={(newState) => (modes.opacity = newState)}
                   nodes_properties={nodes_properties}

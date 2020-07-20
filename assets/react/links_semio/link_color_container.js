@@ -10,6 +10,7 @@ export const ColorContainerComponent = (props) => {
 
   //Put a border when the ramp is clicked (or one of its children nodes)
   function selectColorRamp(e) {
+    document.getElementById("linkColorAlertMessage").innerHTML = "";
     document
       .querySelectorAll(".selectedRamp")
       .forEach((el) => el.classList.remove("selectedRamp"));
@@ -2212,6 +2213,7 @@ export const ColorContainerComponent = (props) => {
               </td>
             </tr>
           </div>
+          <div id="linkColorAlertMessage"></div>
         </div>
       );
     } else if (color_type === "qualitative") {
@@ -2735,6 +2737,7 @@ export const ColorContainerComponent = (props) => {
               </div>
             </div>
           </div>
+          <div id="linkColorAlertMessage"></div>
         </div>
       );
     }

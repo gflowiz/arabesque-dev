@@ -27,9 +27,13 @@ export const LinksSemioModalComponent = (props) => {
       semio.color.mode = "varied";
       let color_ramp = document.getElementsByClassName("selectedRamp")[0];
       if (color_ramp === undefined) {
-        alert("Pick a color");
+        document.getElementById("linkColorAlertMessage").innerHTML =
+          "Pick a color";
         return false;
       }
+      //Empty the alert messages
+      document.getElementById("colorAlertMessage").innerHTML = "";
+
       let colors = [];
       color_ramp.childNodes[0].childNodes.forEach((el) =>
         colors.push(el.getAttribute("fill"))
@@ -58,7 +62,10 @@ export const LinksSemioModalComponent = (props) => {
       let width = document.getElementById("ratioMinMaxSizeChangeLink").value;
 
       if (width === "") {
-        alert("Enter a width");
+        //We add invalid class if value is not correct
+        let ratioDiv = document.getElementById("ratioMinMaxSizeChangeLink");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
 
@@ -71,7 +78,9 @@ export const LinksSemioModalComponent = (props) => {
       let ratio = document.getElementById("ratioMinMaxSizeChangeLink").value;
 
       if (ratio === "") {
-        alert("Enter a ratio");
+        let ratioDiv = document.getElementById("ratioMinMaxSizeChangeLink");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
       semio.size.varied = {
@@ -86,11 +95,15 @@ export const LinksSemioModalComponent = (props) => {
       semio.opacity.mode = "fixed";
       let opacity = document.getElementById("ratioMaxOpaChangeLink").value;
       if (opacity === "") {
-        alert("Enter opacity");
+        let ratioDiv = document.getElementById("ratioMaxOpaChangeLink");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
       if (opacity < 0 || opacity > 1) {
-        alert("Opacity must be between 0 and 1 ");
+        let ratioDiv = document.getElementById("ratioMaxOpaChangeLink");
+        ratioDiv.classList.add("is-invalid");
+        ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
         return false;
       }
       semio.opacity.fixed = parseFloat(opacity);
@@ -104,11 +117,29 @@ export const LinksSemioModalComponent = (props) => {
       let max = document.getElementById("ratioMaxOpaChangeLink").value;
 
       if (min === "" || max === "") {
-        alert("Enter opacity minimum and maximum");
+        if (min === "") {
+          let ratioDiv = document.getElementById("ratioMinOpaChangeLink");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
+        if (max === "") {
+          let ratioDiv = document.getElementById("ratioMaxOpaChangeLink");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
         return false;
       }
       if (min < 0 || min > 1 || max < 0 || max > 1) {
-        alert("Minimum and maximum opacity must be between 0 and 1");
+        if (min < 0 || min > 1) {
+          let ratioDiv = document.getElementById("ratioMinOpaChangeLink");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
+        if (max < 0 || max > 1) {
+          let ratioDiv = document.getElementById("ratioMaxOpaChangeLink");
+          ratioDiv.classList.add("is-invalid");
+          ratioDiv.onchange = (e) => ratioDiv.classList.remove("is-invalid");
+        }
         return false;
       }
       semio.opacity.varied = {
@@ -135,7 +166,6 @@ export const LinksSemioModalComponent = (props) => {
 
     //Send new semio to controller
     props.update_semio(semio);
-    //Close modal
   }
 
   return (

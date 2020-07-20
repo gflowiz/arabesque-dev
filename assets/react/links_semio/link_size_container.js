@@ -11,6 +11,15 @@ export const SizeContainerComponent = (props) => {
     return NaN;
   }
 
+  function enablePopup() {
+    if (document.getElementById("linkSizeRatioIcon") !== null) {
+      $("#linkSizeRatioIcon").popover();
+    }
+    if (document.getElementById("linkSizeWidthIcon") !== null) {
+      $("#linkSizeWidthIcon").popover();
+    }
+  }
+
   //The size container changes according to the size mode (fixed or varied)
   let size_container;
   if (size_mode === "fixed") {
@@ -35,13 +44,15 @@ export const SizeContainerComponent = (props) => {
           <label class="text-muted h5">
             Width{" "}
             <img
+              id="linkSizeWidthIcon"
               class="small-icon"
               src="assets/svg/si-glyph-circle-info.svg"
               data-html="true"
               data-container="body"
               data-toggle="popover"
               data-placement="right"
-              data-content="It is the fixed width in pixel for each links"
+              data-content="This width is then multiplied by 1000 times the length of the smallest side of the data bounding box"
+              onLoad={enablePopup}
             ></img>{" "}
           </label>
           <input
@@ -50,6 +61,7 @@ export const SizeContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.size.fixed}
           ></input>
+          <div class="invalid-feedback">Enter a width</div>
         </div>
       </div>
     );
@@ -92,6 +104,9 @@ export const SizeContainerComponent = (props) => {
             <option value="Sqrt">SquareRoot</option>
             <option value="Log">Logarithmic</option>
           </select>
+          <div class="invalid-feedback">
+            Error : all values must be inferior to 0
+          </div>
         </div>
         <div id="semioSizeRatioChangeLink" class="col-md-4">
           <label class="text-muted h5">
@@ -103,9 +118,11 @@ export const SizeContainerComponent = (props) => {
               data-container="body"
               data-toggle="popover"
               data-placement="right"
-              data-content="it represent the max width in pixel of the visualisation "
+              data-content="This ratio is used to calculate the width of the biggest link"
               data-original-title=""
               title=""
+              id="linkSizeWidthIcon"
+              onLoad={enablePopup}
             ></img>
           </label>
           <input
@@ -114,6 +131,7 @@ export const SizeContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.size.varied.maxval}
           ></input>
+          <div class="invalid-feedback">Enter a ratio</div>
         </div>
       </div>
     );

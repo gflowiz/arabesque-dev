@@ -43,6 +43,7 @@ export const OpacityContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.opacity.fixed}
           ></input>
+          <div class="invalid-feedback">Enter a value between 0 and 1 </div>
         </div>
       </div>
     );
@@ -89,6 +90,9 @@ export const OpacityContainerComponent = (props) => {
             <option value="Sqrt">SquareRoot</option>
             <option value="Log">Logarithmic</option>
           </select>
+          <div class="invalid-feedback">
+            Error : all values must be inferior to 0
+          </div>
         </div>
         <div id="semioOpaMinRatioChangeLink" class="col-md-2">
           <label class="text-muted h5">Min</label>
@@ -101,6 +105,7 @@ export const OpacityContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.opacity.varied.min}
           ></input>
+          <div class="invalid-feedback">Enter a value between 0 and 1 </div>
         </div>
         <div id="semioOpaMaxRatioChangeLink" class="col-md-2">
           <label class="text-muted h5">Max</label>
@@ -113,6 +118,7 @@ export const OpacityContainerComponent = (props) => {
             type="number"
             defaultValue={props.semio.opacity.varied.max}
           ></input>
+          <div class="invalid-feedback">Enter a value between 0 and 1 </div>
         </div>
       </div>
     );
