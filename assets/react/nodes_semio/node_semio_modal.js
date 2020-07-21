@@ -8,7 +8,7 @@ export const NodesSemioModalComponent = (props) => {
   //Props is what you receive from parent component
   let nodes_properties = props.nodes_properties;
   let semio = props.semio;
-  console.log(semio, nodes_properties);
+
   //Keep track of the different modes in the modal (fixed/varied)
   let modes = {
     color: "fixed",
@@ -16,6 +16,12 @@ export const NodesSemioModalComponent = (props) => {
     size: "fixed",
     opacity: "fixed",
   };
+
+  function filter_float(value) {
+    if (/^(\-|\+)?([0-9]+(\.[0-9]+)?|Infinity)$/.test(value))
+      return Number(value);
+    return NaN;
+  }
 
   function extract_colors(semio) {
     //Extract colors
@@ -151,15 +157,18 @@ export const NodesSemioModalComponent = (props) => {
       };
     }
   }
+
+  function extract_text(semio) {
+    let variable = document.getElementById("semioSelectorTextChangenode").value;
+    semio.text.var = variable;
+  }
   //When the OK button is clicked, extract color, size, text and opacity from the modal
   //and send it back to the controller via the view's callback function
   function save_and_close() {
     let ext_colors = extract_colors(semio);
 
     let ext_size = extract_size(semio);
-    semio.text.fixed = document.getElementById(
-      "semioSelectorTextChangenode"
-    ).value;
+    let ext_text = extract_text(semio);
     let ext_opacity = extract_opacity(semio);
 
     //We block the extraction if a field is missing or not filled properly
@@ -169,7 +178,6 @@ export const NodesSemioModalComponent = (props) => {
 
     //Send new semio to controller
     props.update_semio(semio);
-    //Close modal
   }
 
   return (
@@ -224,10 +232,18 @@ export const NodesSemioModalComponent = (props) => {
                       id="semioSelectorTextChangenode"
                       defaultValue={semio.text.fixed}
                     >
+                      <option value="" selected></option>
                       {/* We can iterate on the nodes properties to fill the select div  */}
-                      {Object.keys(nodes_properties).map((p) => (
-                        <option value={p}>{p}</option>
-                      ))}
+                      {Object.keys(nodes_properties)
+                        .filter((p) => {
+                          //Checking if the property is a number
+                          return (
+                            isNaN(filter_float(nodes_properties[p])) === true
+                          );
+                        })
+                        .map((p) => (
+                          <option value={p}>{p}</option>
+                        ))}
                     </select>
                   </div>
                 </div>

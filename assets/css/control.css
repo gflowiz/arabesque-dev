@@ -285,6 +285,9 @@ chart {
 .selectedRamp {
   border: solid rgb(112, 98, 98) 2px;
 }
+.linkSelectedRamp {
+  border: solid rgb(112, 98, 98) 2px;
+}
 
 #colorAlertMessage {
   color: red;

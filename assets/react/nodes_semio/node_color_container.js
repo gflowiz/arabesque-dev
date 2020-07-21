@@ -6,7 +6,6 @@ export const ColorContainerComponent = (props) => {
   let [color_mode, set_color_mode] = useState(props.semio.color.mode);
   let [color_type, set_color_type] = useState(props.semio.color.varied.type);
   let nodes_properties = props.nodes_properties;
-  console.log(color_mode, color_type);
 
   //Put a border when the ramp is clicked (or one of its children nodes)
   function selectColorRamp(e) {

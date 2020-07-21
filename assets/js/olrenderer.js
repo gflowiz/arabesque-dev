@@ -227,6 +227,16 @@ export default class OlRenderer {
         fill: new Fill({
           color: this.add_opacity_to_color(nstyle.color.fixed, opacity),
         }),
+        text: new Text({
+          text: node.properties[nstyle.text.var],
+
+          font: "12px Calibri,sans-serif",
+          fill: new Fill({ color: "#000" }),
+          stroke: new Stroke({
+            color: "#fff",
+            width: 2,
+          }),
+        }),
       });
 
       return style;
@@ -247,6 +257,16 @@ export default class OlRenderer {
           fill: new Fill({
             color: this.add_opacity_to_color(color_array[color_index], opacity),
           }),
+          text: new Text({
+            text: node.properties[nstyle.text.var],
+
+            font: "12px Calibri,sans-serif",
+            fill: new Fill({ color: "#000" }),
+            stroke: new Stroke({
+              color: "#fff",
+              width: 2,
+            }),
+          }),
         });
       }
       //If it's qualitative, we just affect a random color of the palette to each node
@@ -264,6 +284,16 @@ export default class OlRenderer {
               opacity
             ),
           }),
+          text: new Text({
+            text: node.properties[nstyle.text.var],
+
+            font: "12px Calibri,sans-serif",
+            fill: new Fill({ color: "#000" }),
+            stroke: new Stroke({
+              color: "#fff",
+              width: 2,
+            }),
+          }),
         });
       }
     }
@@ -276,8 +306,11 @@ export default class OlRenderer {
     }
   }
   nodeOpacityScale(node) {
-    //We need to round the number
-    var node_value = node.properties[this._node_var.opacity];
+    let node_value;
+    //If it's a log scale, we compute log(x+1) to prevent errors (log(0) = -Infinity
+    if (this._node_scale_types.opacity === "Log")
+      node_value = node.properties[this._node_var.opacity] + 1;
+    else node_value = node.properties[this._node_var.opacity];
 
     return this._scale_node_opacity(node_value);
   }
@@ -323,8 +356,12 @@ export default class OlRenderer {
 
   //For one node, this returns the corresponding value in the _node_scale scale, according to its degree
   nodeSizeScale(node) {
-    return this._scale_node_size(+node.properties[this._node_var.size]);
+    //If it's log scale, we compute log(x+1) to prevent errors (log(0) = -Infinity)
+    if (this._node_scale_types.size === "Log")
+      return this._scale_node_size(+node.properties[this._node_var.size] + 1);
+    else return this._scale_node_size(+node.properties[this._node_var.size]);
   }
+
   //If the range of a variable intersects zero, we block the rendering and keep the modal open
   handle_log_scale_size_range(
     min_size,
@@ -332,63 +369,44 @@ export default class OlRenderer {
     do_not_close = false,
     modal_id
   ) {
-    if (min_size == 0) {
-      if (max_size > 0) {
-        min_size = 0.01;
-      } else if ((max_size = 0)) {
-        max_size = 0.01;
-        min_size = 0.01;
-      }
+    let scaleDiv;
+    if (modal_id === "#semioNodes")
+      scaleDiv = document.getElementById("typeSizeChangenode");
+    else if (modal_id === "#semioLinks")
+      scaleDiv = document.getElementById("typeSizeChangeLink");
+
+    if (min_size < 0 || max_size < 0) {
+      scaleDiv.classList.add("is-invalid");
+      scaleDiv.onchange = () => scaleDiv.classList.remove("is-invalid");
+      return false;
+    } else {
+      scaleDiv.classList.remove("is-invalid");
+      if (do_not_close === false) $(modal_id).modal("hide");
     }
-    if (max_size == 0) {
-      if (min_size < 0) {
-        max_size = -0.01;
-      } else if (min_size == 0) {
-        max_size = -0.01;
-        min_size = -0.01;
-      }
-    }
-    if (min_size < 0 && max_size > 0) {
-      let scaleDiv = document.getElementById("typeSizeChangenode");
+    //Compute log(x+1) because log(0) = -Infinity
+    return [min_size + 1, max_size + 1];
+  }
+  handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
+    let scaleDiv;
+    if (modal_id === "#semioNodes")
+      scaleDiv = document.getElementById("typeSizeChangenode");
+    else if (modal_id === "#semioLinks")
+      scaleDiv = document.getElementById("typeSizeChangeLink");
+
+    if (min_opa < 0 || max_opa < 0) {
       scaleDiv.classList.add("is-invalid");
       scaleDiv.onchange = () => scaleDiv.classList.remove("is-invalid");
 
       return false;
     } else {
-      if (do_not_close === false) $(modal_id).modal("hide");
-    }
-    return [min_size, max_size];
-  }
-  handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
-    if (min_opa == 0) {
-      if (max_opa > 0) {
-        min_opa = 0.01;
-      } else if ((max_opa = 0)) {
-        max_opa = 0.01;
-        min_opa = 0.01;
-      }
-    }
-    if (max_opa == 0) {
-      if (min_opa < 0) {
-        max_opa = -0.01;
-      } else if (min_opa == 0) {
-        max_opa = -0.01;
-        min_opa = -0.01;
-      }
-    }
-    if (min_opa < 0 && max_opa > 0) {
-      let scaleDiv = document.getElementById("typeOpaChangenode");
-      scaleDiv.classList.add("is-invalid");
-      scaleDiv.onchange = () => scaleDiv.classList.remove("is-invalid");
-    } else {
+      scaleDiv.classList.remove("is-invalid");
       $(modal_id).modal("hide");
     }
-    return [min_opa, max_opa];
+    //Compute log(x+1) because log(0) = -Infinity
+    return [min_opa + 1, max_opa + 1];
   }
 
   add_nodes(nodes, nstyle) {
-    console.log("adding nodes");
-
     this.update_nodes_var(nstyle);
     this.update_node_scales_types(nstyle);
 
@@ -463,7 +481,6 @@ export default class OlRenderer {
     this.map.getView().fit(boundingExtent(proj_nodes.map((co) => co.center)));
   }
   update_nodes(nodes, nstyle) {
-    console.log("updating nodes");
     //Update nodes_var with discretization variables
     this.update_nodes_var(nstyle);
     this.update_node_scales_types(nstyle);
@@ -542,8 +559,6 @@ export default class OlRenderer {
   }
   //Updates scales for sizing elements according to node_var
   update_nodes_scales(nodes, nstyle) {
-    console.log("update scales");
-
     //COLORS
 
     //Pour l'échelle des couleurs
@@ -732,12 +747,16 @@ export default class OlRenderer {
     if (lstyle.size.mode === "fixed") {
       return lstyle.size.fixed * (this._extent_size / 1000);
     } else if (lstyle.size.mode === "varied") {
-      return this._scale_link_size(link.value);
+      if (this._link_scale_types.size === "Log")
+        return this._scale_link_size(link.value + 1);
+      else return this._scale_link_size(link.value);
     }
   }
 
   linkOpacityScale(link) {
-    return this._scale_link_opacity(+link.value);
+    if (this._link_scale_types.opacity === "Log")
+      return this._scale_link_opacity(+link.value + 1);
+    else return this._scale_link_opacity(+link.value);
   }
   //Update the variables according to which the color, size, text and opacity will vary
   update_links_var(lstyle) {
@@ -759,8 +778,6 @@ export default class OlRenderer {
   }
   //Updates scales for sizing elements according to link_var
   update_links_scales(links, lstyle) {
-    console.log("update links scales");
-
     //COLORS
 
     //Pour l'échelle des couleurs
@@ -1032,7 +1049,6 @@ export default class OlRenderer {
 
   update_links(links, lstyle) {
     console.log("update links with lstyle :");
-    console.log(lstyle);
 
     //Update the discretization variable
     this.update_links_var(lstyle);

@@ -6,23 +6,22 @@ export const ColorContainerComponent = (props) => {
   let [color_mode, set_color_mode] = useState(props.semio.color.mode);
   let [color_type, set_color_type] = useState(props.semio.color.varied.type);
   let links_properties = props.links_properties;
-  console.log(color_mode, color_type);
 
   //Put a border when the ramp is clicked (or one of its children nodes)
   function selectColorRamp(e) {
     document.getElementById("linkColorAlertMessage").innerHTML = "";
     document
-      .querySelectorAll(".selectedRamp")
-      .forEach((el) => el.classList.remove("selectedRamp"));
-    console.log(e.target.nodeName);
+      .querySelectorAll(".linkSelectedRamp")
+      .forEach((el) => el.classList.remove("linkSelectedRamp"));
 
+    //Select a ramp on click on the ramp, the rectangles and the svg elements
     let clickedElement = e.target;
     if (clickedElement.nodeName === "rect") {
-      clickedElement.parentNode.parentNode.classList.add("selectedRamp");
+      clickedElement.parentNode.parentNode.classList.add("linkSelectedRamp");
     } else if (clickedElement.nodeName === "svg") {
-      clickedElement.parentNode.classList.add("selectedRamp");
+      clickedElement.parentNode.classList.add("linkSelectedRamp");
     } else {
-      clickedElement.classList.add("selectedRamp");
+      clickedElement.classList.add("linkSelectedRamp");
     }
   }
 
@@ -93,7 +92,6 @@ export const ColorContainerComponent = (props) => {
           class="custom-select"
           id="linkColorType"
           onChange={(e) => {
-            console.log(e.target.value);
             set_color_type(e.target.value);
           }}
           defaultValue={color_type}

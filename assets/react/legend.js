@@ -144,7 +144,7 @@ export const LegendComponent = (props) => {
     if (nodesSizeMode === "varied") {
       nodesSizeDiv = (
         <div id="nodesSizeLegend" class="legendSubSubContainer">
-          {node_size_ramp(
+          {node_size_container(
             important_values.nodes.size.min,
             important_values.nodes.size.mid,
             important_values.nodes.size.max
@@ -172,7 +172,7 @@ export const LegendComponent = (props) => {
     if (linksSizeMode === "varied") {
       linksSizeDiv = (
         <div id="linksSizeLegend" class="legendSubSubContainer">
-          {link_size_ramp(
+          {link_size_container(
             important_values.links.min,
             important_values.links.mid,
             important_values.links.max
@@ -186,27 +186,37 @@ export const LegendComponent = (props) => {
   }
 
   function color_ramp(colors, min, max, data_type) {
+    console.log(min, max);
     let max_or_min = max;
     let visibility;
     let variable;
+    let style;
     if (data_type === "links") {
       variable = props.lstyle.color.varied.var;
+      style = props.lstyle;
     } else if (data_type === "nodes") {
       variable = props.nstyle.color.varied.var;
+      style = props.nstyle;
     }
 
     return (
       <div class="legendColorRamp">
         <div style={{ paddingBottom: "5%" }}>{variable.substring(0, 12)}</div>
+        {/* 
+        We set the conditional rendering of the label min and max (only if it's quantitative,
+        otherwise there is no min and max) */}
 
-        {colors.map((col) => {
-          if (colors.indexOf(col) < 7 && colors.indexOf(col) > 0) {
+        {colors.map((col, i) => {
+          if (i < 7 && i > 0) {
             visibility = "hidden";
           }
-          if (colors.indexOf(col) === colors.length - 1) {
+          if (i === colors.length - 1) {
             max_or_min = min;
             visibility = "visible";
           }
+
+          //Hide the labels if it's qualitatiative (no min and max)
+          if (style.color.varied.type === "qualitative") visibility = "hidden";
 
           return (
             <div class="colorAndLabel">
@@ -227,7 +237,7 @@ export const LegendComponent = (props) => {
       </div>
     );
   }
-  function node_size_ramp(min, mid, max) {
+  function node_size_container(min, mid, max) {
     //Circles radius in pixels
     let max_radius = d3.max(
       Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
@@ -299,7 +309,7 @@ export const LegendComponent = (props) => {
         </svg> */
     ];
   }
-  function link_size_ramp(min, mid, max) {
+  function link_size_container(min, mid, max) {
     for (let a of Object.entries(props.links_hash)) {
     }
     //Circles radius in pixels

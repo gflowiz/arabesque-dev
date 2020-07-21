@@ -31,7 +31,7 @@ export default class Model {
         varied: { var: "degree", scale: "Sqrt", maxval: 100 },
         fixed: 10,
       },
-      text: { fixed: "none" },
+      text: { var: "" },
       opacity: {
         mode: "fixed",
         fixed: 0.91,
@@ -168,7 +168,6 @@ export default class Model {
 
   // import nodes and convert to geojson points
   async import_nodes(file, callback) {
-    console.log("Importing nodes");
     if (
       (file.type != "text/csv") &
       (file.type != "application/json") &
@@ -223,7 +222,6 @@ export default class Model {
   }
 
   async import_links(file, callback) {
-    console.log("Importing links");
     if (file.type != "text/csv") {
       throw "unsupported file type";
     } else {
@@ -236,7 +234,7 @@ export default class Model {
         });
         that.data.links = links.data;
         var import_resume = that.import();
-        console.log(that.config);
+
         callback(
           import_resume,
           that.get_nodes(),
@@ -382,9 +380,6 @@ export default class Model {
     this.init_nodes_stats();
     this.update_nodes_stats();
 
-    console.log("Model");
-    console.log(this);
-
     // import statistics
     return {
       nb_nodes: final_nodes.size,
@@ -468,7 +463,6 @@ export default class Model {
 
         let groups = dimensions.map((d) => d.group());
 
-        console.log("Import end");
         let res = {
           nb_nodes: that.data.nodes.length,
           nb_links: that.data.links.length,
@@ -476,7 +470,7 @@ export default class Model {
           nb_removed_links: 0,
           nb_aggregated_links: that.data.links_aggregated.all().length,
         };
-        console.log(that.config.filters);
+
         callback(res, that.config.filters, dimensions, groups, that.config);
       });
   }
@@ -572,9 +566,7 @@ export default class Model {
           data[p]
         );
         points.push(point);
-      } catch {
-        console.log("some nodes not parsed");
-      }
+      } catch {}
     }
     return points;
   }

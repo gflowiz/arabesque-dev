@@ -114,7 +114,8 @@ export const SizeContainerComponent = (props) => {
             <option value="Log">Logarithmic</option>
           </select>
           <div class="invalid-feedback">
-            Error : all values must be inferior to 0
+            Error : Can't use log scale with this data. All values must be
+            superior to 0
           </div>
         </div>
         <div id="semioSizeRatioChangenode" class="col-md-4">

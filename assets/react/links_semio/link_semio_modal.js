@@ -25,14 +25,12 @@ export const LinksSemioModalComponent = (props) => {
       semio.color.fixed = color_picker.value;
     } else if (modes.color === "varied") {
       semio.color.mode = "varied";
-      let color_ramp = document.getElementsByClassName("selectedRamp")[0];
+      let color_ramp = document.getElementsByClassName("linkSelectedRamp")[0];
       if (color_ramp === undefined) {
         document.getElementById("linkColorAlertMessage").innerHTML =
           "Pick a color";
         return false;
       }
-      //Empty the alert messages
-      document.getElementById("colorAlertMessage").innerHTML = "";
 
       let colors = [];
       color_ramp.childNodes[0].childNodes.forEach((el) =>

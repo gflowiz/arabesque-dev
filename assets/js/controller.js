@@ -44,15 +44,12 @@ export default class Controller {
       .addEventListener("click", this.show_links_shape.bind(this));
     document
       .getElementById("legendButton")
-      .addEventListener("click", this.show_legend.bind(this));
+      .addEventListener("click", this.toggle_legend.bind(this));
 
     //Everytime the zoom level changes, we update the legend
-    this.view.renderer.map.on("moveend", this.show_legend.bind(this));
+    this.view.renderer.map.on("moveend", this.render_legend.bind(this));
 
     this.charts = [];
-
-    console.log("controller1");
-    console.log(this.model.data);
   }
 
   import_handler() {
@@ -166,7 +163,7 @@ export default class Controller {
   set_projection() {
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
-    console.log(proj);
+
     this.model.set_projection(proj);
     let config = this.model.config;
     this.view.set_projection(
@@ -214,9 +211,6 @@ export default class Controller {
     );
   }
   save_nodes_semio(new_semio) {
-    console.log("save nodes semio");
-    console.log(new_semio);
-
     //Update the model config
     this.model.update_nodes_style(new_semio);
 
@@ -226,20 +220,17 @@ export default class Controller {
       this.model.get_nodes_style()
     );
     let lstyle = this.model.get_links_style();
-    console.log(this.model.get_links_style());
+
     //Re-render the links because the depend on nodes size
     this.view.renderer.update_links(this.model.get_links(), lstyle);
 
-    this.show_legend();
+    this.render_legend();
   }
   show_links_semio() {
-    console.log("show links semio");
-
     let lstyle = this.model.get_links_style();
     //We need them in the modal to be able to chose according to which property the color will vary
     //We take the first line to be able to identify data types for each property
     let links_properties = this.model.data.links[0];
-    console.log(links_properties);
 
     //To open the semio modal
     this.view.update_links_semio(
@@ -250,8 +241,6 @@ export default class Controller {
     );
   }
   save_links_semio(new_semio) {
-    console.log("save link semio");
-    console.log(new_semio);
     //Update the model config
     this.model.update_links_style(new_semio);
 
@@ -259,7 +248,7 @@ export default class Controller {
       this.model.get_links(),
       this.model.get_links_style()
     );
-    this.show_legend();
+    this.render_legend();
   }
   show_links_shape() {
     let lstyle = this.model.get_links_style();
@@ -271,7 +260,7 @@ export default class Controller {
     this.view.renderer.update_links(links, new_semio);
     $("#changeGeometryModal").modal("hide");
   }
-  show_legend() {
+  render_legend() {
     let nstyle = this.model.get_nodes_style();
     let lstyle = this.model.get_links_style();
     let nodes = this.model.get_nodes();
@@ -284,12 +273,27 @@ export default class Controller {
     this.view.renderer.update_links_width(links, lstyle);
     let links_hash = this.view.renderer.proj_links_hash;
 
-    this.view.show_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle);
+    this.view.render_legend(
+      nodes,
+      nodes_hash,
+      nstyle,
+      links,
+      links_hash,
+      lstyle
+    );
+  }
+  toggle_legend() {
+    let legendDiv = document.getElementById("legend");
+    let style = getComputedStyle(legendDiv);
+    console.log(legendDiv.style.visibility);
+    if (legendDiv.style.visibility !== "hidden")
+      legendDiv.style.visibility = "hidden";
+    else legendDiv.style.visibility = "visible";
   }
   render_all() {
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
-    console.log(proj);
+
     this.view.renderer.render(
       this.model.get_nodes(),
       this.model.get_links(),

@@ -26,11 +26,6 @@ export default class View {
     // modal import stats
     this.ModalImportStats = document.getElementById("ModalImportStats");
     this.import_stats_modal = require("../hbs/import-stats-modal.hbs");
-
-    // modal node semio
-    this.ModalSemioNodes = document.getElementById("ModalSemioNodes");
-    // this.semio_nodes_modal = require("../hbs/semio-nodes-modal.hbs");
-    // this.ModalSemioNodes.innerHTML = this.semio_nodes_modal();
   }
 
   import_nodes() {
@@ -207,7 +202,7 @@ export default class View {
       document.getElementById("ModalShapeLinks")
     );
   }
-  show_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle) {
+  render_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle) {
     ReactDOM.render(
       <LegendComponent
         nstyle={nstyle}
