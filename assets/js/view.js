@@ -211,6 +211,9 @@ export default class View {
         links={links}
         nodes_hash={nodes_hash}
         links_hash={links_hash}
+        node_size_scale={this.renderer._scale_node_size}
+        link_size_scale={this.renderer._scale_link_size}
+        map={this.renderer.map}
       />,
       document.getElementById("legendDiv")
     );

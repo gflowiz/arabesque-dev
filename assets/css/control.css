@@ -181,9 +181,9 @@ nav {
   height: 100%;
 }
 .legendSubSubContainer {
-  width: 50%;
-  height: 92%;
-  margin-bottom: 7%;
+  /* width: 50%; */
+  height: 95%;
+  margin-bottom: 5%;
 
   display: flex;
   flex-direction: row;
@@ -223,11 +223,47 @@ nav {
 }
 
 #legendCircles {
-  width: 100%;
+  width: 64%;
+}
+
+#circleLabels {
+  width: 36%;
+}
+
+.circleOneLabel {
+  width: 36%;
+  font-size: 86%;
+  word-break: break-all;
+  text-align: left;
+  margin: auto !important;
+}
+
+.circleTwoLabels {
+  width: 36%;
   display: flex;
   flex-direction: column;
 }
+#legendCircleContainer {
+  width: 100%;
+  height: 70%;
+  display: flex;
+}
 
+.subContainerLabel {
+  position: absolute;
+  top: 20%;
+  left: 1%;
+  height: 10%;
+  max-height: 10%;
+  width: 24%;
+  text-align: center;
+}
+.bigSubSubContainer {
+  width: 55%;
+}
+.smallSubSubContainer {
+  width: 45%;
+}
 .legendLinkSquares {
   width: 100%;
   display: flex;

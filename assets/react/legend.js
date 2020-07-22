@@ -6,6 +6,7 @@ export const LegendComponent = (props) => {
   let linksColorMode = props.lstyle.color.mode;
   let linksSizeMode = props.lstyle.size.mode;
   let important_values = extract_important_values();
+  // console.log(props);
 
   //Defining and filling the different containers of the legend
   let [
@@ -128,7 +129,10 @@ export const LegendComponent = (props) => {
     if (nodesColorMode === "varied") {
       nodesColorDiv = (
         <>
-          <div id="nodesColorLegend" class="legendSubSubContainer">
+          <div
+            id="nodesColorLegend"
+            class="legendSubSubContainer smallSubSubContainer"
+          >
             {color_ramp(
               nodes_colors,
               important_values.nodes.color.min,
@@ -143,7 +147,10 @@ export const LegendComponent = (props) => {
     }
     if (nodesSizeMode === "varied") {
       nodesSizeDiv = (
-        <div id="nodesSizeLegend" class="legendSubSubContainer">
+        <div
+          id="nodesSizeLegend"
+          class="legendSubSubContainer bigSubSubContainer"
+        >
           {node_size_container(
             important_values.nodes.size.min,
             important_values.nodes.size.mid,
@@ -157,7 +164,10 @@ export const LegendComponent = (props) => {
 
     if (linksColorMode === "varied") {
       linksColorDiv = (
-        <div id="linksColorLegend" class="legendSubSubContainer">
+        <div
+          id="linksColorLegend"
+          class="legendSubSubContainer smallSubSubContainer"
+        >
           {color_ramp(
             links_colors,
             important_values.links.min,
@@ -171,7 +181,10 @@ export const LegendComponent = (props) => {
     }
     if (linksSizeMode === "varied") {
       linksSizeDiv = (
-        <div id="linksSizeLegend" class="legendSubSubContainer">
+        <div
+          id="linksSizeLegend"
+          class="legendSubSubContainer bigSubSubContainer"
+        >
           {link_size_container(
             important_values.links.min,
             important_values.links.mid,
@@ -186,7 +199,6 @@ export const LegendComponent = (props) => {
   }
 
   function color_ramp(colors, min, max, data_type) {
-    console.log(min, max);
     let max_or_min = max;
     let visibility;
     let variable;
@@ -223,7 +235,7 @@ export const LegendComponent = (props) => {
               <div
                 id="legendColorRectangle"
                 style={{
-                  width: "28%",
+                  width: "34%",
                   height: "100%",
                   background: col,
                 }}
@@ -238,6 +250,12 @@ export const LegendComponent = (props) => {
     );
   }
   function node_size_container(min, mid, max) {
+    //Compute the size of the direct parent of the circles (#legendCircleContainer),
+    // in order to prevent overflowing. We can't directly compute its width
+    //as it's not rendered yet
+    let container_width =
+      ((document.getElementById("Mapcontainer").clientWidth * 0.7) / 4) * 0.64;
+
     //Circles radius in pixels
     let max_radius = d3.max(
       Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
@@ -247,66 +265,172 @@ export const LegendComponent = (props) => {
       Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
     );
 
-    let median_radius = d3.median(
-      Object.entries(props.nodes_hash).map((node) => node[1].radius_px)
+    return (
+      <div id="legendCircleContainer">
+        <div class="subContainerLabel">
+          {props.nstyle.size.varied.var.substring(0, 10)}
+        </div>
+        {getCircles(min_radius, max_radius, container_width)}
+      </div>
+    );
+  }
+  function getCircles(min_radius, max_radius, container_width) {
+    let [smallCircleRadius, setSmallCircleRadius] = useState(min_radius);
+    //Minimum visible difference between two circles, in % of the div legendCircles
+    let min_vis_diff = 4;
+    //Minimum radius that we can display (in % too)
+    let minimum_radius = 2;
+    if (max_radius < minimum_radius)
+      return (
+        <div class="zoomOutMessage">
+          Circles are too small to be displayed. Zoom in to see them
+        </div>
+      );
+
+    let onlyBigCircle = (
+      <>
+        <svg id="legendCircles">
+          <circle
+            id="bigLegendSizeDrawing"
+            cx="52%"
+            cy="50%"
+            r={max_radius}
+            fill="black"
+          ></circle>
+        </svg>
+        <div class="circleOneLabel">
+          {round_and_shorten(
+            pixelWidthToValue(max_radius, props.node_size_scale, props.map)
+          )}
+        </div>
+      </>
+    );
+    let onlySmallCircle = (
+      <>
+        <svg id="legendCircles">
+          <circle
+            id="bigLegendSizeDrawing"
+            cx="52%"
+            cy="50%"
+            r={smallCircleRadius}
+            fill="black"
+          ></circle>
+        </svg>
+        <div class="circleOneLabel">
+          {round_and_shorten(
+            pixelWidthToValue(
+              smallCircleRadius,
+              props.node_size_scale,
+              props.map
+            )
+          )}
+        </div>
+      </>
     );
 
-    //Compute the size of the direct parent of the circles, in order to prevent
-    //Overflowing. We can't directly compute its width as it's not rendered yet
-    let container_width =
-      (document.getElementById("Mapcontainer").clientWidth * 0.7) / 4;
-    if (max_radius > container_width * 0.4) {
+    //If it's too big (radius > 50% of his parent div)
+    if (max_radius > container_width * 0.5) {
+      return onlySmallCircle;
+    }
+
+    if (smallCircleRadius > container_width * 0.5)
       return (
         <div class="zoomOutMessage">
           Zoom out to see this part of the legend
         </div>
       );
-    }
 
+    //If there isn't enough difference between the sizes of the small and big circles,
+    //We only display the big one
+    if (max_radius - smallCircleRadius < min_vis_diff) {
+      return onlyBigCircle;
+    }
+    //If the difference between the big and small circle is big enough, but that the small
+    //circle is to small to be displayed, we look for another value in the quantiles of
+    //the distribution
+    if (smallCircleRadius < minimum_radius) {
+      let smallCircleGoodSize;
+      for (let i = 0.1; i <= 0.9; i += 0.1) {
+        i = Math.round(i * 10) / 10;
+
+        let quantile_i_radius = d3.quantile(
+          Object.entries(props.nodes_hash)
+            .map((node) => node[1].radius_px)
+            .sort(),
+          i
+        );
+
+        //If these two conditions are filled, the value is good enough
+        if (
+          quantile_i_radius > minimum_radius &&
+          max_radius - quantile_i_radius > min_vis_diff
+        ) {
+          smallCircleGoodSize = quantile_i_radius;
+          break;
+        }
+      }
+      //If we didn't find any good value, we display the single big circle
+      if (smallCircleGoodSize === undefined) return onlyBigCircle;
+      //If we did, we set the state so the function will re-execute and directly
+      //reach the last "return" (underneath)
+      else setSmallCircleRadius(smallCircleGoodSize);
+    }
     return [
-      <div style={{ position: "absolute", top: "2em", left: "1%" }}>
-        {props.nstyle.size.varied.var.substring(0, 12)}
-      </div>,
       <svg id="legendCircles">
         <circle
-          class="legendSizeDrawing"
-          cx="43%"
-          cy="50%"
-          // r={size_scale(max_radius) + "%"}
-          r={max_radius + "px"}
+          id="bigLegendSizeDrawing"
+          cx="52%"
+          cy="35%"
+          r={max_radius}
           fill="red"
         ></circle>
         <circle
-          class="legendSizeDrawing"
-          cx="43%"
-          cy="50%"
-          // r={size_scale(median_radius) + "%"}
-          r={median_radius + "px"}
+          id="medianLegendSizeDrawing"
+          cx="52%"
+          cy="85%"
+          r={smallCircleRadius}
           fill="blue"
         ></circle>
-        <circle
-          class="legendSizeDrawing"
-          cx="43%"
-          cy="50%"
-          // r={size_scale(min_radius) + "%"}
-          r={min_radius + 1 + "px"}
-          fill="black"
-        ></circle>
       </svg>,
-
-      /* <svg class="legendLabels">
-          <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
-            {round_and_shorten(max)}
-          </text>
-
-          <text class="labelMid" x="50%" y="60%" fontSize="0.9em">
-            {round_and_shorten(mid)}
-          </text>
-
-          <text class="labelMin" x="50%" y="60%" fontSize="0.9em">
-            {round_and_shorten(min)}
-          </text>
-        </svg> */
+      <div class="circleTwoLabels">
+        <div
+          // class="circleOneLabel"
+          style={{
+            height: "70%",
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <div style={{ fontSize: "80%" }}>
+            {" "}
+            {round_and_shorten(
+              pixelWidthToValue(max_radius, props.node_size_scale, props.map)
+            )}
+          </div>
+        </div>
+        <div
+          // class="circleOneLabel"
+          style={{
+            height: "30%",
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {" "}
+          <div style={{ fontSize: "80%" }}>
+            {" "}
+            {round_and_shorten(
+              pixelWidthToValue(
+                smallCircleRadius,
+                props.node_size_scale,
+                props.map
+              )
+            )}
+          </div>
+        </div>
+      </div>,
     ];
   }
   function link_size_container(min, mid, max) {
@@ -377,6 +501,14 @@ export const LegendComponent = (props) => {
         ></rect>
       </svg>,
     ];
+  }
+
+  function pixelWidthToValue(radius_px, size_scale, map) {
+    let resolution = map.getView().getResolution();
+    let radius_m = radius_px * resolution;
+    let value = size_scale.invert(radius_m);
+
+    return value;
   }
 
   return (

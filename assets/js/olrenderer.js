@@ -644,7 +644,7 @@ export default class OlRenderer {
     this._scale_node_size = this._scales[this._node_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
-      .domain([min_size, max_size]);
+      .domain([0, max_size]);
 
     //Opacité
     this._scale_node_opacity = this._scales[this._node_scale_types.opacity]
@@ -853,7 +853,7 @@ export default class OlRenderer {
     this._scale_link_size = this._scales[this._link_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._link_size_ratio / 100)])
-      .domain([min_count_size, max_count_size]);
+      .domain([0, max_count_size]);
 
     //Opacité
     this._scale_link_opacity = this._scales[this._link_scale_types.opacity]

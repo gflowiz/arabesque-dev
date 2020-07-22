@@ -265,6 +265,7 @@ export default class Controller {
     let lstyle = this.model.get_links_style();
     let nodes = this.model.get_nodes();
     let links = this.model.get_links();
+
     //Update nodes radius in pixel (according to zoom level)
     this.view.renderer.update_circles_radius();
     let nodes_hash = this.view.renderer.proj_nodes_hash;
