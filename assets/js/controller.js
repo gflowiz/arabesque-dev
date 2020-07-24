@@ -271,7 +271,7 @@ export default class Controller {
     let nodes_hash = this.view.renderer.proj_nodes_hash;
 
     //Same for links
-    this.view.renderer.update_links_width(links, lstyle);
+    this.view.renderer.update_links_height(links, lstyle);
     let links_hash = this.view.renderer.proj_links_hash;
 
     this.view.render_legend(

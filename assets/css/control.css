@@ -164,18 +164,18 @@ nav {
 #legend {
   position: absolute;
   bottom: 0;
-  width: 70%;
+  width: 60%;
   height: 35%;
-  background: rgba(128, 128, 179, 0.397);
   z-index: 50;
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* justify-content: center; */
 }
 .legendSubContainer {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(128, 128, 179, 0.397);
 
   width: 50%;
   height: 100%;
@@ -212,6 +212,7 @@ nav {
   justify-content: center;
   display: flex;
   align-items: center;
+  margin-left: 5%;
 }
 
 .legendColorRampLabels {
@@ -222,8 +223,12 @@ nav {
   justify-content: space-between;
 }
 
-#legendCircles {
+#legendShapes {
   width: 64%;
+}
+
+.squareContainer {
+  width: 55% !important;
 }
 
 #circleLabels {
@@ -231,8 +236,8 @@ nav {
 }
 
 .circleOneLabel {
-  width: 36%;
-  font-size: 86%;
+  width: 42%;
+  font-size: 78%;
   word-break: break-all;
   text-align: left;
   margin: auto !important;
@@ -251,18 +256,19 @@ nav {
 
 .subContainerLabel {
   position: absolute;
-  top: 20%;
-  left: 1%;
+  top: 17%;
   height: 10%;
   max-height: 10%;
   width: 24%;
   text-align: center;
+  font-size: 0.9rem;
 }
 .bigSubSubContainer {
   width: 55%;
 }
 .smallSubSubContainer {
   width: 45%;
+  margin-left: 4%;
 }
 .legendLinkSquares {
   width: 100%;

@@ -109,16 +109,16 @@ export default class OlRenderer {
     }
   }
 
-  update_links_width(links, lstyle) {
+  update_links_height(links, lstyle) {
     let resolution_m = this.map.getView().getResolution();
 
     for (let link of links) {
-      let width_m = this.linkSize(link, lstyle);
-      let width_px = width_m / resolution_m;
+      let height_m = this.linkSize(link, lstyle);
+      let height_px = height_m / resolution_m;
       this.proj_links_hash[link.key] = {
         value: link.value,
-        width_m: width_m,
-        width_px: width_px,
+        height_m: height_m,
+        height_px: height_px,
       };
     }
   }
@@ -358,7 +358,7 @@ export default class OlRenderer {
   nodeSizeScale(node) {
     //If it's log scale, we compute log(x+1) to prevent errors (log(0) = -Infinity)
     if (this._node_scale_types.size === "Log")
-      return this._scale_node_size(+node.properties[this._node_var.size] + 1);
+      return this._scale_node_size(+node.properties[this._node_var.size]);
     else return this._scale_node_size(+node.properties[this._node_var.size]);
   }
 
@@ -369,6 +369,7 @@ export default class OlRenderer {
     do_not_close = false,
     modal_id
   ) {
+    console.log(min_size, max_size);
     let scaleDiv;
     if (modal_id === "#semioNodes")
       scaleDiv = document.getElementById("typeSizeChangenode");
@@ -383,8 +384,8 @@ export default class OlRenderer {
       scaleDiv.classList.remove("is-invalid");
       if (do_not_close === false) $(modal_id).modal("hide");
     }
-    //Compute log(x+1) because log(0) = -Infinity
-    return [min_size + 1, max_size + 1];
+
+    return [min_size, max_size];
   }
   handle_log_scale_opacity_range(min_opa, max_opa, modal_id) {
     let scaleDiv;
@@ -639,13 +640,20 @@ export default class OlRenderer {
     } else {
       $("#semioNodes").modal("hide");
     }
-
     // definition de l'échelle pour la taille
+    let domain_size;
+    if (this._node_scale_types.size === "Log") domain_size = [1, max_size];
+    else domain_size = [0, max_size];
+
     this._scale_node_size = this._scales[this._node_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
-      .domain([0, max_size]);
+      .domain(domain_size);
 
+    // let domain_opacity;
+    // if (this._node_scale_types.opacity === "Log")
+    //   domain_opacity = [1, max_opacity];
+    // else domain_opacity = [0, max_opacity];
     //Opacité
     this._scale_node_opacity = this._scales[this._node_scale_types.opacity]
       .copy()
@@ -869,7 +877,7 @@ export default class OlRenderer {
     let shape_type = lstyle.shape.type;
 
     //Attach link width (in px) for the scalability in the legend
-    this.update_links_width(links, lstyle);
+    this.update_links_height(links, lstyle);
 
     let style = {
       geometry: {

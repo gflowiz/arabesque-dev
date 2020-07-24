@@ -3,7 +3,7 @@ import ReactDOM from "react-dom";
 import { NodesSemioModalComponent } from "../react/nodes_semio/node_semio_modal";
 import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal";
 import { LinksShapeModalComponent } from "../react/links_shape_semio";
-import { LegendComponent } from "../react/legend";
+import { LegendComponent } from "../react/legend/legend";
 
 export default class View {
   constructor(renderer) {
