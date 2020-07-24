@@ -287,9 +287,8 @@ export default class Controller {
     let legendDiv = document.getElementById("legend");
     let style = getComputedStyle(legendDiv);
     console.log(legendDiv.style.visibility);
-    if (legendDiv.style.visibility !== "hidden")
-      legendDiv.style.visibility = "hidden";
-    else legendDiv.style.visibility = "visible";
+    if (legendDiv.style.display !== "none") legendDiv.style.display = "none";
+    else legendDiv.style.display = "flex";
   }
   render_all() {
     let proj_sel = document.getElementById("projection");

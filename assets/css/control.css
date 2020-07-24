@@ -164,7 +164,7 @@ nav {
 #legend {
   position: absolute;
   bottom: 0;
-  width: 60%;
+  width: 45%;
   height: 35%;
   z-index: 50;
   display: flex;
@@ -175,7 +175,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(128, 128, 179, 0.397);
+  background: rgba(128, 128, 179, 0.497);
 
   width: 50%;
   height: 100%;

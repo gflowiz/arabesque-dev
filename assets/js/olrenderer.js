@@ -643,17 +643,13 @@ export default class OlRenderer {
     // definition de l'échelle pour la taille
     let domain_size;
     if (this._node_scale_types.size === "Log") domain_size = [1, max_size];
-    else domain_size = [0, max_size];
+    else domain_size = [min_size, max_size];
 
     this._scale_node_size = this._scales[this._node_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
       .domain(domain_size);
 
-    // let domain_opacity;
-    // if (this._node_scale_types.opacity === "Log")
-    //   domain_opacity = [1, max_opacity];
-    // else domain_opacity = [0, max_opacity];
     //Opacité
     this._scale_node_opacity = this._scales[this._node_scale_types.opacity]
       .copy()
@@ -801,18 +797,6 @@ export default class OlRenderer {
       .range([0, 7.99])
       .domain([min_count, max_count]);
 
-    //SIZE
-
-    // recherche du max pour l'échelle des tailles
-    // let max_size = d3.max(links, (n) => parseFloat(n[this._link_var.size]));
-    // let min_size = d3.min(links, (n) => parseFloat(n[this._link_var.size]));
-    // console.log("size:" + min_size + " " + max_size);
-
-    //OPACITY
-    // let max_opa = d3.max(links, (n) => parseFloat(n[this._link_var.opacity]));
-    // let min_opa = d3.min(links, (n) => parseFloat(n[this._link_var.opacity]));
-    // console.log("opa :" + min_opa + " " + max_opa);
-
     //If scale is logarithmic, the range musn't cross zero
     if (
       this._link_scale_types.size === "Log" ||
@@ -858,10 +842,14 @@ export default class OlRenderer {
     }
 
     // definition de l'échelle pour la taille
+    let domain_size;
+    if (this._link_scale_types.size === "Log") domain_size = [1, max_size];
+    else domain_size = [min_count, max_count];
+    // definition de l'échelle pour la taille
     this._scale_link_size = this._scales[this._link_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._link_size_ratio / 100)])
-      .domain([0, max_count_size]);
+      .domain([domain_size]);
 
     //Opacité
     this._scale_link_opacity = this._scales[this._link_scale_types.opacity]

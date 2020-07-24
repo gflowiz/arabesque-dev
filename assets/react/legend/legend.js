@@ -355,17 +355,17 @@ export const LegendComponent = (props) => {
 
   function get_nodes_var_labels() {
     let [nodeColorVar, nodeSizeVar] = [
-      props.nstyle.color.varied.var.substring(0, 12),
-      props.nstyle.size.varied.var.substring(0, 12),
+      props.nstyle.color.varied.var,
+      props.nstyle.size.varied.var,
     ];
 
     if (nodesColorMode === "varied" && nodesSizeMode === "varied")
       return [
         <div class="subContainerLabel" style={{ left: "1%" }}>
-          {nodeSizeVar}
+          {nodeSizeVar.substring(0, 12)}
         </div>,
         <div class="subContainerLabel" style={{ left: "25%" }}>
-          {nodeColorVar}
+          {nodeColorVar.substring(0, 12)}
         </div>,
       ];
     if (nodesColorMode === "fixed" && nodesSizeMode === "fixed") return <p></p>;
@@ -385,8 +385,8 @@ export const LegendComponent = (props) => {
 
   function get_links_var_labels() {
     let [linkColorVar, linkSizeVar] = [
-      props.lstyle.color.varied.var.substring(0, 12),
-      props.lstyle.size.varied.var.substring(0, 12),
+      props.lstyle.color.varied.var,
+      props.lstyle.size.varied.var,
     ];
     //If node container is empty, the link container is positionned directly to the left
     let offset_x;
@@ -396,10 +396,10 @@ export const LegendComponent = (props) => {
     if (linksColorMode === "varied" && linksSizeMode === "varied")
       return [
         <div class="subContainerLabel" style={{ left: offset_x + "%" }}>
-          {linkSizeVar}
+          {linkSizeVar.substring(0, 12)}
         </div>,
         <div class="subContainerLabel" style={{ left: offset_x + 25 + "%" }}>
-          {linkColorVar}
+          {linkColorVar.substring(0, 12)}
         </div>,
       ];
     if (linksColorMode === "fixed" && linksSizeMode === "fixed") return <p></p>;
