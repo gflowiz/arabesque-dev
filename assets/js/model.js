@@ -454,13 +454,11 @@ export default class Model {
         that.init_nodes_stats();
         that.update_nodes_stats();
 
-        //Adding a filter on flows volume
-        that.config.filters.push({ id: that.config.varnames.vol });
-
         let filters = that.config.filters;
         that.config.filters = [];
+        filters = [];
+        filters.push({ id: that.config.varnames.vol });
         let dimensions = filters.map((f) => that.create_filter(f.id));
-
         let groups = dimensions.map((d) => d.group());
 
         let res = {

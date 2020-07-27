@@ -4,6 +4,7 @@ import { NodesSemioModalComponent } from "../react/nodes_semio/node_semio_modal"
 import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal";
 import { LinksShapeModalComponent } from "../react/links_shape_semio";
 import { LegendComponent } from "../react/legend/legend";
+import { NewFilterModal } from "../react/filters/filters_modal";
 
 export default class View {
   constructor(renderer) {
@@ -216,6 +217,17 @@ export default class View {
         map={this.renderer.map}
       />,
       document.getElementById("legendDiv")
+    );
+  }
+
+  new_filter(nodes_properties, callback) {
+    console.log(callback);
+    ReactDOM.render(
+      <NewFilterModal
+        nodes_properties={nodes_properties}
+        add_filter={callback}
+      />,
+      document.getElementById("ModalNewFilter")
     );
   }
 }

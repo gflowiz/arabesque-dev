@@ -84,7 +84,8 @@ function smallAndBigRectangles(
         class="legendSizeDrawing"
         x="35%"
         y={placeRectangle("big", 2, container_height, max_height)}
-        height={max_height}
+        //-2 to include the border
+        height={max_height - 2}
         width="50%"
         fill="none"
         stroke="black"
@@ -95,7 +96,7 @@ function smallAndBigRectangles(
         class="legendSizeDrawing"
         x="35%"
         y={placeRectangle("small", 2, container_height, smallRectangleHeight)}
-        height={smallRectangleHeight}
+        height={smallRectangleHeight - 2}
         width="50%"
         fill="none"
         stroke="black"
@@ -211,7 +212,7 @@ export const Rectangles = (props) => {
 
   //If the big Rectangle is too big (height > 50% of his parent div),
   //we render only the small one
-  console.log(max_height > container_height * 0.4);
+
   if (max_height > container_height * 0.4) {
     return smallRectangle(
       smallRectangleHeightM,

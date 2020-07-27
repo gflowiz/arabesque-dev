@@ -9,6 +9,7 @@ export function pxToMeters(px_length, map) {
 export function pixelWidthToValue(radius_px, size_scale, map) {
   let resolution = map.getView().getResolution();
   let radius_m = radius_px * resolution;
+
   let value = size_scale.invert(radius_m);
 
   return value;
@@ -281,7 +282,7 @@ export const LegendComponent = (props) => {
     // in order to prevent overflowing. We can't directly compute its width
     //as it's not rendered yet
     let container_width =
-      ((document.getElementById("Mapcontainer").clientWidth * 0.7) / 4) * 0.64;
+      ((document.getElementById("Mapcontainer").clientWidth * 0.45) / 4) * 0.64;
 
     let container_height =
       document.getElementById("Mapcontainer").clientHeight * 0.35 * 0.95 * 0.7;
@@ -327,6 +328,7 @@ export const LegendComponent = (props) => {
     let max_height = d3.max(
       Object.entries(props.links_hash).map((link) => link[1].height_px)
     );
+    console.log(max_height);
 
     let min_height = d3.min(
       Object.entries(props.links_hash).map((link) => link[1].height_px)
@@ -334,13 +336,6 @@ export const LegendComponent = (props) => {
 
     return (
       <div id="legendCircleContainer">
-        {/* <div
-          class="subContainerLabel"
-          style={{ left: placeLabels("link", "size") }}
-        >
-          {props.lstyle.size.varied.var.substring(0, 10)}
-        </div> */}
-        {/* {getRectangles(min_height, max_height, container_height)} */}
         <Rectangles
           map={props.map}
           link_size_scale={props.link_size_scale}

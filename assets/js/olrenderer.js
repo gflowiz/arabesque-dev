@@ -114,6 +114,7 @@ export default class OlRenderer {
 
     for (let link of links) {
       let height_m = this.linkSize(link, lstyle);
+
       let height_px = height_m / resolution_m;
       this.proj_links_hash[link.key] = {
         value: link.value,
@@ -369,7 +370,6 @@ export default class OlRenderer {
     do_not_close = false,
     modal_id
   ) {
-    console.log(min_size, max_size);
     let scaleDiv;
     if (modal_id === "#semioNodes")
       scaleDiv = document.getElementById("typeSizeChangenode");
@@ -843,19 +843,27 @@ export default class OlRenderer {
 
     // definition de l'échelle pour la taille
     let domain_size;
-    if (this._link_scale_types.size === "Log") domain_size = [1, max_size];
-    else domain_size = [min_count, max_count];
+    if (this._link_scale_types.size === "Log")
+      domain_size = [1, max_count_size];
+    else domain_size = [min_count_size, max_count_size];
     // definition de l'échelle pour la taille
     this._scale_link_size = this._scales[this._link_scale_types.size]
       .copy()
       .range([0, (this._extent_size / 100) * (this._link_size_ratio / 100)])
-      .domain([domain_size]);
+      .domain(domain_size);
 
     //Opacité
+
+    // definition de l'échelle pour la taille
+    let domain_opacity;
+    if (this._link_scale_types.opacity === "Log")
+      domain_opacity = [1, max_count_opa];
+    else domain_opacity = [min_count_opa, max_count_opa];
+
     this._scale_link_opacity = this._scales[this._link_scale_types.opacity]
       .copy()
       .range([lstyle.opacity.varied.min, lstyle.opacity.varied.max])
-      .domain([min_count_opa, max_count_opa]);
+      .domain(domain_opacity);
   }
 
   create_arrows(links, lstyle) {
@@ -1044,8 +1052,6 @@ export default class OlRenderer {
   }
 
   update_links(links, lstyle) {
-    console.log("update links with lstyle :");
-
     //Update the discretization variable
     this.update_links_var(lstyle);
     //Update scale types for size and opacity (linear, pow etc)

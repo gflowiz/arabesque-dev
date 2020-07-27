@@ -208,7 +208,8 @@ nav {
   width: 50%;
   height: 100%;
   text-align: center;
-  font-size: 80%;
+  font-size: 75%;
+  word-break: break-all;
   justify-content: center;
   display: flex;
   align-items: center;
@@ -247,6 +248,7 @@ nav {
   width: 36%;
   display: flex;
   flex-direction: column;
+  word-break: break-allk;
 }
 #legendCircleContainer {
   width: 100%;
@@ -362,4 +364,11 @@ chart {
 }
 #NodesSemioColorRow {
   align-items: center;
+}
+
+/*FILTERS*/
+
+.filterColumn {
+  display: flex;
+  flex-direction: column;
 }
