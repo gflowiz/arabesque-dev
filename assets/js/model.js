@@ -3,6 +3,11 @@ import saveAs from "file-saver";
 import { parse as papaparse } from "papaparse";
 import * as turf from "@turf/turf";
 import crossfilter from "crossfilter2";
+import BarChart from "./barchartfilter.js";
+import React from "react";
+import ReactDOM from "react-dom";
+import { Filters } from "../react/filters/filters";
+import { FilterMinMax } from "../react/filters/filterminmax";
 
 export default class Model {
   constructor() {
@@ -454,12 +459,9 @@ export default class Model {
         that.init_nodes_stats();
         that.update_nodes_stats();
 
-        let filters = that.config.filters;
-        that.config.filters = [];
-        filters = [];
-        filters.push({ id: that.config.varnames.vol });
-        let dimensions = filters.map((f) => that.create_filter(f.id));
-        let groups = dimensions.map((d) => d.group());
+        // that.create_filter("count");
+
+        // that.render_filters();
 
         let res = {
           nb_nodes: that.data.nodes.length,
@@ -469,7 +471,7 @@ export default class Model {
           nb_aggregated_links: that.data.links_aggregated.all().length,
         };
 
-        callback(res, that.config.filters, dimensions, groups, that.config);
+        callback(res, that.config);
       });
   }
 
@@ -567,20 +569,5 @@ export default class Model {
       } catch {}
     }
     return points;
-  }
-
-  create_filter(vname) {
-    let dim = this.data.crossfilters.dimension((l) => +l[vname]);
-    this.data.filters[vname] = dim;
-
-    this.config.filters.push({
-      id: vname,
-      range: [
-        +dim.group().all()[0].key,
-        +dim.group().all()[dim.group().all().length - 1].key,
-      ],
-    });
-
-    return dim;
   }
 }

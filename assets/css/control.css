@@ -372,3 +372,18 @@ chart {
   display: flex;
   flex-direction: column;
 }
+
+.filterMinInput {
+  width: 60%;
+}
+.filterMaxInput {
+  width: 60%;
+}
+
+.barchart {
+  height: 10em;
+}
+
+#filterTrashIcon {
+  width: 15%;
+}

@@ -2,21 +2,24 @@ import React, { useState } from "react";
 import { filter } from "jszip/lib/object";
 
 export const NewFilterModal = (props) => {
-  let [filterLayer, setFilterLayer] = useState("links");
+  let [targetLayer, settargetLayer] = useState("links");
 
-  function add_filter(e) {
+  function save_and_close(e) {
+    let target = targetLayer;
+    let variable = document.getElementById("filterVariableSelect").value;
+    let type = document.getElementById("filterTypeSelect").value;
+
     e.preventDefault();
-    props.add_filter();
+    props.add_filter(target, variable, type);
   }
 
-  console.log(filterLayer);
+  console.log(targetLayer);
   let variableContainer;
-  if (filterLayer === "links")
+  if (targetLayer === "links")
     variableContainer = (
       <div class="col-md-4">
-        <label for="valueTofilter">Variable </label>
-        <select class="custom-select" id="valueTofilter">
-          <option selected="">Choose...</option>
+        <label for="filterVariableSelect">Variable </label>
+        <select class="custom-select" id="filterVariableSelect">
           <option value="origin">origin</option>
           <option value="dest">dest</option>
           <option value="count">count</option>
@@ -24,7 +27,7 @@ export const NewFilterModal = (props) => {
         </select>
       </div>
     );
-  else if (filterLayer === "nodes")
+  else if (targetLayer === "nodes")
     variableContainer = (
       <div class="col-md-4">
         <label for="valueTofilter">Variable </label>
@@ -69,7 +72,7 @@ export const NewFilterModal = (props) => {
               </div>
               {variableContainer}
               <div class="col-md-4">
-                <label for="selectedFilter">
+                <label for="filterTypeSelect">
                   Type{" "}
                   <img
                     class="small-icon"
@@ -83,7 +86,7 @@ export const NewFilterModal = (props) => {
                     data-original-title="Select the type of filter:"
                   ></img>
                 </label>
-                <select class="custom-select" id="selectedFilter">
+                <select class="custom-select" id="filterTypeSelect">
                   <option selected=""></option>
                   <option value="categorial">Categorial</option>
                   <option value="numeral">Numeral</option>
@@ -99,7 +102,7 @@ export const NewFilterModal = (props) => {
             type="button"
             id="addFilterButton"
             data-dismiss="modal"
-            onClick={add_filter}
+            onClick={save_and_close}
           >
             ADD FILTER
           </button>

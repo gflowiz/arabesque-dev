@@ -25,6 +25,7 @@
     "json-loader": "^0.5.7",
     "mini-css-extract-plugin": "^0.7.0",
     "prettier": "2.0.5",
+    "react-html-parser": "^2.0.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.0",
     "webpack-dev-server": "^3.3.1"

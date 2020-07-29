@@ -1,11 +1,19 @@
 import * as d3 from "d3";
 import React from "react";
+import BarChartFilter from "../../js/barchartfilter";
 
-export default class BarChartFilter {
-  constructor(id, dimension, group, render_all) {
-    this.id = id;
+export class BarChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.id = props.id;
+    this.data = props.data;
+
+    this.dimension = this.create_dimension(this.id);
+    this.group = this.dimension.group();
+    this.render_all = props.render_all;
+
     this.margin = { top: 10, right: 13, bottom: 20, left: 10 };
-    let ga = group.all();
+    let ga = this.group.all();
     this.x = d3
       .scaleLinear()
       .range([0, 200])
@@ -14,20 +22,19 @@ export default class BarChartFilter {
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
     this.brushDirty = false;
-    this.dimension = dimension;
-    this.group = group;
-    this.render_all = render_all;
+
     this.brush.on("brush.chart", this.brush_listener(this));
     // console.log('BarChartFilter');
     // console.log(this)
   }
 
   brush_listener(that) {
+    console.log("brush");
     return function () {
       const g = d3.select(this.parentNode);
       const brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
       let activeRange = brushRange;
-
+      console.log(brushRange);
       const hasRange =
         activeRange &&
         activeRange.length === 2 &&
@@ -52,15 +59,16 @@ export default class BarChartFilter {
       // filter the active dimension to the range extents
       that.dimension.filterRange(extents);
 
-      // document.getElementById("filterMinInput").value = Math.round(extents[0]);
-      // document.getElementById("filterMaxInput").value = Math.round(extents[1]);
+      document.getElementById("filterMinInput").value = Math.round(extents[0]);
+      document.getElementById("filterMaxInput").value = Math.round(extents[1]);
 
       // re-render the other charts accordingly
       that.render_all();
     };
   }
 
-  chart(div) {
+  chart() {
+    let div = document.createElement("div");
     const width = this.x.range()[1];
     const height = this.y.range()[0];
 
@@ -83,7 +91,6 @@ export default class BarChartFilter {
         .attr("viewBox", `0 0 ${w} ${h}`)
         .attr("width", "100%")
         .attr("height", "250px")
-        .attr("class", "barchart")
         .append("g")
         .attr("transform", `translate(${this.margin.left},${this.margin.top})`);
 
@@ -178,5 +185,83 @@ export default class BarChartFilter {
         4.5 * x
       },${y + 8}V${2 * y - 8}`;
     }
+
+    this.brush.on("brush.chart", this.brush_listener(this));
+    return { __html: div.childNodes[0].outerHTML };
+  }
+
+  create_dimension(vname) {
+    let dim = this.data.crossfilters.dimension((l) => +l[vname]);
+    this.data.filters[vname] = dim;
+
+    // this.config.filters.push({
+    //   id: vname,
+    //   range: [
+    //     +dim.group().all()[0].key,
+    //     +dim.group().all()[dim.group().all().length - 1].key,
+    //   ],
+    // });
+
+    return dim;
+  }
+
+  // create_barchart() {
+  //   let div = document.createElement("div");
+  //   div.id = "filter-count";
+  //   this.chart(div);
+  //   return div.outerHTML;
+  // }
+
+  render() {
+    return [
+      <div dangerouslySetInnerHTML={this.chart()}></div>,
+      // <div class="row align-items-center m-3 border-top border-secondary filter-bar">
+      //   <img class="icon-filter" src="assets/svg/si-glyph-link.svg"></img>
+      //   <label for="filterNumdistance" class="h5">
+      //     distance
+      //   </label>
+      //   <div class="col-sm-11 p-0" id="filterNumdistance"></div>
+      //   <div class="col-sm-1 p-0">
+      //     <button
+      //       type="button"
+      //       class="close center-block"
+      //       id="buttonFilterdistance"
+      //       aria-label="Close"
+      //     >
+      //       <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
+      //     </button>
+      //   </div>
+      //   <div class="col-sm-6">
+      //     <div class="row">
+      //       <div class="col-md-3">Min:</div>
+      //       <div class="col-md-9">
+      //         <input
+      //           class="form-control"
+      //           id="numMinFilterdistance"
+      //           min="6.491051123632014"
+      //           max="277.4746920145835"
+      //           step="0.01"
+      //           type="number"
+      //         ></input>
+      //       </div>
+      //     </div>
+      //   </div>
+      //   <div class="col-sm-6">
+      //     <div class="row">
+      //       <div class="col-md-3">Max:</div>
+      //       <div class="col-md-9">
+      //         <input
+      //           class="form-control"
+      //           id="numMaxFilterdistance"
+      //           min="6.491051123632014"
+      //           max="277.4746920145835"
+      //           step="0.01"
+      //           type="number"
+      //         ></input>
+      //       </div>
+      //     </div>
+      //   </div>
+      // </div>,
+    ];
   }
 }

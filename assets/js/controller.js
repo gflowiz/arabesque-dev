@@ -1,8 +1,9 @@
-import barChart from "./barchartfilter.js";
+import BarChart from "./barchartfilter.js";
 import { render } from "ol/control/Attribution";
-import { FilterContainer } from "../react/filters/filter";
+import { Filters } from "../react/filters/filters";
 import ReactDOM from "react-dom";
 import React from "react";
+import { FilterMinMax } from "../react/filters/filterminmax";
 
 export default class Controller {
   constructor(model, view) {
@@ -137,13 +138,14 @@ export default class Controller {
       .import_zip(zipfile, this.post_import_zip.bind(this))
       .catch(this.view.error_zip_file());
   }
-  post_import_zip(res, filters, dimensions, groups, config) {
+  post_import_zip(res, config) {
     //Updating styles
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
 
-    this.render_filters(filters, dimensions, groups, config);
+    //Render filters
+    this.render_filters(this.render_all.bind(this));
 
     this.view.import_end(
       res,
@@ -189,14 +191,7 @@ export default class Controller {
       )
       .join("");
   }
-  add_filter(id, dimension, group) {
-    let f = new barChart(id, dimension, group, this.render_all.bind(this));
-    let div = document.createElement("div");
-    div.id = `filter-${id}`;
-    document.getElementById("Filters").append(div);
-    f.chart(div);
-    this.charts.push(f);
-  }
+
   show_nodes_semio() {
     let nstyle = this.model.get_nodes_style();
     //We need them in the modal to be able to chose according to which property the color will vary
@@ -292,6 +287,7 @@ export default class Controller {
     else legendDiv.style.display = "flex";
   }
   render_all() {
+    console.log("renderall");
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
 
@@ -314,85 +310,117 @@ export default class Controller {
   }
   toggle_new_filter_modal() {
     let nodes_properties = Object.keys(this.model.data.nodes[0].properties);
-    console.log(this.add_filter);
     this.view.new_filter(nodes_properties, this.add_filter.bind(this));
   }
-  // add_filter() {
-  //   console.log("addfilter");
-  //   this.model.config.filters = [];
-  //   //Adding a filter on flows volume
-  //   this.model.config.filters.push({ id: this.model.config.varnames.vol });
-  //   // this.render_filters(this.model.config.filters);
-  // }
 
-  render_filters(filters, dimensions, groups, config) {
-    console.log(dimensions, groups);
+  render_filters() {
+    document.getElementById("Filters").innerHTML = "";
+
+    // this.model.config.filters = [{ id: "origin" }];
+    let filters = this.model.config.filters;
+    console.log(filters);
+
     //Create filters
     for (let i = 0; i < filters.length; i++) {
-      let f = new barChart(
-        filters[i].id,
-        dimensions[i],
-        groups[i],
-        this.render_all.bind(this)
-      );
-      let div = document.createElement("div");
-      div.id = `filter-${filters[i].id}`;
-      document.getElementById("Filters").append(
-        <div class="row align-items-center m-3 border-top border-secondary filter-bar">
-          <img class="icon-filter" src="assets/svg/si-glyph-link.svg"></img>
-          <label for="filterNumdistance" class="h5">
-            distance
-          </label>
-          <div class="col-sm-11 p-0" id="filterNumdistance"></div>
-          <div class="col-sm-1 p-0">
-            <button
-              type="button"
-              class="close center-block"
-              id="buttonFilterdistance"
-              aria-label="Close"
-            >
-              <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
-            </button>
-          </div>
-          <div class="col-sm-6">
-            <div class="row">
-              <div class="col-md-3">Min:</div>
-              <div class="col-md-9">
-                <input
-                  class="form-control"
-                  id="numMinFilterdistance"
-                  min="6.491051123632014"
-                  max="277.4746920145835"
-                  step="0.01"
-                  type="number"
-                ></input>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-6">
-            <div class="row">
-              <div class="col-md-3">Max:</div>
-              <div class="col-md-9">
-                <input
-                  class="form-control"
-                  id="numMaxFilterdistance"
-                  min="6.491051123632014"
-                  max="277.4746920145835"
-                  step="0.01"
-                  type="number"
-                ></input>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-      // ReactDOM.render(
-      //   <FilterContainer filter={div} />,
-      //   document.getElementById("Filters")
-      // );
-      //Create chart
-      f.chart(div);
-      this.charts.push(f);
+      let id = filters[i].id;
+      let filter_div = this.barchart_filter(id, this.render_all.bind(this));
+
+      document.getElementById("Filters").append(filter_div);
     }
+  }
+  add_filter(target, variable, type) {
+    console.log(this, variable, target, type);
+    this.model.config.filters.push({ id: variable });
+    console.log(this.model.config.filters);
+    this.render_filters();
+  }
+  delete_filter(e) {
+    let filter_id = e.target.parentNode.id.split("-")[1];
+    console.log(e.target.parentNode.id);
+    console.log(filter_id);
+
+    console.log(this.model.config.filters);
+    const new_filters = this.model.config.filters.filter((filter) => {
+      return filter.id !== filter_id;
+    });
+
+    this.model.config.filters = new_filters;
+    console.log(this.model.config.filters);
+    this.render_filters();
+  }
+
+  barchart_filter(id, render_all) {
+    let dimension = this.create_dimension(id);
+    let group = dimension.group();
+    let f = new BarChart(id, dimension, group, render_all);
+
+    let filter_div = document.createElement("div");
+    filter_div.id = `filter-${id}`;
+
+    /*Title*/
+    let title_div = document.createElement("div");
+    title_div.id = "filterTitle";
+    title_div.innerHTML = id;
+
+    /*Chart*/
+    let chart_div = document.createElement("div");
+    chart_div.id = `chart-${id}`;
+    //In order to resize the graph
+    f.chart(chart_div);
+    this.charts.push(f);
+
+    /*Min/Max*/
+    let min_max_div = document.createElement("div");
+    min_max_div.id = "filterMinMax";
+
+    let minLabel = document.createElement("div");
+    minLabel.innerHTML = "Min";
+    minLabel.className = "minMaxLabel";
+
+    let minInput = document.createElement("input");
+    minInput.className = "form-control filterMinInput";
+
+    let maxLabel = document.createElement("div");
+    maxLabel.innerHTML = "Max";
+    maxLabel.className = "maxMaxLabel";
+
+    let maxInput = document.createElement("input");
+    maxInput.className = "form-control filterMaxInput";
+
+    min_max_div.appendChild(minLabel);
+    min_max_div.appendChild(minInput);
+    min_max_div.appendChild(maxLabel);
+    min_max_div.appendChild(maxInput);
+
+    /*Trash Icon*/
+    let trash_div = document.createElement("img");
+    trash_div.id = "filterTrashIcon";
+    trash_div.src = "assets/svg/si-glyph-trash.svg";
+    trash_div.onclick = this.delete_filter.bind(this);
+
+    filter_div.appendChild(title_div);
+    filter_div.appendChild(chart_div);
+    filter_div.appendChild(trash_div);
+    filter_div.appendChild(min_max_div);
+
+    return filter_div;
+  }
+  create_dimension(vname) {
+    let dim = this.model.data.crossfilters.dimension((l) => +l[vname]);
+    this.model.data.filters[vname] = dim;
+    // this.model.config.filters[vname].range = [
+    //   +dim.group().all()[0].key,
+    //   +dim.group().all()[dim.group().all().length - 1].key,
+    // ];
+
+    // this.config.filters.push({
+    //   id: vname,
+    //   range: [
+    //     +dim.group().all()[0].key,
+    //     +dim.group().all()[dim.group().all().length - 1].key,
+    //   ],
+    // });
+
+    return dim;
   }
 }
