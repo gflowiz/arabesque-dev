@@ -3,6 +3,8 @@ import { filter } from "jszip/lib/object";
 
 export const NewFilterModal = (props) => {
   let [targetLayer, settargetLayer] = useState("links");
+  let [linksVariable, setLinksVariable] = useState("origin");
+  console.log(props);
 
   function save_and_close(e) {
     let target = targetLayer;
@@ -12,23 +14,47 @@ export const NewFilterModal = (props) => {
     e.preventDefault();
     props.add_filter(target, variable, type);
   }
+  function changeLinksVariable(e) {
+    console.log(e.target.value);
+    setLinksVariable(e.target.value);
+  }
 
-  console.log(targetLayer);
-  let variableContainer;
-  if (targetLayer === "links")
-    variableContainer = (
+  //Filling the variable and filter type <select>
+  let variableSelect, typeOptions;
+  if (targetLayer === "links") {
+    variableSelect = (
       <div class="col-md-4">
         <label for="filterVariableSelect">Variable </label>
-        <select class="custom-select" id="filterVariableSelect">
-          <option value="origin">origin</option>
-          <option value="dest">dest</option>
-          <option value="count">count</option>
-          <option value="distance">distance</option>
+        <select
+          class="custom-select"
+          id="filterVariableSelect"
+          onChange={changeLinksVariable}
+        >
+          {Object.entries(props.links_properties).map((prop) => (
+            <option value={prop[0]}>{prop[0]}</option>
+          ))}
         </select>
       </div>
     );
-  else if (targetLayer === "nodes")
-    variableContainer = (
+    //If the selected variable is origin or dest, we can't have a barchart filter
+    //(it is only for numeral values)
+    if (isNaN(props.links_properties[linksVariable]))
+      typeOptions = [
+        { value: "categorial", label: "Categorial" },
+        { value: "remove", label: "Remove" },
+        { value: "temporal", label: "One Category" },
+        { value: "timeLapse", label: "Temporal" },
+      ];
+    else
+      typeOptions = [
+        { value: "categorial", label: "Categorial" },
+        { value: "numeral", label: "Bar Chart" },
+        { value: "remove", label: "Remove" },
+        { value: "temporal", label: "One Category" },
+        { value: "timeLapse", label: "Temporal" },
+      ];
+  } else if (targetLayer === "nodes")
+    variableSelect = (
       <div class="col-md-4">
         <label for="valueTofilter">Variable </label>
         <select class="custom-select" id="valueTofilter">
@@ -70,7 +96,7 @@ export const NewFilterModal = (props) => {
                   <option value="nodes">Nodes</option>
                 </select>
               </div>
-              {variableContainer}
+              {variableSelect}
               <div class="col-md-4">
                 <label for="filterTypeSelect">
                   Type{" "}
@@ -87,12 +113,9 @@ export const NewFilterModal = (props) => {
                   ></img>
                 </label>
                 <select class="custom-select" id="filterTypeSelect">
-                  <option selected=""></option>
-                  <option value="categorial">Categorial</option>
-                  <option value="numeral">Numeral</option>
-                  <option value="remove">Remove</option>
-                  <option value="temporal">One Category</option>
-                  <option value="timeLapse">Temporal</option>
+                  {typeOptions.map((opt) => (
+                    <option value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
               </div>
             </div>

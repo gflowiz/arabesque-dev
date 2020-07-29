@@ -309,8 +309,16 @@ export default class Controller {
     links_layer.setVisible(!links_layer.getVisible());
   }
   toggle_new_filter_modal() {
-    let nodes_properties = Object.keys(this.model.data.nodes[0].properties);
-    this.view.new_filter(nodes_properties, this.add_filter.bind(this));
+    //We take the first node/link to be able to display properties,
+    //as well as filter their types (numeral or string) in the filter modal
+    let nodes_properties = this.model.data.nodes[0].properties;
+    let links_properties = this.model.data.links[0];
+
+    this.view.new_filter(
+      nodes_properties,
+      links_properties,
+      this.add_filter.bind(this)
+    );
   }
 
   render_filters() {
@@ -339,19 +347,29 @@ export default class Controller {
     console.log(e.target.parentNode.id);
     console.log(filter_id);
 
-    console.log(this.model.config.filters);
+    //removing filter from model.config
     const new_filters = this.model.config.filters.filter((filter) => {
       return filter.id !== filter_id;
     });
-
     this.model.config.filters = new_filters;
     console.log(this.model.config.filters);
+
+    //Removing dimension from the crossfilter
+    this.model.data.filters[filter_id].dispose();
+
+    //Removing the dimension from model.data
+    delete this.model.data.filters[filter_id];
+    console.log(Object.keys(this.model.data.filters).length === 0);
     this.render_filters();
+    if (Object.keys(this.model.data.filters).length === 0) this.render_all();
   }
 
   barchart_filter(id, render_all) {
     let dimension = this.create_dimension(id);
+    console.log(dimension.top(50));
+
     let group = dimension.group();
+
     let f = new BarChart(id, dimension, group, render_all);
 
     let filter_div = document.createElement("div");

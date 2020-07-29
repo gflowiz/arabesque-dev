@@ -220,11 +220,12 @@ export default class View {
     );
   }
 
-  new_filter(nodes_properties, callback) {
+  new_filter(nodes_properties, links_properties, callback) {
     console.log(callback);
     ReactDOM.render(
       <NewFilterModal
         nodes_properties={nodes_properties}
+        links_properties={links_properties}
         add_filter={callback}
       />,
       document.getElementById("ModalNewFilter")

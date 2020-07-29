@@ -6,6 +6,7 @@ export default class BarChartFilter {
     this.id = id;
     this.margin = { top: 10, right: 13, bottom: 20, left: 10 };
     let ga = group.all();
+    console.log(ga);
     this.x = d3
       .scaleLinear()
       .range([0, 200])
