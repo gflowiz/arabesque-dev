@@ -337,7 +337,11 @@ export default class Controller {
     //Create filters
     for (let i = 0; i < filters.length; i++) {
       let id = filters[i].id;
-      let filter_div = this.barchart_filter(id, this.render_all.bind(this));
+      let type = filters[i].type;
+      let filter_div;
+      if (type === "numeral")
+        filter_div = this.barchart_filter(id, this.render_all.bind(this));
+      else filter_div = <div>Lol</div>;
 
       document.getElementById("Filters").append(filter_div);
     }
@@ -345,8 +349,13 @@ export default class Controller {
   add_filter(target, variable, type) {
     // let dimension = this.model.data.crossfilters.dimension((l) => +l[variable]);
     // this.model.data.filters[variable] = dimension;
-    let filter = { id: variable };
-    let filter_div = this.barchart_filter(variable, this.render_all.bind(this));
+    let filter = { target: target, id: variable, type: type };
+
+    let filter_div;
+    if (type === "numeral") {
+      filter_div = this.barchart_filter(variable, this.render_all.bind(this));
+    } else filter_div = <div>Lol</div>;
+
     document.getElementById("Filters").append(filter_div);
     this.model.config.filters.push(
       filter
