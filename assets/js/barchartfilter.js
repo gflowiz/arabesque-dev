@@ -5,12 +5,16 @@ export default class BarChartFilter {
   constructor(id, dimension, group, render_all) {
     this.id = id;
     this.margin = { top: 10, right: 13, bottom: 20, left: 10 };
+
     let ga = group.all();
-    console.log(ga);
+
+    let domain = [+ga[0].key, +ga[ga.length - 1].key];
+    //We add an offset to the domain so we can see and select the last bar of the graph
+    this.offset_x = (domain[1] - domain[0]) / 10;
     this.x = d3
       .scaleLinear()
       .range([0, 200])
-      .domain([+ga[0].key, +ga[ga.length - 1].key]);
+      .domain([domain[0], domain[1] + this.offset_x]);
     this.y = d3.scaleLinear().range([100, 0]);
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
@@ -40,6 +44,9 @@ export default class BarChartFilter {
       // calculate current brush extents using x scale
       let extents = activeRange.map(that.x.invert);
 
+      //We remove the offset that we added to the graph to display the real biggest value
+      extents[1] = extents[1] - that.offset_x;
+
       // move brush handles to start and end of range
       g.selectAll(".brush-handle")
         .style("display", null)
@@ -53,8 +60,12 @@ export default class BarChartFilter {
       // filter the active dimension to the range extents
       that.dimension.filterRange(extents);
 
-      // document.getElementById("filterMinInput").value = Math.round(extents[0]);
-      // document.getElementById("filterMaxInput").value = Math.round(extents[1]);
+      document.getElementById("filterMinInput-" + that.id).value = Math.round(
+        extents[0]
+      );
+      document.getElementById("filterMaxInput-" + that.id).value = Math.round(
+        extents[1]
+      );
 
       // re-render the other charts accordingly
       that.render_all();
@@ -67,8 +78,20 @@ export default class BarChartFilter {
 
     this.brush.extent([
       [0, 0],
+      //We add width/10 otherwise the biggest values are not included (I guess it's
+      //because of the width of the last bar)
       [width, height],
     ]);
+
+    let min = this.group.all()[0].key;
+    let max = this.group.all()[this.group.all().length - 1].key;
+
+    // document.getElementById("filterMinInput-" + this.id).value = Math.round(
+    //   min
+    // );
+    // document.getElementById("filterMaxInput-" + this.id).value = Math.round(
+    //   max
+    // );
 
     this.y.domain([0, this.group.top(1)[0].value]);
 

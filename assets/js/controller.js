@@ -144,6 +144,14 @@ export default class Controller {
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
 
+    // console.log(this.model.config.filters);
+
+    // for (let filter of this.model.config.filters) {
+    //   let dimension = this.model.data.crossfilters.dimension(
+    //     (l) => +l[filter.id]
+    //   );
+    //   this.model.data.filters[filter.id] = dimension;
+    // }
     //Render filters
     this.render_filters(this.render_all.bind(this));
 
@@ -282,12 +290,11 @@ export default class Controller {
   toggle_legend() {
     let legendDiv = document.getElementById("legend");
     let style = getComputedStyle(legendDiv);
-    console.log(legendDiv.style.visibility);
+
     if (legendDiv.style.display !== "none") legendDiv.style.display = "none";
     else legendDiv.style.display = "flex";
   }
   render_all() {
-    console.log("renderall");
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
 
@@ -300,12 +307,12 @@ export default class Controller {
   }
   hide_nodes() {
     let nodes_layer = this.view.renderer.map.getLayers().array_[1];
-    console.log(nodes_layer);
+
     nodes_layer.setVisible(!nodes_layer.getVisible());
   }
   hide_links() {
     let links_layer = this.view.renderer.map.getLayers().array_[2];
-    console.log(links_layer);
+
     links_layer.setVisible(!links_layer.getVisible());
   }
   toggle_new_filter_modal() {
@@ -326,7 +333,6 @@ export default class Controller {
 
     // this.model.config.filters = [{ id: "origin" }];
     let filters = this.model.config.filters;
-    console.log(filters);
 
     //Create filters
     for (let i = 0; i < filters.length; i++) {
@@ -337,37 +343,47 @@ export default class Controller {
     }
   }
   add_filter(target, variable, type) {
-    console.log(this, variable, target, type);
-    this.model.config.filters.push({ id: variable });
-    console.log(this.model.config.filters);
-    this.render_filters();
+    // let dimension = this.model.data.crossfilters.dimension((l) => +l[variable]);
+    // this.model.data.filters[variable] = dimension;
+    let filter = { id: variable };
+    let filter_div = this.barchart_filter(variable, this.render_all.bind(this));
+    document.getElementById("Filters").append(filter_div);
+    this.model.config.filters.push(
+      filter
+
+      // range: [
+      //   +dimension.group().all()[0].key,
+      //   +dimension.group().all()[dimension.group().all().length - 1].key,
+      // ],
+    );
+
+    // this.render_filters();
   }
   delete_filter(e) {
     let filter_id = e.target.parentNode.id.split("-")[1];
-    console.log(e.target.parentNode.id);
-    console.log(filter_id);
 
     //removing filter from model.config
     const new_filters = this.model.config.filters.filter((filter) => {
       return filter.id !== filter_id;
     });
     this.model.config.filters = new_filters;
-    console.log(this.model.config.filters);
 
     //Removing dimension from the crossfilter
     this.model.data.filters[filter_id].dispose();
 
     //Removing the dimension from model.data
     delete this.model.data.filters[filter_id];
-    console.log(Object.keys(this.model.data.filters).length === 0);
-    this.render_filters();
-    if (Object.keys(this.model.data.filters).length === 0) this.render_all();
+
+    let filter_div = document.getElementById("filter-" + filter_id);
+    document.getElementById("Filters").removeChild(filter_div);
+
+    // this.render_filters();
+
+    this.render_all();
   }
 
   barchart_filter(id, render_all) {
     let dimension = this.create_dimension(id);
-    console.log(dimension.top(50));
-
     let group = dimension.group();
 
     let f = new BarChart(id, dimension, group, render_all);
@@ -397,6 +413,7 @@ export default class Controller {
 
     let minInput = document.createElement("input");
     minInput.className = "form-control filterMinInput";
+    minInput.id = "filterMinInput-" + id;
 
     let maxLabel = document.createElement("div");
     maxLabel.innerHTML = "Max";
@@ -404,6 +421,7 @@ export default class Controller {
 
     let maxInput = document.createElement("input");
     maxInput.className = "form-control filterMaxInput";
+    maxInput.id = "filterMaxInput-" + id;
 
     min_max_div.appendChild(minLabel);
     min_max_div.appendChild(minInput);
@@ -425,11 +443,14 @@ export default class Controller {
   }
   create_dimension(vname) {
     let dim = this.model.data.crossfilters.dimension((l) => +l[vname]);
+    let range = [
+      +dim.group().all()[0].key,
+      +dim.group().all()[dim.group().all().length - 1].key,
+    ];
+    console.log(dim.currentFilter());
+    // dim.filterRange(range);
+    // console.log(dim.top(5000));
     this.model.data.filters[vname] = dim;
-    // this.model.config.filters[vname].range = [
-    //   +dim.group().all()[0].key,
-    //   +dim.group().all()[dim.group().all().length - 1].key,
-    // ];
 
     // this.config.filters.push({
     //   id: vname,

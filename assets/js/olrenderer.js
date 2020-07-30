@@ -351,6 +351,7 @@ export default class OlRenderer {
       return nstyle.size.fixed * (this._extent_size / 1000);
     } else if (nstyle.size.mode === "varied") {
       var ns = this.nodeSizeScale.bind(this);
+
       return ns(node);
     }
   }
@@ -846,6 +847,7 @@ export default class OlRenderer {
     if (this._link_scale_types.size === "Log")
       domain_size = [1, max_count_size];
     else domain_size = [min_count_size, max_count_size];
+
     // definition de l'échelle pour la taille
     this._scale_link_size = this._scales[this._link_scale_types.size]
       .copy()
@@ -1022,11 +1024,6 @@ export default class OlRenderer {
     }
 
     this.map.removeLayer(this.get_layer("links"));
-
-    let mval = d3.max(links, (l) => l.value);
-    this._scale_link_size
-      .range([0, (this._extent_size / 100) * (this._node_size_ratio / 100)])
-      .domain([0, mval]);
 
     let arrows = this.create_arrows(links, lstyle);
 
