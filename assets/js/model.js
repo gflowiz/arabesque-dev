@@ -6,8 +6,6 @@ import crossfilter from "crossfilter2";
 import BarChart from "./barchartfilter.js";
 import React from "react";
 import ReactDOM from "react-dom";
-import { Filters } from "../react/filters/filters";
-import { FilterMinMax } from "../react/filters/filterminmax";
 
 export default class Model {
   constructor() {

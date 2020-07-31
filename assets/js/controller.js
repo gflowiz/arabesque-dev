@@ -1,9 +1,9 @@
-import BarChart from "./barchartfilter.js";
+import BarChartFilter from "./barchartfilter.js";
+import { CategorialFilter } from "../react/filters/categorial_filter";
 import { render } from "ol/control/Attribution";
-import { Filters } from "../react/filters/filters";
+
 import ReactDOM from "react-dom";
 import React from "react";
-import { FilterMinMax } from "../react/filters/filterminmax";
 
 export default class Controller {
   constructor(model, view) {
@@ -295,6 +295,7 @@ export default class Controller {
     else legendDiv.style.display = "flex";
   }
   render_all() {
+    console.log("renderall");
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
 
@@ -336,12 +337,26 @@ export default class Controller {
 
     //Create filters
     for (let i = 0; i < filters.length; i++) {
-      let id = filters[i].id;
+      let variable = filters[i].id;
       let type = filters[i].type;
+      let target = filters[i].target;
+
       let filter_div;
-      if (type === "numeral")
-        filter_div = this.barchart_filter(id, this.render_all.bind(this));
-      else filter_div = <div>Lol</div>;
+      if (type === "numeral") {
+        filter_div = this.barchart_filter(
+          target,
+          variable,
+          type,
+          this.render_all.bind(this)
+        );
+      } else if (type === "categorial") {
+        filter_div = document.createElement("div");
+        const filter_id = "filter-" + target + "-" + variable + "-" + type;
+        filter_div.id = filter_id;
+        document.getElementById("Filters").append(filter_div);
+        //Fill the div with filter
+        this.categorial_filter(target, variable, filter_id);
+      } else filter_div = <div>Lol</div>;
 
       document.getElementById("Filters").append(filter_div);
     }
@@ -350,13 +365,28 @@ export default class Controller {
     // let dimension = this.model.data.crossfilters.dimension((l) => +l[variable]);
     // this.model.data.filters[variable] = dimension;
     let filter = { target: target, id: variable, type: type };
-
+    console.log(filter);
     let filter_div;
     if (type === "numeral") {
-      filter_div = this.barchart_filter(variable, this.render_all.bind(this));
-    } else filter_div = <div>Lol</div>;
+      filter_div = this.barchart_filter(
+        target,
+        variable,
+        type,
+        this.render_all.bind(this)
+      );
+      document.getElementById("Filters").append(filter_div);
+    } else if (type === "categorial") {
+      filter_div = document.createElement("div");
+      const filter_id = "filter-" + target + "-" + variable + "-" + type;
+      filter_div.id = filter_id;
+      document.getElementById("Filters").append(filter_div);
+      //Fill the div with filter
+      this.categorial_filter(target, variable, filter_id);
+    } else {
+      filter_div = <div>Lol</div>;
+      document.getElementById("Filters").append(filter_div);
+    }
 
-    document.getElementById("Filters").append(filter_div);
     this.model.config.filters.push(
       filter
 
@@ -368,9 +398,8 @@ export default class Controller {
 
     // this.render_filters();
   }
-  delete_filter(e) {
-    let filter_id = e.target.parentNode.id.split("-")[1];
-
+  delete_filter(event) {
+    let filter_id = event.target.parentNode.id;
     //removing filter from model.config
     const new_filters = this.model.config.filters.filter((filter) => {
       return filter.id !== filter_id;
@@ -383,7 +412,7 @@ export default class Controller {
     //Removing the dimension from model.data
     delete this.model.data.filters[filter_id];
 
-    let filter_div = document.getElementById("filter-" + filter_id);
+    let filter_div = document.getElementById(filter_id);
     document.getElementById("Filters").removeChild(filter_div);
 
     // this.render_filters();
@@ -391,14 +420,16 @@ export default class Controller {
     this.render_all();
   }
 
-  barchart_filter(id, render_all) {
-    let dimension = this.create_dimension(id);
+  barchart_filter(target, id, type, render_all) {
+    const filter_id = `filter-${target}-${id}-${type}`;
+
+    let dimension = this.create_dimension(id, filter_id);
     let group = dimension.group();
 
-    let f = new BarChart(id, dimension, group, render_all);
+    let f = new BarChartFilter(id, dimension, group, render_all);
 
     let filter_div = document.createElement("div");
-    filter_div.id = `filter-${id}`;
+    filter_div.id = filter_id;
 
     /*Title*/
     let title_div = document.createElement("div");
@@ -407,7 +438,7 @@ export default class Controller {
 
     /*Chart*/
     let chart_div = document.createElement("div");
-    chart_div.id = `chart-${id}`;
+    chart_div.id = `chart-${target}-${id}-${type}`;
     //In order to resize the graph
     f.chart(chart_div);
     this.charts.push(f);
@@ -447,19 +478,44 @@ export default class Controller {
     filter_div.appendChild(chart_div);
     filter_div.appendChild(trash_div);
     filter_div.appendChild(min_max_div);
-
+    console.log(filter_div);
     return filter_div;
   }
-  create_dimension(vname) {
-    let dim = this.model.data.crossfilters.dimension((l) => +l[vname]);
-    let range = [
-      +dim.group().all()[0].key,
-      +dim.group().all()[dim.group().all().length - 1].key,
-    ];
-    console.log(dim.currentFilter());
+  categorial_filter(target, variable, filter_id) {
+    let dimension = this.create_dimension(variable, filter_id);
+    let filtering_properties;
+    if (target === "links") {
+      console.log(this.model.data.links, variable);
+      filtering_properties = this.model.data.links.map(
+        (link) => link[variable]
+      );
+    } else if (target === "nodes")
+      filtering_properties = this.model.data.nodes.map(
+        (node) => node.properties.variable
+      );
+
+    filtering_properties = ReactDOM.render(
+      <CategorialFilter
+        variable={variable}
+        filtering_properties={filtering_properties}
+        dimension={dimension}
+        render_all={this.render_all.bind(this)}
+        delete_filter={this.delete_filter.bind(this)}
+      />,
+      document.getElementById(filter_id)
+    );
+  }
+
+  create_dimension(vname, filter_id) {
+    let dim = this.model.data.crossfilters.dimension((l) => l[vname]);
+    // let range = [
+    //   +dim.group().all()[0].key,
+    //   +dim.group().all()[dim.group().all().length - 1].key,
+    // ];
+
     // dim.filterRange(range);
     // console.log(dim.top(5000));
-    this.model.data.filters[vname] = dim;
+    this.model.data.filters[filter_id] = dim;
 
     // this.config.filters.push({
     //   id: vname,
