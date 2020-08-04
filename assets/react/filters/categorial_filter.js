@@ -36,7 +36,7 @@ export const CategorialFilter = (props) => {
   let [selectedItems, setSelectedItems] = useState([]);
   console.log(selectedItems);
 
-  function handleItemSelect(s, e) {
+  function handleItemSelect(e) {
     let new_selection;
     let id = e.target.id;
     //If the element is already selected, we remove it from the selected items
@@ -52,10 +52,12 @@ export const CategorialFilter = (props) => {
       setSelectedItems(new_selection);
       e.target.classList.add("active");
     }
-    filterItems(new_selection);
+    //According to the mode, we add or remove items from selection
+    if (props.mode === "add") addItems(new_selection);
+    else if (props.mode === "remove") removeItems(new_selection);
   }
 
-  function filterItems(new_selection) {
+  function addItems(new_selection) {
     //If there is no items selected, we just render every record of the dimension
     if (new_selection.length === 0) {
       props.dimension.filterAll();
@@ -71,6 +73,25 @@ export const CategorialFilter = (props) => {
 
     props.render_all();
   }
+
+  function removeItems(new_selection) {
+    //If there is no items selected, we just render every record of the dimension
+    if (new_selection.length === 0) {
+      props.dimension.filterAll();
+      props.render_all();
+      return;
+    }
+
+    props.dimension.filterAll();
+    // Else we render only the selected ones
+    props.dimension.filterFunction(function (d) {
+      return !new_selection.includes(d.toString());
+    });
+    console.log(props.dimension.top(Infinity));
+
+    props.render_all();
+  }
+
   function toggleButtonPlaceHolder() {
     if (selectedItems.length === 0) return "Choose...";
     else {
@@ -99,6 +120,43 @@ export const CategorialFilter = (props) => {
     }
   }
 
+  function unselectAll() {
+    setSelectedItems([]);
+    props.dimension.filterAll();
+    props.render_all();
+    let active_elements = Array.from(
+      document.querySelectorAll(
+        "." + props.mode + "-" + props.variable + "-item" + ".active"
+      )
+    );
+    for (let el of active_elements) {
+      el.classList.remove("active");
+    }
+  }
+
+  function selectAll() {
+    const all_elements = props.filtering_properties.filter(onlyUnique);
+    setSelectedItems(all_elements);
+    if (props.mode === "add") addItems(all_elements);
+    else if (props.mode === "remove") removeItems(all_elements);
+
+    let all_divs = Array.from(
+      document.querySelectorAll(
+        "." + props.mode + "-" + props.variable + "-item"
+      )
+    );
+    for (let el of all_divs) {
+      el.classList.add("active");
+    }
+  }
+
+  function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+  }
+
+  let toggle_button_mode;
+  if (props.mode === "add") toggle_button_mode = "success";
+  else if (props.mode === "remove") toggle_button_mode = "danger";
   return [
     <img
       class="flowFilterIcon"
@@ -109,17 +167,25 @@ export const CategorialFilter = (props) => {
       {props.variable}
     </label>,
 
-    <Dropdown onSelect={handleItemSelect}>
-      <Dropdown.Toggle variant="success" id="dropdown-basic">
+    <Dropdown>
+      <Dropdown.Toggle variant={toggle_button_mode} id="dropdown-basic">
         {toggleButtonPlaceHolder()}
       </Dropdown.Toggle>
 
       <Dropdown.Menu as={CustomMenu}>
+        <Dropdown.Item onClick={selectAll}>Select all</Dropdown.Item>
+        <Dropdown.Item onClick={unselectAll}>Unselect all</Dropdown.Item>
         {props.filtering_properties
           //remove duplicates
           .filter((v, i, a) => a.indexOf(v) === i)
           .map((opt) => (
-            <Dropdown.Item id={opt}>{opt}</Dropdown.Item>
+            <Dropdown.Item
+              className={props.mode + "-" + props.variable + "-item"}
+              onClick={handleItemSelect}
+              id={opt}
+            >
+              {opt}
+            </Dropdown.Item>
           ))}
       </Dropdown.Menu>
     </Dropdown>,

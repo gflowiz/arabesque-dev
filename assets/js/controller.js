@@ -356,15 +356,33 @@ export default class Controller {
         filter_div.className = "categorialFilter";
         document.getElementById("Filters").append(filter_div);
         //Fill the div with filter
-        this.categorial_filter(target, variable, filter_id);
+        this.categorial_filter(target, variable, filter_id, "add");
+      } else if (type === "remove") {
+        filter_div = document.createElement("div");
+        const filter_id = "filter-" + target + "-" + variable + "-" + type;
+        filter_div.id = filter_id;
+        filter_div.className = "categorialFilter";
+        document.getElementById("Filters").append(filter_div);
+        //Fill the div with filter
+        this.categorial_filter(target, variable, filter_id, "remove");
       } else filter_div = <div>Lol</div>;
 
       document.getElementById("Filters").append(filter_div);
     }
   }
   add_filter(target, variable, type) {
-    // let dimension = this.model.data.crossfilters.dimension((l) => +l[variable]);
-    // this.model.data.filters[variable] = dimension;
+    const filter_container = document.getElementById(
+      "filter-" + target + "-" + variable + "-" + type
+    );
+    if (filter_container !== null) {
+      document.getElementById("filterTypeSelect").classList.add("is-invalid");
+      return;
+    } else {
+      document
+        .getElementById("filterTypeSelect")
+        .classList.remove("is-invalid");
+      $("#FilterModal").modal("hide");
+    }
     let filter = { target: target, id: variable, type: type };
     console.log(filter);
     let filter_div;
@@ -383,7 +401,15 @@ export default class Controller {
       filter_div.className = "categorialFilter";
       document.getElementById("Filters").append(filter_div);
       //Fill the div with filter
-      this.categorial_filter(target, variable, filter_id);
+      this.categorial_filter(target, variable, filter_id, "add");
+    } else if (type === "remove") {
+      filter_div = document.createElement("div");
+      const filter_id = "filter-" + target + "-" + variable + "-" + type;
+      filter_div.id = filter_id;
+      filter_div.className = "categorialFilter";
+      document.getElementById("Filters").append(filter_div);
+      //Fill the div with filter
+      this.categorial_filter(target, variable, filter_id, "remove");
     } else {
       filter_div = <div>Lol</div>;
       document.getElementById("Filters").append(filter_div);
@@ -449,7 +475,7 @@ export default class Controller {
 
     return filter_div;
   }
-  categorial_filter(target, variable, filter_id) {
+  categorial_filter(target, variable, filter_id, mode) {
     let dimension = this.create_dimension(variable, filter_id);
     let filtering_properties;
     if (target === "links") {
@@ -469,6 +495,7 @@ export default class Controller {
         dimension={dimension}
         render_all={this.render_all.bind(this)}
         delete_filter={this.delete_filter.bind(this)}
+        mode={mode}
       />,
       document.getElementById(filter_id)
     );

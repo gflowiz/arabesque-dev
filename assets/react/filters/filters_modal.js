@@ -12,6 +12,7 @@ export const NewFilterModal = (props) => {
     let type = document.getElementById("filterTypeSelect").value;
 
     e.preventDefault();
+    e.stopPropagation();
     props.add_filter(target, variable, type);
   }
   function changeLinksVariable(e) {
@@ -117,6 +118,9 @@ export const NewFilterModal = (props) => {
                     <option value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
+                <div class="invalid-feedback">
+                  A filter already exists for these parameters
+                </div>
               </div>
             </div>
           </div>
@@ -124,7 +128,6 @@ export const NewFilterModal = (props) => {
             class="modal-footer btn btn-dark justify-content-center mt-2"
             type="button"
             id="addFilterButton"
-            data-dismiss="modal"
             onClick={save_and_close}
           >
             ADD FILTER
