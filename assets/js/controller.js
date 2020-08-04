@@ -353,6 +353,7 @@ export default class Controller {
         filter_div = document.createElement("div");
         const filter_id = "filter-" + target + "-" + variable + "-" + type;
         filter_div.id = filter_id;
+        filter_div.className = "categorialFilter";
         document.getElementById("Filters").append(filter_div);
         //Fill the div with filter
         this.categorial_filter(target, variable, filter_id);
@@ -379,6 +380,7 @@ export default class Controller {
       filter_div = document.createElement("div");
       const filter_id = "filter-" + target + "-" + variable + "-" + type;
       filter_div.id = filter_id;
+      filter_div.className = "categorialFilter";
       document.getElementById("Filters").append(filter_div);
       //Fill the div with filter
       this.categorial_filter(target, variable, filter_id);
@@ -400,11 +402,17 @@ export default class Controller {
   }
   delete_filter(event) {
     let filter_id = event.target.parentNode.id;
+    console.log(filter_id);
     //removing filter from model.config
-    const new_filters = this.model.config.filters.filter((filter) => {
-      return filter.id !== filter_id;
+    console.log(this.model.config.filters);
+    let new_filters = this.model.config.filters.filter((filter) => {
+      let full_id =
+        "filter-" + filter.target + "-" + filter.id + "-" + filter.type;
+      console.log(full_id);
+      return full_id !== filter_id;
     });
     this.model.config.filters = new_filters;
+    console.log(new_filters);
 
     //Removing dimension from the crossfilter
     this.model.data.filters[filter_id].dispose();
@@ -426,59 +434,19 @@ export default class Controller {
     let dimension = this.create_dimension(id, filter_id);
     let group = dimension.group();
 
-    let f = new BarChartFilter(id, dimension, group, render_all);
-
-    let filter_div = document.createElement("div");
-    filter_div.id = filter_id;
-
-    /*Title*/
-    let title_div = document.createElement("div");
-    title_div.id = "filterTitle";
-    title_div.innerHTML = id;
-
-    /*Chart*/
-    let chart_div = document.createElement("div");
-    chart_div.id = `chart-${target}-${id}-${type}`;
-    //In order to resize the graph
-    f.chart(chart_div);
-    this.charts.push(f);
-
-    /*Min/Max*/
-    let min_max_div = document.createElement("div");
-    min_max_div.id = "filterMinMax";
-
-    let minLabel = document.createElement("div");
-    minLabel.innerHTML = "Min";
-    minLabel.className = "minMaxLabel";
-
-    let minInput = document.createElement("input");
-    minInput.className = "form-control filterMinInput";
-    minInput.id = "filterMinInput-" + id;
-
-    let maxLabel = document.createElement("div");
-    maxLabel.innerHTML = "Max";
-    maxLabel.className = "maxMaxLabel";
-
-    let maxInput = document.createElement("input");
-    maxInput.className = "form-control filterMaxInput";
-    maxInput.id = "filterMaxInput-" + id;
-
-    min_max_div.appendChild(minLabel);
-    min_max_div.appendChild(minInput);
-    min_max_div.appendChild(maxLabel);
-    min_max_div.appendChild(maxInput);
-
-    /*Trash Icon*/
-    let trash_div = document.createElement("img");
-    trash_div.id = "filterTrashIcon";
-    trash_div.src = "assets/svg/si-glyph-trash.svg";
-    trash_div.onclick = this.delete_filter.bind(this);
-
-    filter_div.appendChild(title_div);
-    filter_div.appendChild(chart_div);
-    filter_div.appendChild(trash_div);
-    filter_div.appendChild(min_max_div);
+    let f = new BarChartFilter(
+      id,
+      filter_id,
+      dimension,
+      group,
+      render_all,
+      this.delete_filter.bind(this)
+    );
+    let filter_div = f.render();
     console.log(filter_div);
+
+    // this.charts.push(f);
+
     return filter_div;
   }
   categorial_filter(target, variable, filter_id) {
@@ -494,7 +462,7 @@ export default class Controller {
         (node) => node.properties.variable
       );
 
-    filtering_properties = ReactDOM.render(
+    ReactDOM.render(
       <CategorialFilter
         variable={variable}
         filtering_properties={filtering_properties}

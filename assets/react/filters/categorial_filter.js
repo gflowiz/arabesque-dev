@@ -63,6 +63,7 @@ export const CategorialFilter = (props) => {
       return;
     }
 
+    props.dimension.filterAll();
     // Else we render only the selected ones
     props.dimension.filterFunction(function (d) {
       return new_selection.includes(d.toString());
@@ -70,20 +71,47 @@ export const CategorialFilter = (props) => {
 
     props.render_all();
   }
+  function toggleButtonPlaceHolder() {
+    if (selectedItems.length === 0) return "Choose...";
+    else {
+      if (selectedItems.length === 1) return selectedItems[0];
+      let placeholder = "";
+
+      for (let item of selectedItems) {
+        if ((placeholder + item).length < 10) {
+          if (selectedItems.indexOf(item) === selectedItems.length - 1)
+            placeholder += item;
+          else placeholder += item + ",";
+        } else {
+          if (
+            placeholder.substring(
+              placeholder.length - 3,
+              placeholder.length
+            ) === "..."
+          )
+            return placeholder;
+          placeholder =
+            placeholder.substring(0, placeholder.length - 1) + "...";
+        }
+      }
+
+      return placeholder;
+    }
+  }
 
   return [
     <img
-      class="icon-filter"
+      class="flowFilterIcon"
       src="assets/svg/si-glyph-link.svg"
       style={{ width: "1em" }}
     ></img>,
-    <label for="filterorigin" class="h5">
+    <label for="filterorigin" class="filterTitle">
       {props.variable}
     </label>,
 
     <Dropdown onSelect={handleItemSelect}>
       <Dropdown.Toggle variant="success" id="dropdown-basic">
-        Dropdown Button
+        {toggleButtonPlaceHolder()}
       </Dropdown.Toggle>
 
       <Dropdown.Menu as={CustomMenu}>
@@ -97,9 +125,10 @@ export const CategorialFilter = (props) => {
     </Dropdown>,
 
     <img
-      class="icon"
+      class="icon categorialTrashIcon"
       src="assets/svg/si-glyph-trash.svg"
       onClick={(e) => props.delete_filter(e)}
     ></img>,
+    <div class="filterBottomLine"></div>,
   ];
 };

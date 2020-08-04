@@ -381,9 +381,47 @@ chart {
 }
 
 .barchart {
-  height: 10em;
+  height: 5em;
+  width: 90%;
 }
 
-#filterTrashIcon {
-  width: 15%;
+.barchartTrashIcon {
+  width: 20px;
+  position: absolute;
+  top: 24%;
+  right: 0;
+}
+.categorialTrashIcon {
+  position: absolute;
+  top: 49%;
+  right: 0;
+}
+
+#selectFilterButton {
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
+
+.categorialFilter {
+  position: relative;
+}
+.barchartFilter {
+  position: relative;
+}
+
+.flowFilterIcon {
+  width: 1em;
+}
+
+.filterTitle {
+  margin-left: 5%;
+  font-weight: bold;
+}
+
+.filterBottomLine {
+  margin-bottom: 10%;
+  margin-top: 10%;
+  width: 100%;
+  height: 2px;
+  background-color: black;
 }
