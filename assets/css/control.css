@@ -425,3 +425,11 @@ chart {
   height: 2px;
   background-color: black;
 }
+
+/*ADD LAYERS */
+#addLayersButton {
+  font-size: 1em;
+}
+.addLayerButton {
+  font-size: 0.8em;
+}

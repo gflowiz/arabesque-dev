@@ -61,12 +61,13 @@ export default class Controller {
       .getElementById("selectFilterButton")
       .addEventListener("click", this.toggle_new_filter_modal.bind(this));
 
+    for (let button of document.getElementsByClassName("addLayerButton"))
+      button.addEventListener("click", this.view.newFilterModal.bind(this));
+
     //Everytime the zoom level changes, we update the legend
     this.view.renderer.map.on("moveend", this.render_legend.bind(this));
 
     this.charts = [];
-
-    this.set_drag_layers();
   }
 
   import_handler() {
@@ -146,15 +147,6 @@ export default class Controller {
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
 
-    // console.log(this.model.config.filters);
-
-    // for (let filter of this.model.config.filters) {
-    //   let dimension = this.model.data.crossfilters.dimension(
-    //     (l) => +l[filter.id]
-    //   );
-    //   this.model.data.filters[filter.id] = dimension;
-    // }
-    //Render filters
     this.render_filters(this.render_all.bind(this));
 
     this.view.import_end(
@@ -297,7 +289,6 @@ export default class Controller {
     else legendDiv.style.display = "flex";
   }
   render_all() {
-    console.log("renderall");
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
 
@@ -324,6 +315,8 @@ export default class Controller {
     let links_layer = this.view.renderer.map.getLayers().array_[2];
 
     links_layer.setVisible(!links_layer.getVisible());
+
+    //Changing the icon
     const eyeIcon = document.getElementById("linksVisibility");
     if (links_layer.getVisible() === true)
       eyeIcon.src = "assets/svg/si-glyph-view.svg";
@@ -398,7 +391,7 @@ export default class Controller {
       $("#FilterModal").modal("hide");
     }
     let filter = { target: target, id: variable, type: type };
-    console.log(filter);
+
     let filter_div;
     if (type === "numeral") {
       filter_div = this.barchart_filter(
@@ -442,9 +435,9 @@ export default class Controller {
   }
   delete_filter(event) {
     let filter_id = event.target.parentNode.id;
-    console.log(filter_id);
+
     //removing filter from model.config
-    console.log(this.model.config.filters);
+
     let new_filters = this.model.config.filters.filter((filter) => {
       let full_id =
         "filter-" + filter.target + "-" + filter.id + "-" + filter.type;
@@ -452,7 +445,6 @@ export default class Controller {
       return full_id !== filter_id;
     });
     this.model.config.filters = new_filters;
-    console.log(new_filters);
 
     //Removing dimension from the crossfilter
     this.model.data.filters[filter_id].dispose();
@@ -483,7 +475,6 @@ export default class Controller {
       this.delete_filter.bind(this)
     );
     let filter_div = f.render();
-    console.log(filter_div);
 
     // this.charts.push(f);
 
@@ -493,7 +484,6 @@ export default class Controller {
     let dimension = this.create_dimension(variable, filter_id);
     let filtering_properties;
     if (target === "links") {
-      console.log(this.model.data.links, variable);
       filtering_properties = this.model.data.links.map(
         (link) => link[variable]
       );
@@ -535,44 +525,5 @@ export default class Controller {
     // });
 
     return dim;
-  }
-
-  set_drag_layers() {
-    let nodeCard = document.getElementById("cardnode");
-    nodeCard.ondragend = this.drag_end;
-    let linkCard = document.getElementById("cardlink");
-    linkCard.ondragend = this.drag_end;
-  }
-
-  drag_end(e) {
-    let layers = {};
-    console.log(e);
-    let layersContainer = document.getElementById("accordionLayerControl");
-    const layersCards = Array.from(layersContainer.childNodes).filter(
-      (div) => div instanceof HTMLElement
-    );
-    let layersMiddleYPosition = layersCards.map(
-      (div) =>
-        (div.getBoundingClientRect().bottom + div.getBoundingClientRect().top) /
-        2
-    );
-    console.log(layersCards);
-    for (let i in layersCards) {
-      console.log(layersCards[i].id);
-      layers[layersCards[i].id] = layersMiddleYPosition[i];
-    }
-    //We set the clientY of the dragged div in the layers Object
-    layers[e.target.id] = e.clientY;
-
-    //Sort our div by y position ascendant and retrieve the div thanks to its id
-    let sorted_layers = Object.entries(layers)
-      .sort(function (l, e) {
-        return l[1] - e[1];
-      })
-      .map((l) => document.getElementById(l[0]));
-
-    //Empty the layers container and append the divs in the right order
-    layersContainer.innerHTML = "";
-    for (const div of sorted_layers) layersContainer.appendChild(div);
   }
 }

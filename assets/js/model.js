@@ -4,6 +4,7 @@ import { parse as papaparse } from "papaparse";
 import * as turf from "@turf/turf";
 import crossfilter from "crossfilter2";
 import BarChart from "./barchartfilter.js";
+import { NewTileLayerModal } from "../react/new_layer/new_tile_layer_modal";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -84,6 +85,7 @@ export default class Model {
       filters: [],
       proj: "Mercator / EPSG:3857",
       styles: { nodes: nstyle, links: lstyle },
+      layers: {},
     };
 
     // working data structure
@@ -403,6 +405,7 @@ export default class Model {
         let saved_data = JSON.parse(data);
 
         that.config = saved_data.config;
+        console.log(that.config);
         that.data.nodes = saved_data.nodes;
         that.data.links = saved_data.links;
         for (let p = 0; p < that.data.nodes.length; p++) {
@@ -567,5 +570,13 @@ export default class Model {
       } catch {}
     }
     return points;
+  }
+
+  addLayer(e) {
+    if (e.target.id === "tileLayerButton")
+      ReactDOM.render(
+        <NewTileLayerModal />,
+        document.getElementById("ModalNewLayer")
+      );
   }
 }

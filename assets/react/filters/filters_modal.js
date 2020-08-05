@@ -74,6 +74,8 @@ export const NewFilterModal = (props) => {
       aria-labelledby="exampleModalLabel"
       style={{ display: "block" }}
       aria-modal="true"
+      aria-hidden="true"
+      data-backdrop="true"
     >
       <div class="modal-dialog" role="document">
         <div class="modal-content">

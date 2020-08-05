@@ -84,6 +84,31 @@
                 <select class="form-control" id="projection">
                 </select>
               </div>
+              <div class="card">
+                <div class="card-header close collapsed" id="addLayersButton" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" aria-label="Close">
+                   Add Layers
+                   <button type="button" class="close" aria-label="Close">
+                </button></div>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo"  >
+                <div class="card-body">
+                <button type="button" id="addNewNodeFeaturesButton" class="btn btn-dark btn-block addLayerButton"  rel="tooltip" data-placement="right" title="Replace the current Node layer">
+                Add Node Features
+                </button>
+                <button type="button" id="addNewLinkFeaturesButton" class="btn btn-dark btn-block addLayerButton"  data-placement="right" title="Replace the current link layer">
+                Add Link Features
+                </button>
+                <button type="button" id="baseLayerButton" class="btn btn-dark btn-block addLayerButton" >
+                Add Base Layer
+                </button>
+                <button type="button" id="tileLayerButton" class="btn btn-dark btn-block addLayerButton" >
+                Add Tile Layers (OSM)
+                </button>           
+                <button type="button" id="importLayerbutton" class="btn btn-dark btn-block addLayerButton" >
+                Import GeoJson Layers
+                </button>
+                </div>
+                </div>
+             </div>
               <div class="row p-0 mt-3" id="layerControlList" data-toggle="tooltip" data-placement="right" data-delay="0" title="Drag and Drop layers to change z-index" data-animation="false">
 
                 <ul id="accordionLayerControl" class="list-unstyled col-md-12 align-items-center ui-sortable">
@@ -98,7 +123,7 @@
                     </button>
                   </div>
                 </li>
-                <li class="card mt-2 border-dark" id="cardlink" value="link" draggable="true">
+                <li class="card mt-2 border-dark" id="cardlink" value="link" draggable="true" >
                   <div class="card-header text-dark h-5 panel-heading" id="panellink">
                     link
                     <button type="button" id="buttonChangeGeoLayerlink" class="close center-block ml-1" aria-label="Close" data-target="#changeGeometryModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change shape of the links">
@@ -139,6 +164,7 @@
       <div id = "ModalSemioLinks"> </div>
       <div id = "ModalShapeLinks"></div>
       <div id = "ModalNewFilter"></div>
+      <div id = "ModalNewLayer"></div>
 
     </div>
     <link href="main.css" rel="stylesheet">

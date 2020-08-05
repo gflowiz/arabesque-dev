@@ -5,6 +5,7 @@ import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal"
 import { LinksShapeModalComponent } from "../react/links_shape_semio";
 import { LegendComponent } from "../react/legend/legend";
 import { NewFilterModal } from "../react/filters/filters_modal";
+import { NewTileLayerModal } from "../react/new_layer/new_tile_layer_modal";
 
 export default class View {
   constructor(renderer) {
@@ -27,6 +28,9 @@ export default class View {
     // modal import stats
     this.ModalImportStats = document.getElementById("ModalImportStats");
     this.import_stats_modal = require("../hbs/import-stats-modal.hbs");
+
+    //Set the function triggered when a layer card is dropped
+    this.set_layers_drag_event();
   }
 
   import_nodes() {
@@ -230,5 +234,57 @@ export default class View {
       />,
       document.getElementById("ModalNewFilter")
     );
+  }
+  set_layers_drag_event() {
+    let nodeCard = document.getElementById("cardnode");
+    nodeCard.ondragend = this.on_layer_card_drop.bind(this);
+    let linkCard = document.getElementById("cardlink");
+    linkCard.ondragend = this.on_layer_card_drop.bind(this);
+  }
+
+  on_layer_card_drop(e) {
+    let layers = {};
+
+    //Extracting the layers cards and their y position (from viewport)
+    let layersContainer = document.getElementById("accordionLayerControl");
+    const layersCards = Array.from(layersContainer.childNodes).filter(
+      (div) => div instanceof HTMLElement
+    );
+    let layersMiddleYPosition = layersCards.map(
+      (div) =>
+        (div.getBoundingClientRect().bottom + div.getBoundingClientRect().top) /
+        2
+    );
+
+    for (let i in layersCards) {
+      layers[layersCards[i].id] = layersMiddleYPosition[i];
+    }
+    //We set the clientY of the dragged div in the layers Object
+    layers[e.target.id] = e.clientY;
+
+    //Sort our div by y position ascendant and retrieve the div thanks to its id
+    let sorted_layers = Object.entries(layers)
+      .sort(function (l, e) {
+        return l[1] - e[1];
+      })
+      .map((l) => document.getElementById(l[0]));
+
+    //Empty the layers container and append the divs in the right order
+    layersContainer.innerHTML = "";
+    for (const div of sorted_layers) layersContainer.appendChild(div);
+
+    this.set_z_index(sorted_layers);
+  }
+  set_z_index(sorted_layers) {
+    const layers = this.renderer.map.getLayers().array_;
+    console.log(layers);
+  }
+
+  newFilterModal(e) {
+    if (e.target.id === "tileLayerButton")
+      ReactDOM.render(
+        <NewTileLayerModal type="tileLayer" />,
+        document.getElementById("ModalNewLayer")
+      );
   }
 }
