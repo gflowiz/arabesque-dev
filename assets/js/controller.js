@@ -65,6 +65,8 @@ export default class Controller {
     this.view.renderer.map.on("moveend", this.render_legend.bind(this));
 
     this.charts = [];
+
+    this.set_drag_layers();
   }
 
   import_handler() {
@@ -310,11 +312,23 @@ export default class Controller {
     let nodes_layer = this.view.renderer.map.getLayers().array_[1];
 
     nodes_layer.setVisible(!nodes_layer.getVisible());
+
+    //Changing the icon
+    const eyeIcon = document.getElementById("nodesVisibility");
+    if (nodes_layer.getVisible() === true)
+      eyeIcon.src = "assets/svg/si-glyph-view.svg";
+    else if (nodes_layer.getVisible() === false)
+      eyeIcon.src = "assets/svg/si-glyph-noview.svg";
   }
   hide_links() {
     let links_layer = this.view.renderer.map.getLayers().array_[2];
 
     links_layer.setVisible(!links_layer.getVisible());
+    const eyeIcon = document.getElementById("linksVisibility");
+    if (links_layer.getVisible() === true)
+      eyeIcon.src = "assets/svg/si-glyph-view.svg";
+    else if (links_layer.getVisible() === false)
+      eyeIcon.src = "assets/svg/si-glyph-noview.svg";
   }
   toggle_new_filter_modal() {
     //We take the first node/link to be able to display properties,
@@ -521,5 +535,44 @@ export default class Controller {
     // });
 
     return dim;
+  }
+
+  set_drag_layers() {
+    let nodeCard = document.getElementById("cardnode");
+    nodeCard.ondragend = this.drag_end;
+    let linkCard = document.getElementById("cardlink");
+    linkCard.ondragend = this.drag_end;
+  }
+
+  drag_end(e) {
+    let layers = {};
+    console.log(e);
+    let layersContainer = document.getElementById("accordionLayerControl");
+    const layersCards = Array.from(layersContainer.childNodes).filter(
+      (div) => div instanceof HTMLElement
+    );
+    let layersMiddleYPosition = layersCards.map(
+      (div) =>
+        (div.getBoundingClientRect().bottom + div.getBoundingClientRect().top) /
+        2
+    );
+    console.log(layersCards);
+    for (let i in layersCards) {
+      console.log(layersCards[i].id);
+      layers[layersCards[i].id] = layersMiddleYPosition[i];
+    }
+    //We set the clientY of the dragged div in the layers Object
+    layers[e.target.id] = e.clientY;
+
+    //Sort our div by y position ascendant and retrieve the div thanks to its id
+    let sorted_layers = Object.entries(layers)
+      .sort(function (l, e) {
+        return l[1] - e[1];
+      })
+      .map((l) => document.getElementById(l[0]));
+
+    //Empty the layers container and append the divs in the right order
+    layersContainer.innerHTML = "";
+    for (const div of sorted_layers) layersContainer.appendChild(div);
   }
 }

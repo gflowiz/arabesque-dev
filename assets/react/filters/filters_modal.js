@@ -41,18 +41,18 @@ export const NewFilterModal = (props) => {
     //(it is only for numeral values)
     if (isNaN(props.links_properties[linksVariable]))
       typeOptions = [
-        { value: "categorial", label: "Categorial" },
+        { value: "categorial", label: "Add" },
         { value: "remove", label: "Remove" },
-        { value: "temporal", label: "One Category" },
-        { value: "timeLapse", label: "Temporal" },
+        // { value: "temporal", label: "One Category" },
+        // { value: "timeLapse", label: "Temporal" },
       ];
     else
       typeOptions = [
-        { value: "categorial", label: "Categorial" },
+        { value: "categorial", label: "Add" },
         { value: "numeral", label: "Bar Chart" },
         { value: "remove", label: "Remove" },
-        { value: "temporal", label: "One Category" },
-        { value: "timeLapse", label: "Temporal" },
+        // { value: "temporal", label: "One Category" },
+        // { value: "timeLapse", label: "Temporal" },
       ];
   } else if (targetLayer === "nodes")
     variableSelect = (

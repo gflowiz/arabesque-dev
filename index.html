@@ -85,19 +85,20 @@
                 </select>
               </div>
               <div class="row p-0 mt-3" id="layerControlList" data-toggle="tooltip" data-placement="right" data-delay="0" title="Drag and Drop layers to change z-index" data-animation="false">
+
                 <ul id="accordionLayerControl" class="list-unstyled col-md-12 align-items-center ui-sortable">
-                <li class="card mt-2 border-dark" id="cardnode" value="node">
+                <li class="card mt-2 border-dark" id="cardnode" value="node" draggable="true">
                   <div class="card-header text-dark h-5 panel-heading" id="panelnode">
                     node
                     <button type="button" id="buttonChangeLayernode" class="close center-block ml-1" aria-label="Close" data-target="#changeSemioModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change style of the layer">
                       <img class="icon" src="assets/svg/si-glyph-brush-1.svg">
                     </button>
                     <button type="button" id="buttonHideLayernode" class="close center-block ml-1" aria-label="Close" data-toggle="tooltip" data-placement="right" title="Hide the layer" data-animation="false">
-                      <img class="icon" src="assets/svg/si-glyph-view.svg">
+                      <img class="icon" id = "nodesVisibility" src="assets/svg/si-glyph-view.svg">
                     </button>
                   </div>
                 </li>
-                <li class="card mt-2 border-dark" id="cardlink" value="link">
+                <li class="card mt-2 border-dark" id="cardlink" value="link" draggable="true">
                   <div class="card-header text-dark h-5 panel-heading" id="panellink">
                     link
                     <button type="button" id="buttonChangeGeoLayerlink" class="close center-block ml-1" aria-label="Close" data-target="#changeGeometryModal" data-toggle="modal" rel="tooltip" data-placement="right" title="Change shape of the links">
@@ -107,7 +108,7 @@
                       <img class="icon" src="assets/svg/si-glyph-brush-1.svg">
                     </button>
                     <button type="button" id="buttonHideLayerlink" class="close center-block ml-1" aria-label="Close" rel="tooltip" data-placement="right" title="Hide the layer">
-                      <img class="icon" src="assets/svg/si-glyph-view.svg">
+                      <img class="icon" id = "linksVisibility" src="assets/svg/si-glyph-view.svg">
                     </button>
                   </div>
                 </li>
