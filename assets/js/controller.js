@@ -1,14 +1,24 @@
 import BarChartFilter from "./barchartfilter.js";
 import { CategorialFilter } from "../react/filters/categorial_filter";
 import { render } from "ol/control/Attribution";
-
+import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
 import ReactDOM from "react-dom";
 import React from "react";
+import { LayerCardsContainer } from "../react/layers/layers_container";
 
 export default class Controller {
   constructor(model, view) {
     this.model = model;
     this.view = view;
+
+    //Render layer cards
+    ReactDOM.render(
+      <LayerCardsContainer
+        layers={this.model.config.layers}
+        map={this.view.renderer.map}
+      />,
+      document.getElementById("accordionLayerControl")
+    );
 
     document
       .getElementById("ImportData")
@@ -62,7 +72,7 @@ export default class Controller {
       .addEventListener("click", this.toggle_new_filter_modal.bind(this));
 
     for (let button of document.getElementsByClassName("addLayerButton"))
-      button.addEventListener("click", this.view.newFilterModal.bind(this));
+      button.addEventListener("click", this.addLayer.bind(this));
 
     //Everytime the zoom level changes, we update the legend
     this.view.renderer.map.on("moveend", this.render_legend.bind(this));
@@ -525,5 +535,29 @@ export default class Controller {
     // });
 
     return dim;
+  }
+
+  addLayer(e) {
+    console.log("addlayer");
+    if (e.target.id === "tileLayerButton")
+      ReactDOM.render(
+        <NewTileLayerModal save_layer={this.saveLayer.bind(this)} />,
+        document.getElementById("ModalNewLayer")
+      );
+  }
+  saveLayer(type, name) {
+    //We'll add it in the background
+    const z_index = -this.model.config.layers.length;
+    this.model.config.layers.push({ name: name, type: type, z_index: z_index });
+    //Disaply the layers in the map
+    this.view.renderer.render_layers(this.model.config.layers);
+    //Display the layers cards
+    ReactDOM.render(
+      <LayerCardsContainer
+        layers={this.model.config.layers}
+        map={this.view.renderer.map}
+      />,
+      document.getElementById("accordionLayerControl")
+    );
   }
 }

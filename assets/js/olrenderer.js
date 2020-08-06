@@ -48,11 +48,7 @@ export default class OlRenderer {
         legendButtonControl,
       ]),
       target: "Mapcontainer",
-      layers: [
-        new TileLayer({
-          source: new OSM(),
-        }),
-      ],
+      layers: [],
       renderer: "webgl",
       view: new View({
         center: [0, 0],
@@ -476,6 +472,7 @@ export default class OlRenderer {
       renderMode: "image",
       // style: this.nodeStyle(nstyle),
     });
+    nodesLayer.setZIndex(0);
     // ajout de la couche
     this.map.addLayer(nodesLayer);
 
@@ -1036,16 +1033,17 @@ export default class OlRenderer {
       return feature;
     }, this);
 
-    this.links = new VectorSource({
+    let links_vector = new VectorSource({
       features: links_shapes,
     });
-    this.linksLayer = new VectorLayer({
+    let linksLayer = new VectorLayer({
       name: "links",
-      source: this.links,
+      source: links_vector,
       // style: this.linkStyle(lstyle),
       renderMode: "image",
     });
-    this.map.addLayer(this.linksLayer);
+    linksLayer.setZIndex(-1);
+    this.map.addLayer(linksLayer);
   }
 
   update_links(links, lstyle) {
@@ -1114,6 +1112,24 @@ export default class OlRenderer {
       if (layers[i].values_.name == name) {
         return layers[i];
       }
+    }
+  }
+
+  render_layers(layers) {
+    console.log(layers);
+    for (let layer of layers) {
+      //Skip the iteration if it's nodes or links (they are added in add_nodes and add_links functions)
+      if (layer.name !== "nodes" || layer.name !== "links")
+        if (layer.type === "tile") {
+          if (layer.name === "OSM") {
+            let tileLayer = new TileLayer({
+              source: new OSM(),
+              name: layer.name,
+            });
+            tileLayer.setZIndex(layer.z_index);
+            this.map.addLayer(tileLayer);
+          }
+        }
     }
   }
 }

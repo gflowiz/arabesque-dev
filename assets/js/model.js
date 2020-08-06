@@ -4,7 +4,6 @@ import { parse as papaparse } from "papaparse";
 import * as turf from "@turf/turf";
 import crossfilter from "crossfilter2";
 import BarChart from "./barchartfilter.js";
-import { NewTileLayerModal } from "../react/new_layer/new_tile_layer_modal";
 import React from "react";
 import ReactDOM from "react-dom";
 
@@ -14,7 +13,7 @@ export default class Model {
     let nstyle = {
       color: {
         mode: "fixed",
-        fixed: "#F6C270",
+        fixed: "#555555",
         varied: {
           colors: [
             "rgb(255, 247, 243)",
@@ -45,7 +44,7 @@ export default class Model {
     let lstyle = {
       color: {
         mode: "fixed",
-        fixed: "#F6C270",
+        fixed: "#000000",
         varied: {
           colors: [
             "rgb(255, 247, 243)",
@@ -85,7 +84,10 @@ export default class Model {
       filters: [],
       proj: "Mercator / EPSG:3857",
       styles: { nodes: nstyle, links: lstyle },
-      layers: {},
+      layers: [
+        { name: "nodes", type: "vector", z_index: 0 },
+        { name: "links", type: "vector", z_index: -1 },
+      ],
     };
 
     // working data structure
@@ -570,13 +572,5 @@ export default class Model {
       } catch {}
     }
     return points;
-  }
-
-  addLayer(e) {
-    if (e.target.id === "tileLayerButton")
-      ReactDOM.render(
-        <NewTileLayerModal />,
-        document.getElementById("ModalNewLayer")
-      );
   }
 }

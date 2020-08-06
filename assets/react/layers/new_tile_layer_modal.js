@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 
 export const NewTileLayerModal = (props) => {
+  function addLayer(e) {
+    const source = document.getElementById("tileLayersNameSelectorOptions")
+      .value;
+    props.save_layer("tile", source);
+  }
   return (
     <div
       class="modal fade show"
-      id="OSMModal"
+      id="tileLayerModal"
       tabindex="-1"
       role="dialog"
       aria-labelledby="OSMModalLabel"
@@ -23,8 +28,8 @@ export const NewTileLayerModal = (props) => {
             <button
               type="button"
               class="close"
-              dataDismiss="modal"
               ariaLabel="Close"
+              data-dismiss="modal"
             >
               <span aria-hidden="true">×</span>
             </button>
@@ -43,10 +48,10 @@ export const NewTileLayerModal = (props) => {
                 </select>
               </div>
               <div class="col-md-6" id="tileLayersNameSelector">
-                <label class="text-muted h5">Layer</label>
+                {/* <label class="text-muted h5">Layer</label>
                 <select class="custom-select w-100" id="TilelayersAdd">
                   <option selected>Choose...</option>
-                </select>
+                </select> */}
                 <label for="tileLayersNameSelectorOptions">Tiles</label>
                 <select
                   class="custom-select"
@@ -66,7 +71,7 @@ export const NewTileLayerModal = (props) => {
             <hr></hr>
             <div class="row">
               <div class="col-md-6 m-2">
-                {/* <button
+                <button
                   type="button"
                   class="btn btn-dark"
                   data-toggle="modal"
@@ -74,7 +79,7 @@ export const NewTileLayerModal = (props) => {
                   data-dismiss="modal"
                 >
                   I Have My Tiles
-                </button> */}
+                </button>
               </div>
             </div>
           </div>
@@ -83,6 +88,7 @@ export const NewTileLayerModal = (props) => {
             type="button"
             id="addNewTileLayerButtonAdd"
             data-dismiss="modal"
+            onClick={addLayer}
           >
             ADD TILE LAYER
           </button>
