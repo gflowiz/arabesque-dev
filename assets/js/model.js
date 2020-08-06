@@ -62,7 +62,7 @@ export default class Model {
       },
       size: {
         mode: "varied",
-        varied: { var: "degree", scale: "Sqrt", maxval: 100 },
+        varied: { var: "count", scale: "Sqrt", maxval: 100 },
         fixed: 10,
       },
       opacity: {

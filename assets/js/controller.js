@@ -16,6 +16,8 @@ export default class Controller {
       <LayerCardsContainer
         layers={this.model.config.layers}
         map={this.view.renderer.map}
+        delete_layer={this.delete_layer.bind(this)}
+        change_layer_visibility={this.change_layer_visibility.bind(this)}
       />,
       document.getElementById("accordionLayerControl")
     );
@@ -60,12 +62,6 @@ export default class Controller {
     document
       .getElementById("legendButton")
       .addEventListener("click", this.toggle_legend.bind(this));
-    document
-      .getElementById("buttonHideLayernode")
-      .addEventListener("click", this.hide_nodes.bind(this));
-    document
-      .getElementById("buttonHideLayerlink")
-      .addEventListener("click", this.hide_links.bind(this));
 
     document
       .getElementById("selectFilterButton")
@@ -175,6 +171,20 @@ export default class Controller {
       config
     );
   }
+  render_all() {
+    let proj_sel = document.getElementById("projection");
+    let proj = proj_sel.options[proj_sel.selectedIndex].value;
+
+    this.view.renderer.render(
+      this.model.get_nodes(),
+      this.model.get_links(),
+      this.model.get_nodes_style(),
+      this.model.get_links_style()
+    );
+  }
+
+  // PROJECTION //
+
   set_projection() {
     let proj_sel = document.getElementById("projection");
     let proj = proj_sel.options[proj_sel.selectedIndex].value;
@@ -203,6 +213,8 @@ export default class Controller {
       )
       .join("");
   }
+
+  // SEMIOLOGY //
 
   show_nodes_semio() {
     let nstyle = this.model.get_nodes_style();
@@ -268,9 +280,13 @@ export default class Controller {
     this.view.renderer.update_links(links, new_semio);
     $("#changeGeometryModal").modal("hide");
   }
+
+  // LEGEND //
+
   render_legend() {
     let nstyle = this.model.get_nodes_style();
     let lstyle = this.model.get_links_style();
+    console.log(lstyle);
     let nodes = this.model.get_nodes();
     let links = this.model.get_links();
 
@@ -298,41 +314,9 @@ export default class Controller {
     if (legendDiv.style.display !== "none") legendDiv.style.display = "none";
     else legendDiv.style.display = "flex";
   }
-  render_all() {
-    let proj_sel = document.getElementById("projection");
-    let proj = proj_sel.options[proj_sel.selectedIndex].value;
 
-    this.view.renderer.render(
-      this.model.get_nodes(),
-      this.model.get_links(),
-      this.model.get_nodes_style(),
-      this.model.get_links_style()
-    );
-  }
-  hide_nodes() {
-    let nodes_layer = this.view.renderer.map.getLayers().array_[1];
+  // FILTERS //
 
-    nodes_layer.setVisible(!nodes_layer.getVisible());
-
-    //Changing the icon
-    const eyeIcon = document.getElementById("nodesVisibility");
-    if (nodes_layer.getVisible() === true)
-      eyeIcon.src = "assets/svg/si-glyph-view.svg";
-    else if (nodes_layer.getVisible() === false)
-      eyeIcon.src = "assets/svg/si-glyph-noview.svg";
-  }
-  hide_links() {
-    let links_layer = this.view.renderer.map.getLayers().array_[2];
-
-    links_layer.setVisible(!links_layer.getVisible());
-
-    //Changing the icon
-    const eyeIcon = document.getElementById("linksVisibility");
-    if (links_layer.getVisible() === true)
-      eyeIcon.src = "assets/svg/si-glyph-view.svg";
-    else if (links_layer.getVisible() === false)
-      eyeIcon.src = "assets/svg/si-glyph-noview.svg";
-  }
   toggle_new_filter_modal() {
     //We take the first node/link to be able to display properties,
     //as well as filter their types (numeral or string) in the filter modal
@@ -364,7 +348,8 @@ export default class Controller {
           target,
           variable,
           type,
-          this.render_all.bind(this)
+          this.render_all.bind(this),
+          this.render_legend.bind(this)
         );
       } else if (type === "categorial") {
         filter_div = document.createElement("div");
@@ -482,7 +467,8 @@ export default class Controller {
       dimension,
       group,
       render_all,
-      this.delete_filter.bind(this)
+      this.delete_filter.bind(this),
+      this.render_legend.bind(this)
     );
     let filter_div = f.render();
 
@@ -537,11 +523,16 @@ export default class Controller {
     return dim;
   }
 
+  // LAYERS //
+
   addLayer(e) {
     console.log("addlayer");
     if (e.target.id === "tileLayerButton")
       ReactDOM.render(
-        <NewTileLayerModal save_layer={this.saveLayer.bind(this)} />,
+        <NewTileLayerModal
+          save_layer={this.saveLayer.bind(this)}
+          layers={this.model.config.layers}
+        />,
         document.getElementById("ModalNewLayer")
       );
   }
@@ -549,15 +540,62 @@ export default class Controller {
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
     this.model.config.layers.push({ name: name, type: type, z_index: z_index });
-    //Disaply the layers in the map
+    //Display the layers in the map
     this.view.renderer.render_layers(this.model.config.layers);
     //Display the layers cards
     ReactDOM.render(
       <LayerCardsContainer
         layers={this.model.config.layers}
         map={this.view.renderer.map}
+        delete_layer={this.delete_layer.bind(this)}
+        change_layer_visibility={this.change_layer_visibility.bind(this)}
       />,
       document.getElementById("accordionLayerControl")
     );
+  }
+  delete_layer(layer_name) {
+    //Delete layers from model config
+    this.model.config.layers = this.model.config.layers.filter(
+      (layer) => layer.name !== layer_name
+    );
+    //Delete layers from map
+    for (let layer of this.view.renderer.map.getLayers().array_) {
+      if (layer.values_.name === layer_name)
+        this.view.renderer.map.removeLayer(layer);
+    }
+    console.log(this.view.renderer.map.getLayers());
+    //Re-render the cards
+    ReactDOM.render(
+      <LayerCardsContainer
+        layers={this.model.config.layers}
+        map={this.view.renderer.map}
+        delete_layer={this.delete_layer.bind(this)}
+      />,
+      document.getElementById("accordionLayerControl")
+    );
+  }
+  change_layer_visibility(event) {
+    console.log(event);
+    //Compute layerName according to the target of the click (the img or the button)
+    let layerName;
+    if (event.target.tagName === "IMG")
+      layerName = event.target.parentNode.id.split("buttonHideLayer")[1];
+    else if (event.target.tagName === "BUTTON")
+      layerName = event.target.id.split("buttonHideLayer")[1];
+    console.log(layerName);
+
+    //change visibility
+    for (let layer of this.view.renderer.map.getLayers().array_) {
+      if (layer.values_.name === layerName) {
+        layer.setVisible(!layer.getVisible());
+        //Changing the icon
+        let eyeIcon = document.getElementById(layerName + "Visibility");
+        console.log(eyeIcon, layer.getVisible());
+        if (layer.getVisible() === true)
+          eyeIcon.src = "assets/svg/si-glyph-view.svg";
+        else if (layer.getVisible() === false)
+          eyeIcon.src = "assets/svg/si-glyph-noview.svg";
+      }
+    }
   }
 }

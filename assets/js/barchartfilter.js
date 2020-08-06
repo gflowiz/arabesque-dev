@@ -9,7 +9,8 @@ export default class BarChartFilter {
     dimension,
     group,
     render_all,
-    delete_filter
+    delete_filter,
+    render_legend
   ) {
     this.variable = variable;
     this.filter_id = filter_id;
@@ -19,7 +20,6 @@ export default class BarChartFilter {
 
     //Transform keys to float to prevent problems
     ga.map((d) => (d.key = parseFloat(d.key)));
-    console.log(ga);
 
     this.domain = [+ga[0].key, +ga[ga.length - 1].key];
     //We add an offset to the domain so we can see and select the last bar of the graph
@@ -36,6 +36,7 @@ export default class BarChartFilter {
     this.group = group;
 
     this.render_all = render_all;
+    this.render_legend = render_legend;
     this.delete_filter = delete_filter;
     this.brush.on("brush.chart", this.brush_listener(this, null));
     this.filter_div = document.createElement("div");
@@ -44,18 +45,13 @@ export default class BarChartFilter {
   }
 
   brush_listener(that, activeRange) {
-    console.log("brush listener");
     return function () {
-      console.log(activeRange);
       const g = d3.select(this.parentNode);
-      console.log(g);
-      console.log(this);
 
       if (activeRange === null) {
         const brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
         activeRange = brushRange;
       }
-      console.log(activeRange);
 
       const hasRange =
         activeRange &&
@@ -67,7 +63,6 @@ export default class BarChartFilter {
 
       // calculate current brush extents using x scale
       let extents = activeRange.map(that.x.invert);
-      console.log(extents);
 
       //We remove the offset that we added to the graph to display the real biggest value
       // extents[1] = extents[1] - that.offset_x;
@@ -88,8 +83,6 @@ export default class BarChartFilter {
         return parseFloat(d) >= extents[0] && d <= extents[1];
       });
 
-      // console.log(that.dimension.top(Infinity));
-
       document.getElementById(
         "filterMinInput-" + that.filter_id
       ).value = Math.round(extents[0]);
@@ -99,6 +92,11 @@ export default class BarChartFilter {
 
       // re-render the other charts accordingly
       that.render_all();
+
+      //Utile si l'on souhaite que la taille des éléments s'adapte du minimum et
+      //maximum des valeurs filtrées
+      // that.render_legend();
+
       //Reset the active range to null so it can be both called by brush move listener
       //Or onFilterMinChange and onFilterMaxChange functions
       activeRange = null;
@@ -107,7 +105,6 @@ export default class BarChartFilter {
 
   //Creates chart
   chart(div) {
-    console.log("chart()");
     const width = this.x.range()[1];
     const height = this.y.range()[0];
 

@@ -105,7 +105,6 @@ function smallAndBigRectangles(
     </svg>,
     <div class="circleTwoLabels">
       <div
-        // class="circleOneLabel"
         style={{
           height: "68%",
           width: "100%",
@@ -119,7 +118,6 @@ function smallAndBigRectangles(
         </div>
       </div>
       <div
-        // class="circleOneLabel"
         style={{
           height: "24%",
           width: "100%",
@@ -143,7 +141,8 @@ function searchBiggerSmallRectangle(
   minimum_height,
   max_height,
   min_vis_diff,
-  links_hash
+  links_hash,
+  map
 ) {
   let smallRectangleGoodSize;
 
@@ -160,6 +159,7 @@ function searchBiggerSmallRectangle(
 
     //If the height is superior to the minimum displayable and that
     //there is enough difference with the big circle, the value is good enough
+    //(and that the height is not the same as the big rectangle height)
     if (
       quantile_i_height > minimum_height &&
       max_height - quantile_i_height > min_vis_diff
@@ -240,7 +240,8 @@ export const Rectangles = (props) => {
       minimum_height,
       max_height,
       min_vis_diff,
-      props.links_hash
+      props.links_hash,
+      props.map
     );
     //If we didn't find any good value, we display the single big Rectangle
     if (smallRectangleGoodSize === undefined)

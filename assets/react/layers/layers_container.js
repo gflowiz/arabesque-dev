@@ -48,6 +48,20 @@ export const LayerCardsContainer = (props) => {
     }
   }
 
+  function remove_layer(e) {
+    console.log(e.target);
+
+    //Compute layerName according to the target of the click (the img or the button)
+    let layerName;
+    if (e.target.tagName === "IMG")
+      layerName = e.target.parentNode.id.split("buttonRemoveLayer")[1];
+    else if (e.target.tagName === "BUTTON")
+      layerName = e.target.id.split("buttonRemoveLayer")[1];
+
+    //Remove layer from model config
+    props.delete_layer(layerName);
+  }
+
   const layers = props.layers.map((layer) => {
     if (layer.name === "nodes")
       return (
@@ -75,13 +89,14 @@ export const LayerCardsContainer = (props) => {
             </button>
             <button
               type="button"
-              id="buttonHideLayernode"
+              id="buttonHideLayernodes"
               class="close center-block ml-1"
               aria-label="Close"
               data-toggle="tooltip"
               data-placement="right"
               title="Hide the layer"
               data-animation="false"
+              onClick={(e) => props.change_layer_visibility(e)}
             >
               <img
                 class="icon"
@@ -131,12 +146,13 @@ export const LayerCardsContainer = (props) => {
             </button>
             <button
               type="button"
-              id="buttonHideLayerlink"
+              id="buttonHideLayerlinks"
               class="close center-block ml-1"
               aria-label="Close"
               rel="tooltip"
               data-placement="right"
               title="Hide the layer"
+              onClick={(e) => props.change_layer_visibility(e)}
             >
               <img
                 class="icon"
@@ -161,7 +177,19 @@ export const LayerCardsContainer = (props) => {
             id={"panel" + layer.name}
           >
             {layer.name}
-
+            <button
+              onClick={remove_layer}
+              type="button"
+              id={"buttonRemoveLayer" + layer.name}
+              class="close center-block ml-1"
+              aria-label="Close"
+              data-toggle="tooltip"
+              data-placement="right"
+              title="Remove the layer"
+              data-animation="false"
+            >
+              <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
+            </button>
             <button
               type="button"
               id={"buttonHideLayer" + layer.name}
@@ -170,6 +198,7 @@ export const LayerCardsContainer = (props) => {
               rel="tooltip"
               data-placement="right"
               title="Hide the layer"
+              onClick={(e) => props.change_layer_visibility(e)}
             >
               <img
                 class="icon"
@@ -181,6 +210,6 @@ export const LayerCardsContainer = (props) => {
         </li>
       );
   });
-
+  console.log("re-render ?");
   return layers;
 };

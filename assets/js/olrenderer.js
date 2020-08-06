@@ -67,7 +67,6 @@ export default class OlRenderer {
       Log: d3.scaleLog(),
       Linear: d3.scaleLinear(),
     };
-    // this.map.on("moveend", this.update_circles.bind(this));
 
     this._node_var = {
       color: "degree",
@@ -405,6 +404,14 @@ export default class OlRenderer {
   }
 
   add_nodes(nodes, nstyle) {
+    //On enregistre le max et min pour la définition de l'échelle
+    this.nodes_max_value = d3.max(
+      nodes.map((n) => n.properties[this._node_var.size])
+    );
+    this.nodes_min_value = d3.min(
+      nodes.map((n) => n.properties[this._node_var.size])
+    );
+
     this.update_nodes_var(nstyle);
     this.update_node_scales_types(nstyle);
 
@@ -638,10 +645,12 @@ export default class OlRenderer {
     } else {
       $("#semioNodes").modal("hide");
     }
-    // definition de l'échelle pour la taille
+    // definition de l'échelle pour la taille. Le choix est fait de garder un domaine
+    //fixe pour éviter le changement de rayon lorsqu'un filtre barchart est activé
     let domain_size;
-    if (this._node_scale_types.size === "Log") domain_size = [1, max_size];
-    else domain_size = [min_size, max_size];
+    if (this._node_scale_types.size === "Log")
+      domain_size = [1, this.nodes_max_value];
+    else domain_size = [this.nodes_min_value, this.nodes_max_value];
 
     this._scale_node_size = this._scales[this._node_scale_types.size]
       .copy()
@@ -839,11 +848,12 @@ export default class OlRenderer {
       $("#semioLinks").modal("hide");
     }
 
-    // definition de l'échelle pour la taille
+    // definition de l'échelle pour la taille. Le choix est fait de garder un domaine
+    //fixe pour éviter le changement de largeur lorsqu'un filtre barchart est activé
     let domain_size;
     if (this._link_scale_types.size === "Log")
-      domain_size = [1, max_count_size];
-    else domain_size = [min_count_size, max_count_size];
+      domain_size = [1, this.links_max_value];
+    else domain_size = [this.links_min_value, this.links_max_value];
 
     // definition de l'échelle pour la taille
     this._scale_link_size = this._scales[this._link_scale_types.size]
@@ -1009,9 +1019,14 @@ export default class OlRenderer {
   }
 
   add_links(links, lstyle) {
+    //On enregistre le max et min pour la définition de l'échelle des tailles
+    this.links_max_value = d3.max(links.map((l) => l.value));
+    this.links_min_value = d3.min(links.map((l) => l.value));
+
     this.update_links_var(lstyle);
     this.update_link_scales_types(lstyle);
     this.update_links_scales(links, lstyle);
+
     //Initializing a hash link object to store radius in px
     this.proj_links_hash = {};
 
@@ -1121,14 +1136,28 @@ export default class OlRenderer {
       //Skip the iteration if it's nodes or links (they are added in add_nodes and add_links functions)
       if (layer.name !== "nodes" || layer.name !== "links")
         if (layer.type === "tile") {
+          let url;
           if (layer.name === "OSM") {
-            let tileLayer = new TileLayer({
-              source: new OSM(),
-              name: layer.name,
-            });
-            tileLayer.setZIndex(layer.z_index);
-            this.map.addLayer(tileLayer);
-          }
+            url = "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+          } else if (layer.name === "Humanitarian_OSM") {
+            url = "http://{a-b}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
+          } else if (layer.name === "Wikimedia") {
+            console.log("wikimedia");
+            url = "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png";
+          } else if (layer.name === "OSM_without_labels")
+            url = "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";
+          else if (layer.name === "wmflabs_OSM_BW")
+            url = "https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png";
+          else if (layer.name === "Öpnvkarte_Transport_Map")
+            url = "http://tile.memomaps.de/tilegen/{z}/{x}/{y}.png";
+
+          const source = new XYZ({ url: url });
+          let tileLayer = new TileLayer({
+            source: source,
+            name: layer.name,
+          });
+          tileLayer.setZIndex(layer.z_index);
+          this.map.addLayer(tileLayer);
         }
     }
   }

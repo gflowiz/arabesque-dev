@@ -2,8 +2,24 @@ import React, { useState } from "react";
 
 export const NewTileLayerModal = (props) => {
   function addLayer(e) {
+    e.preventDefault();
+    e.stopPropagation();
     const source = document.getElementById("tileLayersNameSelectorOptions")
       .value;
+
+    //Check if it's already in the map
+    if (props.layers.map((layer) => layer.name).includes(source)) {
+      document
+        .getElementById("tileLayersNameSelectorOptions")
+        .classList.add("is-invalid");
+
+      return;
+    } else {
+      document
+        .getElementById("tileLayersNameSelectorOptions")
+        .classList.remove("is-invalid");
+      $("#tileLayerModal").modal("hide");
+    }
     props.save_layer("tile", source);
   }
   return (
@@ -59,13 +75,16 @@ export const NewTileLayerModal = (props) => {
                 >
                   <option value="OSM">OSM</option>
                   <option value="Wikimedia">Wikimedia</option>
-                  <option value="Humanitarian OSM">Humanitarian OSM</option>
-                  <option value="OSM_no_labels">OSM_no_labels</option>
-                  <option value="wmflabs_OSM_BW">wmflabs_OSM_BW</option>
+                  <option value="Humanitarian_OSM">Humanitarian OSM</option>
+                  <option value="OSM_without_labels">OSM without labels</option>
+                  <option value="wmflabs_OSM_BW">wmflabs OSM BW</option>
                   <option value="Öpnvkarte_Transport_Map">
                     Öpnvkarte_Transport_Map
                   </option>
                 </select>
+                <div class="invalid-feedback">
+                  This layer has already been loaded
+                </div>
               </div>
             </div>
             <hr></hr>
@@ -87,7 +106,7 @@ export const NewTileLayerModal = (props) => {
             class="modal-footer btn btn-dark justify-content-center"
             type="button"
             id="addNewTileLayerButtonAdd"
-            data-dismiss="modal"
+            // data-dismiss="modal"
             onClick={addLayer}
           >
             ADD TILE LAYER
