@@ -1062,11 +1062,13 @@ export default class OlRenderer {
   }
 
   update_links(links, lstyle) {
+    console.log(links, lstyle);
     //Update the discretization variable
     this.update_links_var(lstyle);
     //Update scale types for size and opacity (linear, pow etc)
     this.update_link_scales_types(lstyle);
     //update the actual scales
+
     this.update_links_scales(links, lstyle);
 
     //Useful for qualitative color grouping
@@ -1086,6 +1088,7 @@ export default class OlRenderer {
       feature.setStyle(this.linkStyle(link, lstyle));
       return feature;
     }, this);
+    console.log(links_shapes);
 
     let links_vector = new VectorSource({
       features: links_shapes,
@@ -1097,6 +1100,7 @@ export default class OlRenderer {
       renderMode: "image",
     });
     this.map.addLayer(linksLayer);
+    console.log(this.map.getLayers().array_[1].getSource().getFeatures());
   }
   set_projection(proj, nodes, links, config) {
     let olproj = getProjection(proj);
@@ -1131,7 +1135,6 @@ export default class OlRenderer {
   }
 
   render_layers(layers) {
-    console.log(layers);
     for (let layer of layers) {
       //Skip the iteration if it's nodes or links (they are added in add_nodes and add_links functions)
       if (layer.name !== "nodes" || layer.name !== "links")
@@ -1142,7 +1145,6 @@ export default class OlRenderer {
           } else if (layer.name === "Humanitarian_OSM") {
             url = "http://{a-b}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
           } else if (layer.name === "Wikimedia") {
-            console.log("wikimedia");
             url = "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png";
           } else if (layer.name === "OSM_without_labels")
             url = "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";

@@ -407,7 +407,7 @@ export default class Model {
         let saved_data = JSON.parse(data);
 
         that.config = saved_data.config;
-        console.log(that.config);
+
         that.data.nodes = saved_data.nodes;
         that.data.links = saved_data.links;
         for (let p = 0; p < that.data.nodes.length; p++) {
@@ -479,7 +479,7 @@ export default class Model {
   }
 
   get_nodes() {
-    this.update_nodes_stats();
+    // this.update_nodes_stats();
     return this.data.nodes;
   }
 

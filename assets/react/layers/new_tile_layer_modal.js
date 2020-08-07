@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 export const NewTileLayerModal = (props) => {
+  console.log(props);
   function addLayer(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -73,8 +74,8 @@ export const NewTileLayerModal = (props) => {
                   class="custom-select"
                   id="tileLayersNameSelectorOptions"
                 >
-                  <option value="OSM">OSM</option>
                   <option value="Wikimedia">Wikimedia</option>
+                  <option value="OSM">OSM</option>
                   <option value="Humanitarian_OSM">Humanitarian OSM</option>
                   <option value="OSM_without_labels">OSM without labels</option>
                   <option value="wmflabs_OSM_BW">wmflabs OSM BW</option>

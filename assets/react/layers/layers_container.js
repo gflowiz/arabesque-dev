@@ -49,8 +49,6 @@ export const LayerCardsContainer = (props) => {
   }
 
   function remove_layer(e) {
-    console.log(e.target);
-
     //Compute layerName according to the target of the click (the img or the button)
     let layerName;
     if (e.target.tagName === "IMG")
@@ -210,6 +208,6 @@ export const LayerCardsContainer = (props) => {
         </li>
       );
   });
-  console.log("re-render ?");
+
   return layers;
 };

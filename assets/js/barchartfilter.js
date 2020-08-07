@@ -10,7 +10,11 @@ export default class BarChartFilter {
     group,
     render_all,
     delete_filter,
-    render_legend
+    render_legend,
+    update_links,
+    lstyle,
+    update_nodes,
+    nstyle
   ) {
     this.variable = variable;
     this.filter_id = filter_id;
@@ -19,15 +23,22 @@ export default class BarChartFilter {
     let ga = group.all();
 
     //Transform keys to float to prevent problems
-    ga.map((d) => (d.key = parseFloat(d.key)));
+    for (let g of ga) {
+      g = parseFloat(g);
+    }
+    //Sort the groups
+    ga.sort(function (a, b) {
+      return a.key - b.key;
+    });
 
     this.domain = [+ga[0].key, +ga[ga.length - 1].key];
+
     //We add an offset to the domain so we can see and select the last bar of the graph
-    this.offset_x = (this.domain[1] - this.domain[0]) / 10;
+    this.offset_x = this.domain[1] - this.domain[0];
     this.x = d3
       .scaleLinear()
-      .range([0, 200])
-      .domain([this.domain[0], this.domain[1] + this.offset_x]);
+      .range([0, 250])
+      .domain([this.domain[0], this.domain[1]]);
     this.y = d3.scaleLinear().range([100, 0]);
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
@@ -38,6 +49,11 @@ export default class BarChartFilter {
     this.render_all = render_all;
     this.render_legend = render_legend;
     this.delete_filter = delete_filter;
+    this.update_links = update_links;
+    this.update_nodes = update_nodes;
+    this.lstyle = lstyle;
+    this.nstyle = nstyle;
+
     this.brush.on("brush.chart", this.brush_listener(this, null));
     this.filter_div = document.createElement("div");
     this.filter_div.id = filter_id;
@@ -79,6 +95,7 @@ export default class BarChartFilter {
 
       // filter the active dimension to the range extents
 
+      that.dimension.filterAll();
       that.dimension.filterFunction(function (d) {
         return parseFloat(d) >= extents[0] && d <= extents[1];
       });
@@ -95,7 +112,7 @@ export default class BarChartFilter {
 
       //Utile si l'on souhaite que la taille des éléments s'adapte du minimum et
       //maximum des valeurs filtrées
-      // that.render_legend();
+      that.render_legend();
 
       //Reset the active range to null so it can be both called by brush move listener
       //Or onFilterMinChange and onFilterMaxChange functions
@@ -105,13 +122,12 @@ export default class BarChartFilter {
 
   //Creates chart
   chart(div) {
-    const width = this.x.range()[1];
+    const width = this.x.range()[1] + this.margin.left + this.margin.right;
     const height = this.y.range()[0];
 
     this.brush.extent([
       [0, 0],
-      //We add width/10 otherwise the biggest values are not included (I guess it's
-      //because of the width of the last bar)
+
       [width, height],
     ]);
 

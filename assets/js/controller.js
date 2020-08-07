@@ -153,7 +153,22 @@ export default class Controller {
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
 
+    //Add filters
     this.render_filters(this.render_all.bind(this));
+
+    //Add layers cards and tiles
+    //Render layer cards
+    ReactDOM.render(
+      <LayerCardsContainer
+        layers={this.model.config.layers}
+        map={this.view.renderer.map}
+        delete_layer={this.delete_layer.bind(this)}
+        change_layer_visibility={this.change_layer_visibility.bind(this)}
+      />,
+      document.getElementById("accordionLayerControl")
+    );
+
+    this.view.renderer.render_layers(this.model.config.layers);
 
     this.view.import_end(
       res,
@@ -286,7 +301,7 @@ export default class Controller {
   render_legend() {
     let nstyle = this.model.get_nodes_style();
     let lstyle = this.model.get_links_style();
-    console.log(lstyle);
+
     let nodes = this.model.get_nodes();
     let links = this.model.get_links();
 
@@ -436,7 +451,7 @@ export default class Controller {
     let new_filters = this.model.config.filters.filter((filter) => {
       let full_id =
         "filter-" + filter.target + "-" + filter.id + "-" + filter.type;
-      console.log(full_id);
+
       return full_id !== filter_id;
     });
     this.model.config.filters = new_filters;
@@ -468,7 +483,11 @@ export default class Controller {
       group,
       render_all,
       this.delete_filter.bind(this),
-      this.render_legend.bind(this)
+      this.render_legend.bind(this),
+      this.view.renderer.update_links.bind(this.view.renderer),
+      this.model.config.styles.links,
+      this.view.renderer.update_nodes.bind(this.view.renderer),
+      this.model.config.styles.nodes
     );
     let filter_div = f.render();
 
@@ -509,7 +528,7 @@ export default class Controller {
     // ];
 
     // dim.filterRange(range);
-    // console.log(dim.top(5000));
+
     this.model.data.filters[filter_id] = dim;
 
     // this.config.filters.push({
@@ -526,7 +545,7 @@ export default class Controller {
   // LAYERS //
 
   addLayer(e) {
-    console.log("addlayer");
+    console.log(this.model.config.layers);
     if (e.target.id === "tileLayerButton")
       ReactDOM.render(
         <NewTileLayerModal
@@ -537,6 +556,7 @@ export default class Controller {
       );
   }
   saveLayer(type, name) {
+    console.log("savelayers");
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
     this.model.config.layers.push({ name: name, type: type, z_index: z_index });
@@ -563,26 +583,25 @@ export default class Controller {
       if (layer.values_.name === layer_name)
         this.view.renderer.map.removeLayer(layer);
     }
-    console.log(this.view.renderer.map.getLayers());
+
     //Re-render the cards
     ReactDOM.render(
       <LayerCardsContainer
         layers={this.model.config.layers}
         map={this.view.renderer.map}
         delete_layer={this.delete_layer.bind(this)}
+        change_layer_visibility={this.change_layer_visibility.bind(this)}
       />,
       document.getElementById("accordionLayerControl")
     );
   }
   change_layer_visibility(event) {
-    console.log(event);
     //Compute layerName according to the target of the click (the img or the button)
     let layerName;
     if (event.target.tagName === "IMG")
       layerName = event.target.parentNode.id.split("buttonHideLayer")[1];
     else if (event.target.tagName === "BUTTON")
       layerName = event.target.id.split("buttonHideLayer")[1];
-    console.log(layerName);
 
     //change visibility
     for (let layer of this.view.renderer.map.getLayers().array_) {
@@ -590,7 +609,7 @@ export default class Controller {
         layer.setVisible(!layer.getVisible());
         //Changing the icon
         let eyeIcon = document.getElementById(layerName + "Visibility");
-        console.log(eyeIcon, layer.getVisible());
+
         if (layer.getVisible() === true)
           eyeIcon.src = "assets/svg/si-glyph-view.svg";
         else if (layer.getVisible() === false)

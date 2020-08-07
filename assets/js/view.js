@@ -88,7 +88,6 @@ export default class View {
     document.getElementById("ImportNodes").disabled = false;
   }
   error_nodes_file(evt) {
-    console.log(evt);
     document.getElementById("NodesFileError").innerHTML =
       "<b>An error occured during file parsing (check its structure and content)</b>";
   }
@@ -145,7 +144,6 @@ export default class View {
     document.getElementById("ImportLinks").disabled = false;
   }
   error_links_file(evt) {
-    console.log(evt);
     document.getElementById("LinksFileError").innerHTML =
       "<b>An error occured during file parsing (check its structure and content)</b>";
   }
@@ -182,7 +180,6 @@ export default class View {
     $("#semioNodes").modal();
   }
   update_links_semio(semio, links_properties, callback) {
-    console.log("updatelinkssemio2");
     ReactDOM.render(
       <LinksSemioModalComponent
         semio={semio}
@@ -195,7 +192,6 @@ export default class View {
     $("#semioLinks").modal();
   }
   update_links_shape(lstyle, callback) {
-    console.log("update link shapes");
     ReactDOM.render(
       <LinksShapeModalComponent
         semio={lstyle}
@@ -222,7 +218,6 @@ export default class View {
   }
 
   new_filter(nodes_properties, links_properties, callback) {
-    console.log(callback);
     ReactDOM.render(
       <NewFilterModal
         nodes_properties={nodes_properties}

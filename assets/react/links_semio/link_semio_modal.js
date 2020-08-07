@@ -8,7 +8,7 @@ export const LinksSemioModalComponent = (props) => {
   //Props is what you receive from parent component
   let links_properties = props.links_properties;
   let semio = props.semio;
-  console.log(semio, links_properties);
+
   //Keep track of the different modes in the modal (fixed/varied)
   let modes = {
     color: "fixed",

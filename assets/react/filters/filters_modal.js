@@ -4,7 +4,6 @@ import { filter } from "jszip/lib/object";
 export const NewFilterModal = (props) => {
   let [targetLayer, settargetLayer] = useState("links");
   let [linksVariable, setLinksVariable] = useState("origin");
-  console.log(props);
 
   function save_and_close(e) {
     let target = targetLayer;
@@ -16,7 +15,6 @@ export const NewFilterModal = (props) => {
     props.add_filter(target, variable, type);
   }
   function changeLinksVariable(e) {
-    console.log(e.target.value);
     setLinksVariable(e.target.value);
   }
 

@@ -34,7 +34,6 @@ const CustomMenu = React.forwardRef(
 
 export const CategorialFilter = (props) => {
   let [selectedItems, setSelectedItems] = useState([]);
-  console.log(selectedItems);
 
   function handleItemSelect(e) {
     let new_selection;

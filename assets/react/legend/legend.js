@@ -328,7 +328,6 @@ export const LegendComponent = (props) => {
     let max_height = d3.max(
       Object.entries(props.links_hash).map((link) => link[1].height_px)
     );
-    console.log(max_height);
 
     let min_height = d3.min(
       Object.entries(props.links_hash).map((link) => link[1].height_px)
