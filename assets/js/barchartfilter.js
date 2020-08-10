@@ -11,10 +11,9 @@ export default class BarChartFilter {
     render_all,
     delete_filter,
     render_legend,
-    update_links,
     lstyle,
-    update_nodes,
-    nstyle
+    nstyle,
+    update_bars
   ) {
     this.variable = variable;
     this.filter_id = filter_id;
@@ -49,8 +48,8 @@ export default class BarChartFilter {
     this.render_all = render_all;
     this.render_legend = render_legend;
     this.delete_filter = delete_filter;
-    this.update_links = update_links;
-    this.update_nodes = update_nodes;
+    this.update_bars = update_bars;
+
     this.lstyle = lstyle;
     this.nstyle = nstyle;
 
@@ -112,7 +111,7 @@ export default class BarChartFilter {
 
       //Utile si l'on souhaite que la taille des éléments s'adapte du minimum et
       //maximum des valeurs filtrées
-      that.render_legend();
+      // that.render_legend();
 
       //Reset the active range to null so it can be both called by brush move listener
       //Or onFilterMinChange and onFilterMaxChange functions
@@ -213,28 +212,7 @@ export default class BarChartFilter {
       }
     }
 
-    g.selectAll(".bar").attr("d", barPathF(this));
-
-    function barPathF(that) {
-      return function barPath(groups) {
-        const path = [];
-
-        for (let d of groups) {
-          path.push(
-            "M",
-            that.x(+parseFloat(d.key)),
-            ",",
-            height,
-            "V",
-            that.y(d.value),
-            "h9V",
-            height
-          );
-        }
-
-        return path.join("");
-      };
-    }
+    g.selectAll(".bar").attr("d", this.barPathF(this, this.group.all()));
 
     function resizePath(d) {
       const e = +(d.type === "e");
@@ -246,6 +224,24 @@ export default class BarChartFilter {
         4.5 * x
       },${y + 8}V${2 * y - 8}`;
     }
+  }
+  barPathF(that, groups) {
+    let path = [];
+    let height = that.y.range()[0];
+    console.log(groups);
+    for (let d of groups) {
+      path.push(
+        "M",
+        that.x(+parseFloat(d.key)),
+        ",",
+        height,
+        "V",
+        that.y(d.value),
+        "h9V",
+        height
+      );
+    }
+    return path.join(" ");
   }
 
   onFilterMinChange(event) {

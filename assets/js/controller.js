@@ -5,6 +5,9 @@ import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
 import ReactDOM from "react-dom";
 import React from "react";
 import { LayerCardsContainer } from "../react/layers/layers_container";
+import { tickStep } from "d3";
+import { filter } from "jszip/lib/object";
+import crossfilter from "crossfilter2";
 
 export default class Controller {
   constructor(model, view) {
@@ -156,6 +159,9 @@ export default class Controller {
     //Add filters
     this.render_filters(this.render_all.bind(this));
 
+    //Update filters bars everytime there is a change in the filtered data
+    // this.model.data.crossfilters.onChange(this.update_bars.bind(this));
+
     //Add layers cards and tiles
     //Render layer cards
     ReactDOM.render(
@@ -292,7 +298,8 @@ export default class Controller {
   save_links_shape(new_semio) {
     this.model.update_links_style(new_semio);
     let links = this.model.get_links();
-    this.view.renderer.update_links(links, new_semio);
+    // this.view.renderer.update_links(links, new_semio);
+    this.render_all();
     $("#changeGeometryModal").modal("hide");
   }
 
@@ -462,10 +469,14 @@ export default class Controller {
     //Removing the dimension from model.data
     delete this.model.data.filters[filter_id];
 
+    //Remove chart from this.charts
+    this.charts = this.charts.filter((c) => c.filter_id !== filter_id);
+
     let filter_div = document.getElementById(filter_id);
     document.getElementById("Filters").removeChild(filter_div);
 
-    // this.render_filters();
+    //Update other charts's bar with only filtered values
+    this.update_bars();
 
     this.render_all();
   }
@@ -484,16 +495,42 @@ export default class Controller {
       render_all,
       this.delete_filter.bind(this),
       this.render_legend.bind(this),
-      this.view.renderer.update_links.bind(this.view.renderer),
       this.model.config.styles.links,
-      this.view.renderer.update_nodes.bind(this.view.renderer),
-      this.model.config.styles.nodes
+      this.model.config.styles.nodes,
+      this.update_bars.bind(this)
     );
     let filter_div = f.render();
 
-    // this.charts.push(f);
+    this.charts.push(f);
 
     return filter_div;
+  }
+
+  update_bars() {
+    //For every barchart remaining, we update their bars to display only filtered values
+    for (let chart of this.charts) {
+      let filtered_data;
+      if (this.model.data.crossfilters.allFiltered() === [])
+        filtered_data = this.model.data.crossfilters.all();
+      else filtered_data = this.model.data.crossfilters.allFiltered();
+
+      let tempCrossfilter = crossfilter(filtered_data);
+
+      let tempDimension = tempCrossfilter.dimension(function (d) {
+        return d[chart.variable];
+      });
+
+      let filteredGroup = tempDimension.group().top(Infinity);
+
+      //Update the y domain
+      chart.y.domain([0, filteredGroup[0].value]);
+
+      let div = document.getElementById(chart.filter_id);
+
+      let g = d3.select(div).select("g");
+      console.log(this.charts);
+      g.selectAll(".bar").attr("d", chart.barPathF(chart, filteredGroup));
+    }
   }
   categorial_filter(target, variable, filter_id, mode) {
     let dimension = this.create_dimension(variable, filter_id);
@@ -545,7 +582,6 @@ export default class Controller {
   // LAYERS //
 
   addLayer(e) {
-    console.log(this.model.config.layers);
     if (e.target.id === "tileLayerButton")
       ReactDOM.render(
         <NewTileLayerModal
@@ -556,7 +592,6 @@ export default class Controller {
       );
   }
   saveLayer(type, name) {
-    console.log("savelayers");
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
     this.model.config.layers.push({ name: name, type: type, z_index: z_index });

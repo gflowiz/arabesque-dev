@@ -484,7 +484,18 @@ export default class Model {
   }
 
   get_links() {
-    return this.data.links_aggregated.all().filter((l) => l.value > 0);
+    //Getting all the filtered flows and format them
+    let filteredFlows = this.data.crossfilters.allFiltered().map((link) => {
+      return {
+        key:
+          link[this.config.varnames.linkID[0]] +
+          "->" +
+          link[this.config.varnames.linkID[1]],
+        value: parseFloat(link[this.config.varnames.vol]),
+      };
+    });
+
+    return filteredFlows;
   }
 
   //Updates nodes stats from incoming and outcoming flows

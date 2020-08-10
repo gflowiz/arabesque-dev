@@ -1062,7 +1062,6 @@ export default class OlRenderer {
   }
 
   update_links(links, lstyle) {
-    console.log(links, lstyle);
     //Update the discretization variable
     this.update_links_var(lstyle);
     //Update scale types for size and opacity (linear, pow etc)
@@ -1088,7 +1087,6 @@ export default class OlRenderer {
       feature.setStyle(this.linkStyle(link, lstyle));
       return feature;
     }, this);
-    console.log(links_shapes);
 
     let links_vector = new VectorSource({
       features: links_shapes,
@@ -1100,7 +1098,6 @@ export default class OlRenderer {
       renderMode: "image",
     });
     this.map.addLayer(linksLayer);
-    console.log(this.map.getLayers().array_[1].getSource().getFeatures());
   }
   set_projection(proj, nodes, links, config) {
     let olproj = getProjection(proj);
