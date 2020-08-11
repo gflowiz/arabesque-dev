@@ -7,6 +7,7 @@ import { Fill, Stroke, Text, Style, RegularShape } from "ol/style.js";
 import CircleStyle from "ol/style/Circle";
 import { Tile, Vector as VectorLayer } from "ol/layer.js";
 import { OSM, Vector as VectorSource, XYZ } from "ol/source.js";
+import GeoJSON from "ol/format/GeoJSON";
 import Legend from "ol-ext/control/Legend";
 import { transform } from "ol/proj";
 import * as d3 from "d3";
@@ -1157,6 +1158,28 @@ export default class OlRenderer {
           });
           tileLayer.setZIndex(layer.z_index);
           this.map.addLayer(tileLayer);
+        } else if (layer.type === "geojson") {
+          var style = new Style({
+            stroke: new Stroke({
+              color: layer.config.border,
+              width: 2,
+            }),
+            fill: new Fill({
+              color: layer.config.fill,
+              opacity: layer.config.opacity,
+            }),
+          });
+          console.log(layer.config.file);
+          var vectorSource = new VectorSource({
+            features: new GeoJSON().readFeatures(layer.config.file),
+          });
+          var vectorLayer = new VectorLayer({
+            source: vectorSource,
+            style: style,
+          });
+          vectorLayer.setZIndex(layer.z_index);
+          this.map.addLayer(vectorLayer);
+          console.log(this.map.getLayers().array_);
         }
     }
   }

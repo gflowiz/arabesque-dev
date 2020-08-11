@@ -168,6 +168,7 @@ function searchBiggerSmallRectangle(
       break;
     }
   }
+  console.log(smallRectangleGoodSize);
   return smallRectangleGoodSize;
 }
 

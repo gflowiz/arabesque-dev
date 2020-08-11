@@ -32,8 +32,6 @@ export default class BarChartFilter {
 
     this.domain = [+ga[0].key, +ga[ga.length - 1].key];
 
-    //We add an offset to the domain so we can see and select the last bar of the graph
-    this.offset_x = this.domain[1] - this.domain[0];
     this.x = d3
       .scaleLinear()
       .range([0, 250])
@@ -78,9 +76,6 @@ export default class BarChartFilter {
 
       // calculate current brush extents using x scale
       let extents = activeRange.map(that.x.invert);
-
-      //We remove the offset that we added to the graph to display the real biggest value
-      // extents[1] = extents[1] - that.offset_x;
 
       // move brush handles to start and end of range
       g.selectAll(".brush-handle")

@@ -2,6 +2,8 @@ import BarChartFilter from "./barchartfilter.js";
 import { CategorialFilter } from "../react/filters/categorial_filter";
 import { render } from "ol/control/Attribution";
 import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
+import { NewGeojsonLayerModal } from "../react/layers/new_geojson_layer_modal";
+
 import ReactDOM from "react-dom";
 import React from "react";
 import { LayerCardsContainer } from "../react/layers/layers_container";
@@ -590,11 +592,22 @@ export default class Controller {
         />,
         document.getElementById("ModalNewLayer")
       );
+    else if (e.target.id === "importLayerbutton")
+      ReactDOM.render(
+        <NewGeojsonLayerModal save_layer={this.saveLayer.bind(this)} />,
+        document.getElementById("ModalNewGeojson")
+      );
   }
-  saveLayer(type, name) {
+  saveLayer(type, name, config = null) {
+    console.log(type, name, config);
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
-    this.model.config.layers.push({ name: name, type: type, z_index: z_index });
+    this.model.config.layers.push({
+      name: name,
+      type: type,
+      z_index: z_index,
+      config: config,
+    });
     //Display the layers in the map
     this.view.renderer.render_layers(this.model.config.layers);
     //Display the layers cards
