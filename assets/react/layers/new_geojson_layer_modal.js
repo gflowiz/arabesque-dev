@@ -8,7 +8,7 @@ export const NewGeojsonLayerModal = (props) => {
     const file = document.getElementById("geoJson").files[0];
     console.log(file);
     //Checking if it's a geojson
-    if (file.type !== "application/geo+json") {
+    if (file === undefined || file.type !== "application/geo+json") {
       document.getElementById("geoJson").classList.add("is-invalid");
       return;
     } else {
@@ -136,7 +136,7 @@ export const NewGeojsonLayerModal = (props) => {
                   type="color"
                   id="fillColorpickerGeoJson"
                   onchange="clickColor(0, -1, -1, 5)"
-                  value="#ff0000"
+                  defaultValue="#ff0000"
                 ></input>
               </div>
               <div class="col-md-6">
@@ -147,7 +147,7 @@ export const NewGeojsonLayerModal = (props) => {
                   type="color"
                   id="strokeColorpickerGeoJson"
                   onchange="clickColor(0, -1, -1, 5)"
-                  value="#ff0000"
+                  defaultValue="#ff0000"
                 ></input>
               </div>
             </div>

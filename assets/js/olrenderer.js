@@ -1162,26 +1162,51 @@ export default class OlRenderer {
           var style = new Style({
             stroke: new Stroke({
               color: layer.config.border,
-              width: 2,
+              width: 1,
             }),
             fill: new Fill({
-              color: layer.config.fill,
-              opacity: layer.config.opacity,
+              color: this.add_opacity_to_color(
+                layer.config.fill,
+                layer.config.opacity
+              ),
             }),
           });
-          console.log(layer.config.file);
+          console.log(this.map.getView().getProjection().getCode());
           var vectorSource = new VectorSource({
-            features: new GeoJSON().readFeatures(layer.config.file),
+            features: new GeoJSON({
+              extractGeometryName: true,
+              featureProjection: this.map.getView().getProjection().getCode(),
+            }).readFeatures(layer.config.file),
           });
           var vectorLayer = new VectorLayer({
             source: vectorSource,
             style: style,
+            name: layer.name,
           });
           vectorLayer.setZIndex(layer.z_index);
           this.map.addLayer(vectorLayer);
           console.log(this.map.getLayers().array_);
         }
     }
+  }
+
+  update_layer_style(layer_name, new_semio) {
+    console.log(this, new_semio);
+    let layer = this.map
+      .getLayers()
+      .array_.filter((lay) => lay.values_.name === layer_name)[0];
+
+    layer.setStyle(
+      new Style({
+        stroke: new Stroke({
+          color: new_semio.border,
+          width: 1,
+        }),
+        fill: new Fill({
+          color: this.add_opacity_to_color(new_semio.fill, new_semio.opacity),
+        }),
+      })
+    );
   }
 }
 

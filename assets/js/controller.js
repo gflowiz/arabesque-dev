@@ -3,29 +3,20 @@ import { CategorialFilter } from "../react/filters/categorial_filter";
 import { render } from "ol/control/Attribution";
 import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
 import { NewGeojsonLayerModal } from "../react/layers/new_geojson_layer_modal";
-
 import ReactDOM from "react-dom";
 import React from "react";
 import { LayerCardsContainer } from "../react/layers/layers_container";
 import { tickStep } from "d3";
 import { filter } from "jszip/lib/object";
 import crossfilter from "crossfilter2";
+import { contains } from "jquery";
 
 export default class Controller {
   constructor(model, view) {
     this.model = model;
     this.view = view;
 
-    //Render layer cards
-    ReactDOM.render(
-      <LayerCardsContainer
-        layers={this.model.config.layers}
-        map={this.view.renderer.map}
-        delete_layer={this.delete_layer.bind(this)}
-        change_layer_visibility={this.change_layer_visibility.bind(this)}
-      />,
-      document.getElementById("accordionLayerControl")
-    );
+    this.render_layers_cards();
 
     document
       .getElementById("ImportData")
@@ -54,16 +45,16 @@ export default class Controller {
       .getElementById("projection")
       .addEventListener("change", this.set_projection.bind(this));
     //Change node semio
-    document
-      .getElementById("buttonChangeLayernode")
-      .addEventListener("click", this.show_nodes_semio.bind(this));
+    // document
+    //   .getElementById("buttonChangeLayernode")
+    //   .addEventListener("click", this.show_nodes_semio.bind(this));
 
-    document
-      .getElementById("buttonChangeLayerlink")
-      .addEventListener("click", this.show_links_semio.bind(this));
-    document
-      .getElementById("buttonChangeGeoLayerlink")
-      .addEventListener("click", this.show_links_shape.bind(this));
+    // document
+    //   .getElementById("buttonChangeLayerlink")
+    //   .addEventListener("click", this.show_links_semio.bind(this));
+    // document
+    //   .getElementById("buttonChangeGeoLayerlink")
+    //   .addEventListener("click", this.show_links_shape.bind(this));
     document
       .getElementById("legendButton")
       .addEventListener("click", this.toggle_legend.bind(this));
@@ -166,16 +157,9 @@ export default class Controller {
 
     //Add layers cards and tiles
     //Render layer cards
-    ReactDOM.render(
-      <LayerCardsContainer
-        layers={this.model.config.layers}
-        map={this.view.renderer.map}
-        delete_layer={this.delete_layer.bind(this)}
-        change_layer_visibility={this.change_layer_visibility.bind(this)}
-      />,
-      document.getElementById("accordionLayerControl")
-    );
+    this.render_layers_cards();
 
+    //Render layers in the map
     this.view.renderer.render_layers(this.model.config.layers);
 
     this.view.import_end(
@@ -304,7 +288,26 @@ export default class Controller {
     this.render_all();
     $("#changeGeometryModal").modal("hide");
   }
-
+  show_geojson_semio(e) {
+    let layer_name;
+    if (e.target.tagName === "IMG")
+      layer_name = e.target.parentNode.id.split("buttonChangeGeojsonSemio")[1];
+    else if (e.target.tagName === "BUTTON")
+      layer_name = e.target.id.split("buttonChangeGeojsonSemio")[1];
+    const geojsons_style = this.model.config.styles.geojsons;
+    console.log(geojsons_style);
+    this.view.update_geojson_style(
+      layer_name,
+      geojsons_style,
+      this.save_geojson_semio.bind(this)
+    );
+  }
+  save_geojson_semio(layer_name, new_semio) {
+    console.log(new_semio);
+    //updateing the model style
+    this.model.config.styles.geojsons[layer_name] = new_semio;
+    this.view.renderer.update_layer_style(layer_name, new_semio);
+  }
   // LEGEND //
 
   render_legend() {
@@ -610,16 +613,9 @@ export default class Controller {
     });
     //Display the layers in the map
     this.view.renderer.render_layers(this.model.config.layers);
-    //Display the layers cards
-    ReactDOM.render(
-      <LayerCardsContainer
-        layers={this.model.config.layers}
-        map={this.view.renderer.map}
-        delete_layer={this.delete_layer.bind(this)}
-        change_layer_visibility={this.change_layer_visibility.bind(this)}
-      />,
-      document.getElementById("accordionLayerControl")
-    );
+
+    //Display layer cards
+    this.render_layers_cards();
   }
   delete_layer(layer_name) {
     //Delete layers from model config
@@ -664,5 +660,22 @@ export default class Controller {
           eyeIcon.src = "assets/svg/si-glyph-noview.svg";
       }
     }
+  }
+
+  render_layers_cards() {
+    //Display the layers cards
+    ReactDOM.render(
+      <LayerCardsContainer
+        layers={this.model.config.layers}
+        map={this.view.renderer.map}
+        delete_layer={this.delete_layer.bind(this)}
+        change_layer_visibility={this.change_layer_visibility.bind(this)}
+        show_nodes_semio={this.show_nodes_semio.bind(this)}
+        show_links_semio={this.show_links_semio.bind(this)}
+        show_links_shape={this.show_links_shape.bind(this)}
+        show_geojson_semio={this.show_geojson_semio.bind(this)}
+      />,
+      document.getElementById("accordionLayerControl")
+    );
   }
 }

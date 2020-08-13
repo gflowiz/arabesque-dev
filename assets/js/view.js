@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import { NodesSemioModalComponent } from "../react/nodes_semio/node_semio_modal";
 import { LinksSemioModalComponent } from "../react/links_semio/link_semio_modal";
 import { LinksShapeModalComponent } from "../react/links_shape_semio";
+import { LayerSemioModal } from "../react/layers/layer_semio_modal";
 import { LegendComponent } from "../react/legend/legend";
 import { NewFilterModal } from "../react/filters/filters_modal";
 import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
@@ -199,7 +200,22 @@ export default class View {
       />,
       document.getElementById("ModalShapeLinks")
     );
+    $("#changeGeometryModal").modal();
   }
+  update_geojson_style(layer_name, gstyle, callback) {
+    ReactDOM.render(
+      <LayerSemioModal
+        layer_name={layer_name}
+        semio={gstyle}
+        update_geojson={(layer_name, new_semio) =>
+          callback(layer_name, new_semio)
+        }
+      />,
+      document.getElementById("ModalSemioLayer")
+    );
+    $("#changeLayerSemioModal").modal();
+  }
+
   render_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle) {
     ReactDOM.render(
       <LegendComponent

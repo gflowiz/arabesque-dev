@@ -83,7 +83,7 @@ export default class Model {
       aggrop: "sum",
       filters: [],
       proj: "Mercator / EPSG:3857",
-      styles: { nodes: nstyle, links: lstyle },
+      styles: { nodes: nstyle, links: lstyle, geojsons: {}, baselayers: {} },
       layers: [
         { name: "nodes", type: "vector", z_index: 0 },
         { name: "links", type: "vector", z_index: -1 },

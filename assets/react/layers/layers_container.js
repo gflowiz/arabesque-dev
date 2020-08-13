@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import ReactDOM from "react-dom";
+import { LayerSemioModal } from "./layer_semio_modal";
 
 export const LayerCardsContainer = (props) => {
   function on_layer_card_drop(e) {
@@ -36,16 +38,20 @@ export const LayerCardsContainer = (props) => {
   }
   function set_z_indexes(sorted_layers) {
     const map_layers = props.map.getLayers().array_;
-    const model_layers = props.layers;
+    // const model_layers = props.layers;
     let z_indexes = {};
     for (let div of sorted_layers) {
       //Extract the name of layer from the id of his card
       z_indexes[div.id.split("card")[1]] = -sorted_layers.indexOf(div);
     }
 
+    //Set the z-indexes on map layers
     for (let layer of map_layers) {
       layer.setZIndex(z_indexes[layer.values_.name]);
     }
+
+    for (let layer of props.layers) layer.z_index = z_indexes[layer.name];
+    console.log(props.layers);
   }
 
   function remove_layer(e) {
@@ -60,154 +66,212 @@ export const LayerCardsContainer = (props) => {
     props.delete_layer(layerName);
   }
 
-  const layers = props.layers.map((layer) => {
-    if (layer.name === "nodes")
-      return (
-        <li
-          class="card mt-2 border-dark"
-          id="cardnodes"
-          value="node"
-          draggable="true"
-          onDragEnd={on_layer_card_drop}
-        >
-          <div class="card-header text-dark h-5 panel-heading" id="panelnode">
-            node
-            <button
-              type="button"
-              id="buttonChangeLayernode"
-              class="close center-block ml-1"
-              aria-label="Close"
-              data-target="#changeSemioModal"
-              data-toggle="modal"
-              rel="tooltip"
-              data-placement="right"
-              title="Change style of the layer"
-            >
-              <img class="icon" src="assets/svg/si-glyph-brush-1.svg"></img>
-            </button>
-            <button
-              type="button"
-              id="buttonHideLayernodes"
-              class="close center-block ml-1"
-              aria-label="Close"
-              data-toggle="tooltip"
-              data-placement="right"
-              title="Hide the layer"
-              data-animation="false"
-              onClick={(e) => props.change_layer_visibility(e)}
-            >
-              <img
-                class="icon"
-                id="nodesVisibility"
-                src="assets/svg/si-glyph-view.svg"
-              ></img>
-            </button>
-          </div>
-        </li>
-      );
-    else if (layer.name === "links")
-      return (
-        <li
-          class="card mt-2 border-dark"
-          id="cardlinks"
-          value="link"
-          draggable="true"
-          onDragEnd={on_layer_card_drop}
-        >
-          <div class="card-header text-dark h-5 panel-heading" id="panellink">
-            link
-            <button
-              type="button"
-              id="buttonChangeGeoLayerlink"
-              class="close center-block ml-1"
-              aria-label="Close"
-              data-target="#changeGeometryModal"
-              data-toggle="modal"
-              rel="tooltip"
-              data-placement="right"
-              title="Change shape of the links"
-            >
-              <img class="icon" src="assets/svg/si-glyph-ruler.svg"></img>
-            </button>
-            <button
-              type="button"
-              id="buttonChangeLayerlink"
-              class="close center-block ml-1"
-              aria-label="Close"
-              data-target="#changeSemioLinkModal"
-              data-toggle="modal"
-              rel="tooltip"
-              data-placement="right"
-              title="Change style of the links"
-            >
-              <img class="icon" src="assets/svg/si-glyph-brush-1.svg"></img>
-            </button>
-            <button
-              type="button"
-              id="buttonHideLayerlinks"
-              class="close center-block ml-1"
-              aria-label="Close"
-              rel="tooltip"
-              data-placement="right"
-              title="Hide the layer"
-              onClick={(e) => props.change_layer_visibility(e)}
-            >
-              <img
-                class="icon"
-                id="linksVisibility"
-                src="assets/svg/si-glyph-view.svg"
-              ></img>
-            </button>
-          </div>
-        </li>
-      );
-    else
-      return (
-        <li
-          class="card mt-2 border-dark"
-          id={"card" + layer.name}
-          value={layer.name}
-          draggable="true"
-          onDragEnd={on_layer_card_drop}
-        >
-          <div
-            class="card-header text-dark h-5 panel-heading"
-            id={"panel" + layer.name}
+  //Render layers previously ordered by z-index
+  const layers = props.layers
+    .sort((a, b) => b.z_index - a.z_index)
+    .map((layer) => {
+      if (layer.name === "nodes")
+        return (
+          <li
+            class="card mt-2 border-dark"
+            id="cardnodes"
+            value="node"
+            draggable="true"
+            onDragEnd={on_layer_card_drop}
           >
-            {layer.name}
-            <button
-              onClick={remove_layer}
-              type="button"
-              id={"buttonRemoveLayer" + layer.name}
-              class="close center-block ml-1"
-              aria-label="Close"
-              data-toggle="tooltip"
-              data-placement="right"
-              title="Remove the layer"
-              data-animation="false"
+            <div class="card-header text-dark h-5 panel-heading" id="panelnode">
+              node
+              <button
+                type="button"
+                id="buttonChangeLayernode"
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Change style of the layer"
+                onClick={(e) => props.show_nodes_semio()}
+              >
+                <img class="icon" src="assets/svg/si-glyph-brush-1.svg"></img>
+              </button>
+              <button
+                type="button"
+                id="buttonHideLayernodes"
+                class="close center-block ml-1"
+                aria-label="Close"
+                data-toggle="tooltip"
+                data-placement="right"
+                title="Hide the layer"
+                data-animation="false"
+                onClick={(e) => props.change_layer_visibility(e)}
+              >
+                <img
+                  class="icon"
+                  id="nodesVisibility"
+                  src="assets/svg/si-glyph-view.svg"
+                ></img>
+              </button>
+            </div>
+          </li>
+        );
+      else if (layer.name === "links")
+        return (
+          <li
+            class="card mt-2 border-dark"
+            id="cardlinks"
+            value="link"
+            draggable="true"
+            onDragEnd={on_layer_card_drop}
+          >
+            <div class="card-header text-dark h-5 panel-heading" id="panellink">
+              link
+              <button
+                type="button"
+                id="buttonChangeGeoLayerlink"
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Change shape of the links"
+                onClick={(e) => props.show_links_shape()}
+              >
+                <img class="icon" src="assets/svg/si-glyph-ruler.svg"></img>
+              </button>
+              <button
+                type="button"
+                id="buttonChangeLayerlink"
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Change style of the links"
+                onClick={(e) => props.show_links_semio()}
+              >
+                <img class="icon" src="assets/svg/si-glyph-brush-1.svg"></img>
+              </button>
+              <button
+                type="button"
+                id="buttonHideLayerlinks"
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Hide the layer"
+                onClick={(e) => props.change_layer_visibility(e)}
+              >
+                <img
+                  class="icon"
+                  id="linksVisibility"
+                  src="assets/svg/si-glyph-view.svg"
+                ></img>
+              </button>
+            </div>
+          </li>
+        );
+      else if (layer.type === "tile")
+        return (
+          <li
+            class="card mt-2 border-dark"
+            id={"card" + layer.name}
+            value={layer.name}
+            draggable="true"
+            onDragEnd={on_layer_card_drop}
+          >
+            <div
+              class="card-header text-dark h-5 panel-heading"
+              id={"panel" + layer.name}
             >
-              <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
-            </button>
-            <button
-              type="button"
-              id={"buttonHideLayer" + layer.name}
-              class="close center-block ml-1"
-              aria-label="Close"
-              rel="tooltip"
-              data-placement="right"
-              title="Hide the layer"
-              onClick={(e) => props.change_layer_visibility(e)}
+              {layer.name}
+              <button
+                onClick={remove_layer}
+                type="button"
+                id={"buttonRemoveLayer" + layer.name}
+                class="close center-block ml-1"
+                aria-label="Close"
+                data-toggle="tooltip"
+                data-placement="right"
+                title="Remove the layer"
+                data-animation="false"
+              >
+                <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
+              </button>
+              <button
+                type="button"
+                id={"buttonHideLayer" + layer.name}
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Hide the layer"
+                onClick={(e) => props.change_layer_visibility(e)}
+              >
+                <img
+                  class="icon"
+                  id={layer.name + "Visibility"}
+                  src="assets/svg/si-glyph-view.svg"
+                ></img>
+              </button>
+            </div>
+          </li>
+        );
+      else if (layer.type === "geojson")
+        return (
+          <li
+            class="card mt-2 border-dark"
+            id={"card" + layer.name}
+            value={layer.name}
+            draggable="true"
+            onDragEnd={on_layer_card_drop}
+          >
+            <div
+              class="card-header text-dark h-5 panel-heading"
+              id={"panel" + layer.name}
             >
-              <img
-                class="icon"
-                id={layer.name + "Visibility"}
-                src="assets/svg/si-glyph-view.svg"
-              ></img>
-            </button>
-          </div>
-        </li>
-      );
-  });
+              {layer.name}
+              <button
+                onClick={remove_layer}
+                type="button"
+                id={"buttonRemoveLayer" + layer.name}
+                class="close center-block ml-1"
+                aria-label="Close"
+                data-toggle="tooltip"
+                data-placement="right"
+                title="Remove the layer"
+                data-animation="false"
+              >
+                <img class="icon" src="assets/svg/si-glyph-trash.svg"></img>
+              </button>
+              <button
+                type="button"
+                id={"buttonChangeGeojsonSemio" + layer.name}
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Change style of the links"
+                onClick={props.show_geojson_semio}
+              >
+                <img class="icon" src="assets/svg/si-glyph-brush-1.svg"></img>
+              </button>
+              <button
+                type="button"
+                id={"buttonHideLayer" + layer.name}
+                class="close center-block ml-1"
+                aria-label="Close"
+                rel="tooltip"
+                data-placement="right"
+                title="Hide the layer"
+                onClick={(e) => props.change_layer_visibility(e)}
+              >
+                <img
+                  class="icon"
+                  id={layer.name + "Visibility"}
+                  src="assets/svg/si-glyph-view.svg"
+                ></img>
+              </button>
+            </div>
+          </li>
+        );
+    });
 
   return layers;
 };
