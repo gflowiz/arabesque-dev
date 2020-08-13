@@ -160,7 +160,11 @@ export default class Controller {
     this.render_layers_cards();
 
     //Render layers in the map
-    this.view.renderer.render_layers(this.model.config.layers);
+
+    this.view.renderer.render_layers(
+      this.model.config.layers,
+      this.model.config.styles
+    );
 
     this.view.import_end(
       res,
@@ -294,9 +298,9 @@ export default class Controller {
       layer_name = e.target.parentNode.id.split("buttonChangeGeojsonSemio")[1];
     else if (e.target.tagName === "BUTTON")
       layer_name = e.target.id.split("buttonChangeGeojsonSemio")[1];
-    const geojsons_style = this.model.config.styles.geojsons;
+    const geojsons_style = this.model.config.styles.geojson;
     console.log(geojsons_style);
-    this.view.update_geojson_style(
+    this.view.update_geojson_semio(
       layer_name,
       geojsons_style,
       this.save_geojson_semio.bind(this)
@@ -305,7 +309,7 @@ export default class Controller {
   save_geojson_semio(layer_name, new_semio) {
     console.log(new_semio);
     //updateing the model style
-    this.model.config.styles.geojsons[layer_name] = new_semio;
+    this.model.config.styles.geojson[layer_name] = new_semio;
     this.view.renderer.update_layer_style(layer_name, new_semio);
   }
   // LEGEND //
@@ -597,7 +601,10 @@ export default class Controller {
       );
     else if (e.target.id === "importLayerbutton")
       ReactDOM.render(
-        <NewGeojsonLayerModal save_layer={this.saveLayer.bind(this)} />,
+        <NewGeojsonLayerModal
+          save_layer={this.saveLayer.bind(this)}
+          layers={this.model.config.layers}
+        />,
         document.getElementById("ModalNewGeojson")
       );
   }
@@ -605,39 +612,53 @@ export default class Controller {
     console.log(type, name, config);
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
-    this.model.config.layers.push({
+    const layer_object = {
       name: name,
       type: type,
       z_index: z_index,
-      config: config,
-    });
+    };
+    this.model.config.layers.push(layer_object);
+
+    //Add the style to the model config (tiles don't have styles)
+    if (type !== "tile") {
+      this.model.config.styles[type][name] = config;
+    }
+
     //Display the layers in the map
-    this.view.renderer.render_layers(this.model.config.layers);
+    if (type === "tile") {
+      this.view.renderer.add_tile_layer(layer_object);
+    } else if (type === "geojson") {
+      this.view.renderer.add_geojson_layer(layer_object, config);
+    }
 
     //Display layer cards
     this.render_layers_cards();
   }
-  delete_layer(layer_name) {
+  delete_layer(layer_name, type) {
     //Delete layers from model config
     this.model.config.layers = this.model.config.layers.filter(
       (layer) => layer.name !== layer_name
     );
+
+    //delete style (if it's a geojson or baselayer)
+    if (type === "geojson")
+      this.model.config.styles.geojson = this.model.config.layers.filter(
+        (layer) => layer.name !== layer_name
+      );
+    if (type === "baselayer")
+      this.model.config.styles.baselayer = this.model.config.layers.filter(
+        (layer) => layer.name !== layer_name
+      );
+
     //Delete layers from map
     for (let layer of this.view.renderer.map.getLayers().array_) {
       if (layer.values_.name === layer_name)
         this.view.renderer.map.removeLayer(layer);
     }
+    console.log(this.view.renderer.map.getLayers().array_);
 
     //Re-render the cards
-    ReactDOM.render(
-      <LayerCardsContainer
-        layers={this.model.config.layers}
-        map={this.view.renderer.map}
-        delete_layer={this.delete_layer.bind(this)}
-        change_layer_visibility={this.change_layer_visibility.bind(this)}
-      />,
-      document.getElementById("accordionLayerControl")
-    );
+    this.render_layers_cards();
   }
   change_layer_visibility(event) {
     //Compute layerName according to the target of the click (the img or the button)

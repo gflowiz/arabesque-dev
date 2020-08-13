@@ -159,6 +159,8 @@ export default class View {
     this.map_container.style.display = "block";
     this.renderer.fresh();
 
+    //Already done in renderer.set_projection() !
+
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.renderer.add_nodes(nodes, nstyle);
@@ -202,7 +204,7 @@ export default class View {
     );
     $("#changeGeometryModal").modal();
   }
-  update_geojson_style(layer_name, gstyle, callback) {
+  update_geojson_semio(layer_name, gstyle, callback) {
     ReactDOM.render(
       <LayerSemioModal
         layer_name={layer_name}

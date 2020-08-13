@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 export const LayerSemioModal = (props) => {
+  console.log(props);
   function save_and_close(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -14,7 +15,7 @@ export const LayerSemioModal = (props) => {
       border: border_color,
       opacity: opacity,
     };
-    console.log(config);
+
     //Sending back the style to the view and to the controller
     props.update_geojson(props.layer_name, config);
   }
@@ -58,6 +59,7 @@ export const LayerSemioModal = (props) => {
                   max="1"
                   step="0.05"
                   id="opacityLayerChange"
+                  defaultValue={props.semio[props.layer_name].opacity}
                 ></input>
               </div>
             </div>
@@ -71,7 +73,7 @@ export const LayerSemioModal = (props) => {
                   type="color"
                   id="fillColorpickerChange"
                   onchange="clickColor(0, -1, -1, 5)"
-                  defaultValue="#ff0000"
+                  defaultValue={props.semio[props.layer_name].fill}
                 ></input>
               </div>
               <div class="col-md-6">
@@ -83,7 +85,7 @@ export const LayerSemioModal = (props) => {
                   type="color"
                   id="layerStrokeColorPickerChange"
                   onchange="clickColor(0, -1, -1, 5)"
-                  defaultValue="#ff0000"
+                  defaultValue={props.semio[props.layer_name].border}
                 ></input>
               </div>
             </div>

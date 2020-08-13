@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 export const NewGeojsonLayerModal = (props) => {
+  console.log(props);
   function save_and_close(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -15,7 +16,15 @@ export const NewGeojsonLayerModal = (props) => {
       document.getElementById("geoJson").classList.remove("is-invalid");
     }
 
-    const name = document.getElementById("nameGeoJson").value;
+    let name = document.getElementById("nameGeoJson").value;
+    console.log(props.layers.map((l) => l.name));
+    //Checking that name is not empty and not already loaded
+    if (name === "" || props.layers.map((l) => l.name).includes(name)) {
+      document.getElementById("nameGeoJson").classList.add("is-invalid");
+      return;
+    } else
+      document.getElementById("nameGeoJson").classList.remove("is-invalid");
+
     const opacity = document.getElementById("opacityGeoJson").value;
     const fill = document.getElementById("fillColorpickerGeoJson").value;
     const border_color = document.getElementById("strokeColorpickerGeoJson")
@@ -106,7 +115,12 @@ export const NewGeojsonLayerModal = (props) => {
                     class="form-control"
                     placeholder="GeoJson"
                     id="nameGeoJson"
+                    defaultValue=""
                   ></input>
+                  <div class="invalid-feedback">
+                    Name must not be empty or be the same as the name of a layer
+                    already loaded
+                  </div>
                 </div>
               </div>
             </div>

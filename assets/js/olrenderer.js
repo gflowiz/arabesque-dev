@@ -7,6 +7,7 @@ import { Fill, Stroke, Text, Style, RegularShape } from "ol/style.js";
 import CircleStyle from "ol/style/Circle";
 import { Tile, Vector as VectorLayer } from "ol/layer.js";
 import { OSM, Vector as VectorSource, XYZ } from "ol/source.js";
+import LayerGroup from "ol/layer/Group";
 import GeoJSON from "ol/format/GeoJSON";
 import Legend from "ol-ext/control/Legend";
 import { transform } from "ol/proj";
@@ -1131,71 +1132,77 @@ export default class OlRenderer {
       }
     }
   }
+  add_tile_layer(layer) {
+    let url;
+    if (layer.name === "OSM") {
+      url = "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    } else if (layer.name === "Humanitarian_OSM") {
+      url = "http://{a-b}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
+    } else if (layer.name === "Wikimedia") {
+      url = "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png";
+    } else if (layer.name === "OSM_without_labels")
+      url = "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";
+    else if (layer.name === "wmflabs_OSM_BW")
+      url = "https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png";
+    else if (layer.name === "Öpnvkarte_Transport_Map")
+      url = "http://tile.memomaps.de/tilegen/{z}/{x}/{y}.png";
 
-  render_layers(layers) {
+    const source = new XYZ({ url: url });
+    let tileLayer = new TileLayer({
+      source: source,
+      name: layer.name,
+    });
+    tileLayer.setZIndex(layer.z_index);
+    this.map.addLayer(tileLayer);
+  }
+  add_geojson_layer(layer, style) {
+    console.log(layer, style);
+    var olstyle = new Style({
+      stroke: new Stroke({
+        color: style.border,
+        width: 1,
+      }),
+      fill: new Fill({
+        color: this.add_opacity_to_color(style.fill, style.opacity),
+      }),
+    });
+
+    var vectorSource = new VectorSource({
+      features: new GeoJSON({
+        extractGeometryName: true,
+        featureProjection: this.map.getView().getProjection().getCode(),
+      }).readFeatures(style.file),
+    });
+    var vectorLayer = new VectorLayer({
+      source: vectorSource,
+      style: olstyle,
+      name: layer.name,
+    });
+    vectorLayer.setZIndex(layer.z_index);
+    this.map.addLayer(vectorLayer);
+  }
+
+  render_layers(layers, styles) {
+    console.log(layers, styles);
+
     for (let layer of layers) {
       //Skip the iteration if it's nodes or links (they are added in add_nodes and add_links functions)
-      if (layer.name !== "nodes" || layer.name !== "links")
+      if (layer.name !== "nodes" || layer.name !== "links") {
         if (layer.type === "tile") {
-          let url;
-          if (layer.name === "OSM") {
-            url = "https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-          } else if (layer.name === "Humanitarian_OSM") {
-            url = "http://{a-b}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png";
-          } else if (layer.name === "Wikimedia") {
-            url = "https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png";
-          } else if (layer.name === "OSM_without_labels")
-            url = "https://tiles.wmflabs.org/osm-no-labels/{z}/{x}/{y}.png";
-          else if (layer.name === "wmflabs_OSM_BW")
-            url = "https://tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png";
-          else if (layer.name === "Öpnvkarte_Transport_Map")
-            url = "http://tile.memomaps.de/tilegen/{z}/{x}/{y}.png";
-
-          const source = new XYZ({ url: url });
-          let tileLayer = new TileLayer({
-            source: source,
-            name: layer.name,
-          });
-          tileLayer.setZIndex(layer.z_index);
-          this.map.addLayer(tileLayer);
+          this.add_tile_layer(layer);
         } else if (layer.type === "geojson") {
-          var style = new Style({
-            stroke: new Stroke({
-              color: layer.config.border,
-              width: 1,
-            }),
-            fill: new Fill({
-              color: this.add_opacity_to_color(
-                layer.config.fill,
-                layer.config.opacity
-              ),
-            }),
-          });
-          console.log(this.map.getView().getProjection().getCode());
-          var vectorSource = new VectorSource({
-            features: new GeoJSON({
-              extractGeometryName: true,
-              featureProjection: this.map.getView().getProjection().getCode(),
-            }).readFeatures(layer.config.file),
-          });
-          var vectorLayer = new VectorLayer({
-            source: vectorSource,
-            style: style,
-            name: layer.name,
-          });
-          vectorLayer.setZIndex(layer.z_index);
-          this.map.addLayer(vectorLayer);
-          console.log(this.map.getLayers().array_);
+          const style = styles.geojson[layer.name];
+          this.add_geojson_layer(layer, style);
         }
+      }
     }
   }
 
   update_layer_style(layer_name, new_semio) {
-    console.log(this, new_semio);
     let layer = this.map
       .getLayers()
       .array_.filter((lay) => lay.values_.name === layer_name)[0];
-
+    console.log(layer);
     layer.setStyle(
       new Style({
         stroke: new Stroke({

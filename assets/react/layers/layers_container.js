@@ -62,8 +62,9 @@ export const LayerCardsContainer = (props) => {
     else if (e.target.tagName === "BUTTON")
       layerName = e.target.id.split("buttonRemoveLayer")[1];
 
+    let type = props.layers.filter((l) => l.name === layerName)[0].type;
     //Remove layer from model config
-    props.delete_layer(layerName);
+    props.delete_layer(layerName, type);
   }
 
   //Render layers previously ordered by z-index
@@ -80,7 +81,7 @@ export const LayerCardsContainer = (props) => {
             onDragEnd={on_layer_card_drop}
           >
             <div class="card-header text-dark h-5 panel-heading" id="panelnode">
-              node
+              {layer.name}
               <button
                 type="button"
                 id="buttonChangeLayernode"
@@ -123,7 +124,7 @@ export const LayerCardsContainer = (props) => {
             onDragEnd={on_layer_card_drop}
           >
             <div class="card-header text-dark h-5 panel-heading" id="panellink">
-              link
+              {layer.name}
               <button
                 type="button"
                 id="buttonChangeGeoLayerlink"
