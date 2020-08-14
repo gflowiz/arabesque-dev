@@ -1113,6 +1113,30 @@ export default class OlRenderer {
         multiWorld: false,
       })
     );
+
+    //Reprojecting geojson and baselayers
+    //Selecting every vectorlayers other than nodes and links (so geojson or baselayers)
+    for (let vectorLayer of this.map.getLayers().array_.filter((l) => {
+      return (
+        l instanceof VectorLayer &&
+        l.values_.name !== "nodes" &&
+        l.values_.name !== "links"
+      );
+    })) {
+      const layer_name = vectorLayer.values_.name;
+      const model_layer = config.layers.filter((l) => l.name === layer_name)[0];
+
+      let layer_style;
+      if (model_layer.type === "geojson") {
+        layer_style = config.styles.geojson[layer_name];
+        this.map.removeLayer(vectorLayer);
+        this.add_geojson_layer(model_layer, layer_style);
+      } else if (model_layer.type === "baselayer") {
+        //To complete when baselayer adding will be implemented
+        layer_style = config.styles.baselayer[layer_name];
+      }
+    }
+    console.log(this.map.getLayers().array_);
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.add_nodes(nodes, nstyle);
