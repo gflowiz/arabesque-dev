@@ -44,17 +44,7 @@ export default class Controller {
     document
       .getElementById("projection")
       .addEventListener("change", this.set_projection.bind(this));
-    //Change node semio
-    // document
-    //   .getElementById("buttonChangeLayernode")
-    //   .addEventListener("click", this.show_nodes_semio.bind(this));
 
-    // document
-    //   .getElementById("buttonChangeLayerlink")
-    //   .addEventListener("click", this.show_links_semio.bind(this));
-    // document
-    //   .getElementById("buttonChangeGeoLayerlink")
-    //   .addEventListener("click", this.show_links_shape.bind(this));
     document
       .getElementById("legendButton")
       .addEventListener("click", this.toggle_legend.bind(this));
@@ -155,7 +145,6 @@ export default class Controller {
     //Update filters bars everytime there is a change in the filtered data
     // this.model.data.crossfilters.onChange(this.update_bars.bind(this));
 
-    //Add layers cards and tiles
     //Render layer cards
     this.render_layers_cards();
 
@@ -456,8 +445,6 @@ export default class Controller {
       //   +dimension.group().all()[dimension.group().all().length - 1].key,
       // ],
     );
-
-    // this.render_filters();
   }
   delete_filter(event) {
     let filter_id = event.target.parentNode.id;

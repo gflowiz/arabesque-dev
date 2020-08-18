@@ -29,6 +29,7 @@ export default class BarChartFilter {
     ga.sort(function (a, b) {
       return a.key - b.key;
     });
+    console.log(ga);
 
     this.domain = [+ga[0].key, +ga[ga.length - 1].key];
 
@@ -36,12 +37,20 @@ export default class BarChartFilter {
       .scaleLinear()
       .range([0, 250])
       .domain([this.domain[0], this.domain[1]]);
-    this.y = d3.scaleLinear().range([100, 0]);
+    this.y = d3
+      .scaleLinear()
+      .range([100, 0])
+      .domain([
+        d3.min(ga.map((g) => Math.round(g.value))),
+        d3.max(ga.map((g) => Math.round(g.value))),
+      ]);
+    console.log(this.y.domain());
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
     this.brushDirty = false;
     this.dimension = dimension;
     this.group = group;
+    this.variable = variable;
 
     this.render_all = render_all;
     this.render_legend = render_legend;
@@ -138,6 +147,7 @@ export default class BarChartFilter {
       let h = height + this.margin.top + this.margin.bottom;
       g = d3
         .select(div)
+        .attr("class", "barchartContainer")
         .append("svg")
         .attr("viewBox", `0 0 ${w} ${h}`)
         .attr("width", "100%")
@@ -167,7 +177,37 @@ export default class BarChartFilter {
       g.append("g")
         .attr("class", "axis")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(this.x).ticks(5));
+        .call(d3.axisBottom(this.x).ticks(3));
+
+      //Setting the y label
+
+      g.append("g")
+        .attr("class", "axis")
+        // .attr("transform", `translate(${width},0)`)
+        .call(d3.axisLeft(this.y).ticks(5))
+        .append("text")
+        .attr("class", "axis-title")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -60)
+        .attr("x", -35)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .attr("fill", "#000000")
+        .text("Count");
+
+      //X label
+      g.append("g")
+        .attr("class", "axis")
+        // .attr("transform", `translate(${width},0)`)
+        .call(d3.axisLeft(this.y).ticks(5))
+        .append("text")
+        .attr("class", "axis-title")
+        .attr("y", 140)
+        .attr("x", 150)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .attr("fill", "#000000")
+        .text(this.variable);
     }
 
     // Initialize the brush component with pretty resize handles.

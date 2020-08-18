@@ -4,6 +4,8 @@ import { LayerSemioModal } from "./layer_semio_modal";
 
 export const LayerCardsContainer = (props) => {
   function on_layer_card_drop(e) {
+    //If the dragged element is not the card, we stop the function
+    if (e.target.id.slice(0, 4) !== "card") return;
     let layers = {};
 
     //Extracting the layers cards and their y position (from viewport)

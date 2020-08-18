@@ -96,7 +96,8 @@ nav {
   height: 100%;
 }
 #Mapcontainer {
-  height: 100%;
+  height: 50vw;
+  position: relative;
 }
 
 .icon-button-ol {
@@ -381,19 +382,25 @@ chart {
 }
 
 .barchart {
-  height: 5em;
-  width: 90%;
+  height: 10em;
+  width: 70%;
+  overflow: visible;
+}
+
+.barchartContainer {
+  display: flex;
+  justify-content: center;
 }
 
 .barchartTrashIcon {
   width: 20px;
   position: absolute;
-  top: 24%;
+  top: 30%;
   right: 0;
 }
 .categorialTrashIcon {
   position: absolute;
-  top: 49%;
+  top: 45%;
   right: 0;
 }
 
@@ -424,6 +431,11 @@ chart {
   width: 100%;
   height: 2px;
   background-color: black;
+}
+
+.axis {
+  font-size: 100%;
+  font-family: quicksand, ubuntu, sans-serif;
 }
 
 /*ADD LAYERS */
