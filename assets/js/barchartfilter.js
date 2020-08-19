@@ -20,7 +20,7 @@ export default class BarChartFilter {
     this.margin = { top: 10, right: 13, bottom: 20, left: 10 };
 
     let ga = group.all();
-
+    console.log(group);
     //Transform keys to float to prevent problems
     for (let g of ga) {
       g = parseFloat(g);

@@ -231,18 +231,30 @@ export default class Controller {
     );
   }
   save_nodes_semio(new_semio) {
+    let nodes_z_index = this.model.config.layers.filter(
+      (l) => l.name === "nodes"
+    )[0].z_index;
+    let links_z_index = this.model.config.layers.filter(
+      (l) => l.name === "links"
+    )[0].z_index;
+
     //Update the model config
     this.model.update_nodes_style(new_semio);
 
     //Re-render the nodes with new style
     this.view.renderer.update_nodes(
       this.model.get_nodes(),
-      this.model.get_nodes_style()
+      this.model.get_nodes_style(),
+      nodes_z_index
     );
     let lstyle = this.model.get_links_style();
 
     //Re-render the links because the depend on nodes size
-    this.view.renderer.update_links(this.model.get_links(), lstyle);
+    this.view.renderer.update_links(
+      this.model.get_links(),
+      lstyle,
+      links_z_index
+    );
 
     this.render_legend();
   }
@@ -261,12 +273,17 @@ export default class Controller {
     );
   }
   save_links_semio(new_semio) {
+    let links_z_index = this.model.config.layers.filter(
+      (l) => l.name === "links"
+    )[0].z_index;
+
     //Update the model config
     this.model.update_links_style(new_semio);
 
     this.view.renderer.update_links(
       this.model.get_links(),
-      this.model.get_links_style()
+      this.model.get_links_style(),
+      links_z_index
     );
     this.render_legend();
   }
@@ -324,15 +341,25 @@ export default class Controller {
       nstyle,
       links,
       links_hash,
-      lstyle
+      lstyle,
+      this.toggle_legend
     );
   }
   toggle_legend() {
+    console.log("toggle legend");
     let legendDiv = document.getElementById("legend");
     let style = getComputedStyle(legendDiv);
 
-    if (legendDiv.style.display !== "none") legendDiv.style.display = "none";
-    else legendDiv.style.display = "flex";
+    let legendButtonDiv = document.getElementById("legendButton");
+
+    if (style.display !== "none") {
+      legendDiv.style.display = "none";
+      legendButtonDiv.style.display = "flex";
+    } else {
+      legendDiv.style.display = "flex";
+
+      legendButtonDiv.style.display = "none";
+    }
   }
 
   // FILTERS //

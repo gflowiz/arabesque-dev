@@ -218,7 +218,15 @@ export default class View {
     $("#changeLayerSemioModal").modal();
   }
 
-  render_legend(nodes, nodes_hash, nstyle, links, links_hash, lstyle) {
+  render_legend(
+    nodes,
+    nodes_hash,
+    nstyle,
+    links,
+    links_hash,
+    lstyle,
+    toggle_legend
+  ) {
     ReactDOM.render(
       <LegendComponent
         nstyle={nstyle}
@@ -230,6 +238,7 @@ export default class View {
         node_size_scale={this.renderer._scale_node_size}
         link_size_scale={this.renderer._scale_link_size}
         map={this.renderer.map}
+        toggle_legend={toggle_legend}
       />,
       document.getElementById("legendDiv")
     );

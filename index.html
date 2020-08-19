@@ -79,24 +79,25 @@
         <div class="container-fluid">
           <div class="row"  >
             <div class="col-sm-2" >
-              <div class="form-group">
-                <label for="projection">Projection</label>
-                <select class="form-control" id="projection">
+              <div class="card">
+                <div class="card-body projection-card">
+              <div class="form-group projection-form-group">
+                <label id = "projection-label" for = "projection">Projection</label>
+                <select class="form-control selectpicker" id="projection">
+
+
                 </select>
               </div>
-              <div class="card">
+              </div>
+            </div>
+
+              <div class="card layers-card mt-2 mb-2">
                 <div class="card-header close collapsed" id="addLayersButton" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" aria-label="Close">
                    Add Layers
                    <button type="button" class="close" aria-label="Close">
                    </button></div>
                 <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo"  >
                 <div class="card-body">
-                <input type="button" id="addNewNodeFeaturesButton" value = "Add Node Features" class="btn btn-dark btn-block addLayerButton"  rel="tooltip" data-placement="right" title="Replace the current Node layer">
-
-                </input>
-                <input type="button" value ="Add Link Features" id="addNewLinkFeaturesButton" class="btn btn-dark btn-block addLayerButton"  data-placement="right" title="Replace the current link layer">
-
-                </input>
                 <input type="button" value ="Add Base Layer" id="baseLayerButton" class="btn btn-dark btn-block addLayerButton" >
                 
                 </input>
@@ -109,6 +110,7 @@
                 </div>
                 </div>
              </div>
+             <div class="layerBottomLine"></div>
               <div class="row p-0 mt-3" id="layerControlList" data-toggle="tooltip" data-placement="right" data-delay="0" title="Drag and Drop layers to change z-index" data-animation="false">
 
                 <ul id="accordionLayerControl" class="list-unstyled col-md-12 align-items-center ui-sortable">

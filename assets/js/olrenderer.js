@@ -488,7 +488,7 @@ export default class OlRenderer {
     //
     this.map.getView().fit(boundingExtent(proj_nodes.map((co) => co.center)));
   }
-  update_nodes(nodes, nstyle) {
+  update_nodes(nodes, nstyle, z_index) {
     //Update nodes_var with discretization variables
     this.update_nodes_var(nstyle);
     this.update_node_scales_types(nstyle);
@@ -542,6 +542,7 @@ export default class OlRenderer {
       renderMode: "image",
     });
     this.map.addLayer(nodesLayer);
+    nodesLayer.setZIndex(z_index);
   }
 
   //Update the variables according to which the color, size, text and opacity will vary
@@ -1063,7 +1064,7 @@ export default class OlRenderer {
     this.map.addLayer(linksLayer);
   }
 
-  update_links(links, lstyle) {
+  update_links(links, lstyle, z_index) {
     //Update the discretization variable
     this.update_links_var(lstyle);
     //Update scale types for size and opacity (linear, pow etc)
@@ -1100,6 +1101,7 @@ export default class OlRenderer {
       renderMode: "image",
     });
     this.map.addLayer(linksLayer);
+    linksLayer.setZIndex(z_index);
   }
   set_projection(proj, nodes, links, config) {
     let olproj = getProjection(proj);

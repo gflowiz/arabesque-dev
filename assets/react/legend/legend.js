@@ -413,6 +413,9 @@ export const LegendComponent = (props) => {
 
   return (
     <div id="legend">
+      <label id="legendClose" onClick={props.toggle_legend}>
+        x
+      </label>
       {get_nodes_var_labels()}
       {get_links_var_labels()}
       {nodeContainer}

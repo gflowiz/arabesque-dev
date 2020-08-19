@@ -23,7 +23,7 @@ export const LayerCardsContainer = (props) => {
       layers[layersCards[i].id] = layersMiddleYPosition[i];
     }
     //We set the clientY of the dragged div in the layers Object
-    layers[e.target.id] = e.clientY;
+    layers[e.target.id] = e.clientY - 10;
 
     //Sort our div by y position ascendant and retrieve the div thanks to its id
     let sorted_layers = Object.entries(layers)
@@ -76,7 +76,7 @@ export const LayerCardsContainer = (props) => {
       if (layer.name === "nodes")
         return (
           <li
-            class="card mt-2 border-dark"
+            class="card mt-2 "
             id="cardnodes"
             value="node"
             draggable="true"
@@ -119,7 +119,7 @@ export const LayerCardsContainer = (props) => {
       else if (layer.name === "links")
         return (
           <li
-            class="card mt-2 border-dark"
+            class="card mt-2 "
             id="cardlinks"
             value="link"
             draggable="true"
@@ -173,7 +173,7 @@ export const LayerCardsContainer = (props) => {
       else if (layer.type === "tile")
         return (
           <li
-            class="card mt-2 border-dark"
+            class="card mt-2 "
             id={"card" + layer.name}
             value={layer.name}
             draggable="true"
@@ -219,7 +219,7 @@ export const LayerCardsContainer = (props) => {
       else if (layer.type === "geojson")
         return (
           <li
-            class="card mt-2 border-dark"
+            class="card mt-2 "
             id={"card" + layer.name}
             value={layer.name}
             draggable="true"
