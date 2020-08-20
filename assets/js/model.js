@@ -128,6 +128,23 @@ export default class Model {
 
   // export app state
   export() {
+    //Saving the filtered range for every filter
+    for (let filter of this.config.filters) {
+      let dimension = this.data.filters[
+        "filter-" + filter.target + "-" + filter.id + "-" + filter.type
+      ];
+
+      //getting the range
+      let filter_values = dimension
+        .top(Infinity)
+        .map((e) => parseFloat(e[filter.id]));
+
+      let min = d3.min(filter_values);
+      let max = d3.max(filter_values);
+
+      //Saving the range, with a offset to make sure we will filter all the desired values
+      filter.range = [min - 0.1, max + 0.1];
+    }
     var zip = new JSZip();
     // delete this.config.legend
     zip.file(

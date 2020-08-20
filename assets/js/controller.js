@@ -10,6 +10,7 @@ import { tickStep } from "d3";
 import { filter } from "jszip/lib/object";
 import crossfilter from "crossfilter2";
 import { contains } from "jquery";
+import { concave } from "@turf/turf";
 
 export default class Controller {
   constructor(model, view) {
@@ -52,6 +53,10 @@ export default class Controller {
     document
       .getElementById("selectFilterButton")
       .addEventListener("click", this.toggle_new_filter_modal.bind(this));
+
+    document
+      .getElementById("thumbnail-card")
+      .addEventListener("click", this.load_thumbnail_zip.bind(this));
 
     for (let button of document.getElementsByClassName("addLayerButton"))
       button.addEventListener("click", this.addLayer.bind(this));
@@ -127,17 +132,24 @@ export default class Controller {
       .import_links(linksfile, this.view.import_end.bind(this.view))
       .catch(this.view.error_links_file());
   }
-  import_zip() {
-    let zipfile = document.getElementById("ImportZip").files[0];
+  import_zip(e, zipfile = null) {
+    console.log(e, "import_zip");
+    //If we called this function without parameter (for the thumbail), we get the file
+    //from the zip input
+    if (zipfile === null)
+      zipfile = document.getElementById("ImportZip").files[0];
+
     this.model
       .import_zip(zipfile, this.post_import_zip.bind(this))
       .catch(this.view.error_zip_file());
   }
   post_import_zip(res, config) {
+    console.log(this.model.data.filters);
     //Updating styles
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
+    // let data_range = this.model.data.crossfilters;
 
     //Add filters
     this.render_filters(this.render_all.bind(this));
@@ -155,11 +167,19 @@ export default class Controller {
       this.model.config.styles
     );
 
+    //Computing the link data range before initializing the filters
+    let link_values = this.model.data.crossfilters
+      .all()
+      .map((el) => parseFloat(el[this.model.config.varnames.vol]));
+
+    let link_data_range = [d3.min(link_values), d3.max(link_values)];
+
     this.view.import_end(
       res,
       this.model.get_nodes(),
       this.model.get_links(),
-      config
+      config,
+      link_data_range
     );
     document.getElementById(
       "projection-" + this.model.get_projection()
@@ -168,8 +188,24 @@ export default class Controller {
       this.model.get_projection(),
       this.model.get_nodes(),
       this.model.get_links(),
-      config
+      config,
+      link_data_range
     );
+    console.log(this.model.config.filters);
+  }
+  load_thumbnail_zip() {
+    const that = this;
+    var blob;
+    var request = new XMLHttpRequest();
+    request.open("GET", "/public/data/suisse2.zip");
+    request.responseType = "blob";
+    request.onload = function () {
+      blob = request.response;
+      var file = new File([blob], "suisse.zip");
+
+      that.import_zip(null, file);
+    };
+    request.send();
   }
   render_all() {
     let proj_sel = document.getElementById("projection");
@@ -305,7 +341,6 @@ export default class Controller {
     else if (e.target.tagName === "BUTTON")
       layer_name = e.target.id.split("buttonChangeGeojsonSemio")[1];
     const geojsons_style = this.model.config.styles.geojson;
-    console.log(geojsons_style);
     this.view.update_geojson_semio(
       layer_name,
       geojsons_style,
@@ -313,7 +348,6 @@ export default class Controller {
     );
   }
   save_geojson_semio(layer_name, new_semio) {
-    console.log(new_semio);
     //updateing the model style
     this.model.config.styles.geojson[layer_name] = new_semio;
     this.view.renderer.update_layer_style(layer_name, new_semio);
@@ -346,7 +380,6 @@ export default class Controller {
     );
   }
   toggle_legend() {
-    console.log("toggle legend");
     let legendDiv = document.getElementById("legend");
     let style = getComputedStyle(legendDiv);
 
@@ -377,11 +410,12 @@ export default class Controller {
     );
   }
 
-  render_filters() {
+  render_filters(render_all) {
     document.getElementById("Filters").innerHTML = "";
 
     // this.model.config.filters = [{ id: "origin" }];
     let filters = this.model.config.filters;
+    console.log(this.model.config.filters);
 
     //Create filters
     for (let i = 0; i < filters.length; i++) {
@@ -389,14 +423,13 @@ export default class Controller {
       let type = filters[i].type;
       let target = filters[i].target;
 
-      let filter_div;
+      let filter_div, filter_instance;
       if (type === "numeral") {
-        filter_div = this.barchart_filter(
+        [filter_div, filter_instance] = this.barchart_filter(
           target,
           variable,
           type,
-          this.render_all.bind(this),
-          this.render_legend.bind(this)
+          render_all
         );
       } else if (type === "categorial") {
         filter_div = document.createElement("div");
@@ -417,12 +450,14 @@ export default class Controller {
       } else filter_div = <div>Lol</div>;
 
       document.getElementById("Filters").append(filter_div);
+      if (type === "numeral")
+        filter_instance.update_brush_extent(filter_instance.filtered_range);
     }
   }
   add_filter(target, variable, type) {
-    const filter_container = document.getElementById(
-      "filter-" + target + "-" + variable + "-" + type
-    );
+    const filter_id = "filter-" + target + "-" + variable + "-" + type;
+    const filter_container = document.getElementById(filter_id);
+    //Checking is the filter already exists
     if (filter_container !== null) {
       document.getElementById("filterTypeSelect").classList.add("is-invalid");
       return;
@@ -432,17 +467,39 @@ export default class Controller {
         .classList.remove("is-invalid");
       $("#FilterModal").modal("hide");
     }
-    let filter = { target: target, id: variable, type: type };
 
     let filter_div;
+    let filter;
     if (type === "numeral") {
       filter_div = this.barchart_filter(
         target,
         variable,
         type,
         this.render_all.bind(this)
-      );
+      )[0];
       document.getElementById("Filters").append(filter_div);
+
+      let dimension = this.model.data.filters[
+        `filter-${target}-${variable}-${type}`
+      ];
+      //Saving the range
+      let values = dimension
+        .group()
+        .all()
+        .map((e) => parseFloat(e.key));
+
+      let min = d3.min(values);
+      let max = d3.max(values);
+
+      let range = [min, max];
+      // console.log(dimension.group().all());
+      filter = {
+        target: target,
+        id: variable,
+        type: type,
+        filter_id: "filter-" + target + "-" + variable + "-" + type,
+        range: range,
+      };
     } else if (type === "categorial") {
       filter_div = document.createElement("div");
       const filter_id = "filter-" + target + "-" + variable + "-" + type;
@@ -451,6 +508,13 @@ export default class Controller {
       document.getElementById("Filters").append(filter_div);
       //Fill the div with filter
       this.categorial_filter(target, variable, filter_id, "add");
+
+      filter = {
+        target: target,
+        id: variable,
+        type: type,
+        filter_id: "filter-" + target + "-" + variable + "-" + type,
+      };
     } else if (type === "remove") {
       filter_div = document.createElement("div");
       const filter_id = "filter-" + target + "-" + variable + "-" + type;
@@ -459,19 +523,18 @@ export default class Controller {
       document.getElementById("Filters").append(filter_div);
       //Fill the div with filter
       this.categorial_filter(target, variable, filter_id, "remove");
+      filter = {
+        target: target,
+        id: variable,
+        type: type,
+        filter_id: "filter-" + target + "-" + variable + "-" + type,
+      };
     } else {
       filter_div = <div>Lol</div>;
       document.getElementById("Filters").append(filter_div);
     }
-
-    this.model.config.filters.push(
-      filter
-
-      // range: [
-      //   +dimension.group().all()[0].key,
-      //   +dimension.group().all()[dimension.group().all().length - 1].key,
-      // ],
-    );
+    console.log(filter);
+    this.model.config.filters.push(filter);
   }
   delete_filter(event) {
     let filter_id = event.target.parentNode.id;
@@ -508,6 +571,18 @@ export default class Controller {
     const filter_id = `filter-${target}-${id}-${type}`;
 
     let dimension = this.create_dimension(id, filter_id);
+    let filtered_range = null;
+    //If the filter exists(that it has been imported from zip), we compute the filtered range
+    if (this.model.config.filters.map((f) => f.filter_id).includes(filter_id)) {
+      filtered_range = this.model.config.filters
+        .filter((f) => f.filter_id === filter_id)[0]
+        .range.map((el) => el.toString());
+      console.log(filtered_range);
+      //And the filter the newly created dimension
+      dimension.filterAll();
+      dimension.filterRange(filtered_range);
+    }
+
     let group = dimension.group();
 
     let f = new BarChartFilter(
@@ -520,13 +595,14 @@ export default class Controller {
       this.render_legend.bind(this),
       this.model.config.styles.links,
       this.model.config.styles.nodes,
-      this.update_bars.bind(this)
+      this.update_bars.bind(this),
+      filtered_range
     );
     let filter_div = f.render();
 
     this.charts.push(f);
 
-    return filter_div;
+    return [filter_div, f];
   }
 
   update_bars() {
@@ -551,7 +627,6 @@ export default class Controller {
       let div = document.getElementById(chart.filter_id);
 
       let g = d3.select(div).select("g");
-      console.log(this.charts);
       g.selectAll(".bar").attr("d", chart.barPathF(chart, filteredGroup));
     }
   }
@@ -582,6 +657,7 @@ export default class Controller {
 
   create_dimension(vname, filter_id) {
     let dim = this.model.data.crossfilters.dimension((l) => l[vname]);
+    console.log(dim);
     // let range = [
     //   +dim.group().all()[0].key,
     //   +dim.group().all()[dim.group().all().length - 1].key,
@@ -623,7 +699,6 @@ export default class Controller {
       );
   }
   saveLayer(type, name, config = null) {
-    console.log(type, name, config);
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
     const layer_object = {
@@ -669,7 +744,6 @@ export default class Controller {
       if (layer.values_.name === layer_name)
         this.view.renderer.map.removeLayer(layer);
     }
-    console.log(this.view.renderer.map.getLayers().array_);
 
     //Re-render the cards
     this.render_layers_cards();

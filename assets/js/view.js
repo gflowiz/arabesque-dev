@@ -152,7 +152,8 @@ export default class View {
     console.log(evt);
   }
 
-  import_end(import_stats, nodes, links, config) {
+  import_end(import_stats, nodes, links, config, link_data_range) {
+    console.log(link_data_range);
     this.ModalImportStats.innerHTML = this.import_stats_modal(import_stats);
     $("#importStatsModal").modal();
     this.home.style.display = "none";
@@ -164,10 +165,11 @@ export default class View {
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.renderer.add_nodes(nodes, nstyle);
-    this.renderer.add_links(links, lstyle);
+    this.renderer.add_links(links, lstyle, link_data_range);
   }
-  set_projection(proj, nodes, links, config) {
-    this.renderer.set_projection(proj, nodes, links, config);
+  set_projection(proj, nodes, links, config, link_data_range) {
+    console.log(link_data_range);
+    this.renderer.set_projection(proj, nodes, links, config, link_data_range);
   }
 
   update_nodes_semio(semio, nodes_properties, callback) {

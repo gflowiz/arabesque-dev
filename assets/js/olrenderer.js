@@ -1021,10 +1021,15 @@ export default class OlRenderer {
     }
   }
 
-  add_links(links, lstyle) {
-    //On enregistre le max et min pour la définition de l'échelle des tailles
-    this.links_max_value = d3.max(links.map((l) => l.value));
-    this.links_min_value = d3.min(links.map((l) => l.value));
+  add_links(links, lstyle, link_data_range) {
+    //On fixe le minimum et maximum des valeurs pour la définition des échelles
+    if (link_data_range !== undefined) {
+      this.links_max_value = link_data_range[0];
+      this.links_min_value = link_data_range[1];
+    } else {
+      this.links_max_value = d3.min(links.map((l) => l.value));
+      this.links_min_value = d3.max(links.map((l) => l.value));
+    }
 
     this.update_links_var(lstyle);
     this.update_link_scales_types(lstyle);
@@ -1103,7 +1108,7 @@ export default class OlRenderer {
     this.map.addLayer(linksLayer);
     linksLayer.setZIndex(z_index);
   }
-  set_projection(proj, nodes, links, config) {
+  set_projection(proj, nodes, links, config, link_data_range) {
     let olproj = getProjection(proj);
 
     this.map.setView(
@@ -1142,7 +1147,7 @@ export default class OlRenderer {
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.add_nodes(nodes, nstyle);
-    this.add_links(links, lstyle);
+    this.add_links(links, lstyle, link_data_range);
   }
 
   render(nodes, links, nstyle, lstyle) {

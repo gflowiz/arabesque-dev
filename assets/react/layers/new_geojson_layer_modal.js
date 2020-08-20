@@ -7,7 +7,6 @@ export const NewGeojsonLayerModal = (props) => {
     e.stopPropagation();
     //Getting the loaded file
     const file = document.getElementById("geoJson").files[0];
-    console.log(file);
     //Checking if it's a geojson
     if (file === undefined || file.type !== "application/geo+json") {
       document.getElementById("geoJson").classList.add("is-invalid");
@@ -17,7 +16,6 @@ export const NewGeojsonLayerModal = (props) => {
     }
 
     let name = document.getElementById("nameGeoJson").value;
-    console.log(props.layers.map((l) => l.name));
     //Checking that name is not empty and not already loaded
     if (name === "" || props.layers.map((l) => l.name).includes(name)) {
       document.getElementById("nameGeoJson").classList.add("is-invalid");

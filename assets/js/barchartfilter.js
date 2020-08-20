@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import React from "react";
 import { measureTextWidths } from "ol/render/canvas";
+import { style } from "d3";
 
 export default class BarChartFilter {
   constructor(
@@ -13,14 +14,17 @@ export default class BarChartFilter {
     render_legend,
     lstyle,
     nstyle,
-    update_bars
+    update_bars,
+    filtered_range
   ) {
     this.variable = variable;
     this.filter_id = filter_id;
     this.margin = { top: 10, right: 13, bottom: 20, left: 10 };
+    if (filtered_range !== null)
+      this.filtered_range = filtered_range.map((el) => parseFloat(el));
 
     let ga = group.all();
-    console.log(group);
+
     //Transform keys to float to prevent problems
     for (let g of ga) {
       g = parseFloat(g);
@@ -29,7 +33,6 @@ export default class BarChartFilter {
     ga.sort(function (a, b) {
       return a.key - b.key;
     });
-    console.log(ga);
 
     this.domain = [+ga[0].key, +ga[ga.length - 1].key];
 
@@ -44,7 +47,7 @@ export default class BarChartFilter {
         d3.min(ga.map((g) => Math.round(g.value))),
         d3.max(ga.map((g) => Math.round(g.value))),
       ]);
-    console.log(this.y.domain());
+
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
     this.brushDirty = false;
@@ -66,9 +69,11 @@ export default class BarChartFilter {
     this.filter_div.className = "barchartFilter";
   }
 
-  brush_listener(that, activeRange) {
+  brush_listener(that, activeRange, mode = "update") {
     return function () {
+      console.log(activeRange);
       const g = d3.select(this.parentNode);
+      console.log(g);
 
       if (activeRange === null) {
         const brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
@@ -110,8 +115,8 @@ export default class BarChartFilter {
         "filterMaxInput-" + that.filter_id
       ).value = Math.round(extents[1]);
 
-      // re-render the other charts accordingly
-      that.render_all();
+      // re-render the other charts accordingly, only if not called
+      if (mode === "update") that.render_all();
 
       //Utile si l'on souhaite que la taille des éléments s'adapte du minimum et
       //maximum des valeurs filtrées
@@ -125,6 +130,7 @@ export default class BarChartFilter {
 
   //Creates chart
   chart(div) {
+    console.log(this.filtered_range);
     const width = this.x.range()[1] + this.margin.left + this.margin.right;
     const height = this.y.range()[0];
 
@@ -263,7 +269,7 @@ export default class BarChartFilter {
   barPathF(that, groups) {
     let path = [];
     let height = that.y.range()[0];
-    console.log(groups);
+
     for (let d of groups) {
       path.push(
         "M",
@@ -300,7 +306,7 @@ export default class BarChartFilter {
     //Convert it to the chart scale
     let brush_range = [min, max].map(this.x);
 
-    //Execute the brush_listener function
+    //Execute the brush_listener function to display handles and selected range properly
     const brush = document.getElementsByClassName("brush")[0];
     const brush_listener = this.brush_listener(this, brush_range).bind(brush);
     brush_listener();
@@ -426,5 +432,46 @@ export default class BarChartFilter {
     this.render_minmax_inputs();
     this.render_bottom_line();
     return this.filter_div;
+  }
+
+  update_brush_extent(data_range) {
+    console.log("update_brush");
+
+    let brush_range = data_range.map(this.x);
+    // console.log(this);
+
+    let brush = document.getElementsByClassName("brush")[0];
+
+    console.log(brush_range);
+    let brush_listener = this.brush_listener(
+      this,
+      brush_range,
+      "non-update"
+    ).bind(brush);
+    brush_listener();
+
+    // move brush handles to start and end of range
+    // brush
+    //   .selectAll(".brush-handle")
+    //   .style("display", null)
+    //   .attr("transform", (d, i) => `translate(${brush_range[i]}, 0)`);
+
+    // // resize sliding window to reflect updated range
+    // brush
+    //   .select(`#clip-${this.filter_id} rect`)
+    //   .attr("x", brush_range[0])
+    //   .attr("width", brush_range[1] - brush_range[0]);
+
+    // let selection = document.getElementsByClassName("selection")[0];
+    // selection.style.x = brush_range[0];
+    // selection.style.y = 0;
+    // selection.style.width = brush_range[1] - brush_range[0];
+    // selection.style.height = this.y.range()[0] + "px";
+    // selection.style.display = "block";
+
+    //Update the selection range on the graph
+    // let chart_selection = document.getElementsByClassName("selection")[0];
+    // chart_selection.setAttribute("x", brush_range[0]);
+    // chart_selection.setAttribute("width", brush_range[1] - brush_range[0]);
   }
 }
