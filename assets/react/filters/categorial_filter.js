@@ -18,7 +18,7 @@ const CustomMenu = React.forwardRef(
           autoFocus
           className="mx-3 my-2 w-auto"
           placeholder="Type to filter..."
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => setValue(e.target.value.toLowerCase())}
           value={value}
         />
         <ul className="list-unstyled">
@@ -86,7 +86,6 @@ export const CategorialFilter = (props) => {
     props.dimension.filterFunction(function (d) {
       return !new_selection.includes(d.toString());
     });
-    console.log(props.dimension.top(Infinity));
 
     props.render_all();
   }

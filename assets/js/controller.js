@@ -133,7 +133,6 @@ export default class Controller {
       .catch(this.view.error_links_file());
   }
   import_zip(e, zipfile = null) {
-    console.log(e, "import_zip");
     //If we called this function without parameter (for the thumbail), we get the file
     //from the zip input
     if (zipfile === null)
@@ -144,12 +143,10 @@ export default class Controller {
       .catch(this.view.error_zip_file());
   }
   post_import_zip(res, config) {
-    console.log(this.model.data.filters);
     //Updating styles
     let nstyle = config.styles.nodes;
     let lstyle = config.styles.links;
     this.model.update_nodes_style(nstyle);
-    // let data_range = this.model.data.crossfilters;
 
     //Add filters
     this.render_filters(this.render_all.bind(this));
@@ -191,7 +188,6 @@ export default class Controller {
       config,
       link_data_range
     );
-    console.log(this.model.config.filters);
   }
   load_thumbnail_zip() {
     const that = this;
@@ -415,7 +411,6 @@ export default class Controller {
 
     // this.model.config.filters = [{ id: "origin" }];
     let filters = this.model.config.filters;
-    console.log(this.model.config.filters);
 
     //Create filters
     for (let i = 0; i < filters.length; i++) {
@@ -492,7 +487,7 @@ export default class Controller {
       let max = d3.max(values);
 
       let range = [min, max];
-      // console.log(dimension.group().all());
+
       filter = {
         target: target,
         id: variable,
@@ -533,7 +528,7 @@ export default class Controller {
       filter_div = <div>Lol</div>;
       document.getElementById("Filters").append(filter_div);
     }
-    console.log(filter);
+
     this.model.config.filters.push(filter);
   }
   delete_filter(event) {
@@ -572,12 +567,13 @@ export default class Controller {
 
     let dimension = this.create_dimension(id, filter_id);
     let filtered_range = null;
+
     //If the filter exists(that it has been imported from zip), we compute the filtered range
     if (this.model.config.filters.map((f) => f.filter_id).includes(filter_id)) {
       filtered_range = this.model.config.filters
         .filter((f) => f.filter_id === filter_id)[0]
         .range.map((el) => el.toString());
-      console.log(filtered_range);
+
       //And the filter the newly created dimension
       dimension.filterAll();
       dimension.filterRange(filtered_range);
@@ -657,7 +653,7 @@ export default class Controller {
 
   create_dimension(vname, filter_id) {
     let dim = this.model.data.crossfilters.dimension((l) => l[vname]);
-    console.log(dim);
+
     // let range = [
     //   +dim.group().all()[0].key,
     //   +dim.group().all()[dim.group().all().length - 1].key,

@@ -153,7 +153,6 @@ export default class View {
   }
 
   import_end(import_stats, nodes, links, config, link_data_range) {
-    console.log(link_data_range);
     this.ModalImportStats.innerHTML = this.import_stats_modal(import_stats);
     $("#importStatsModal").modal();
     this.home.style.display = "none";
@@ -168,7 +167,6 @@ export default class View {
     this.renderer.add_links(links, lstyle, link_data_range);
   }
   set_projection(proj, nodes, links, config, link_data_range) {
-    console.log(link_data_range);
     this.renderer.set_projection(proj, nodes, links, config, link_data_range);
   }
 

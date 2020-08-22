@@ -1023,13 +1023,16 @@ export default class OlRenderer {
 
   add_links(links, lstyle, link_data_range) {
     //On fixe le minimum et maximum des valeurs pour la définition des échelles
+
     if (link_data_range !== undefined) {
-      this.links_max_value = link_data_range[0];
-      this.links_min_value = link_data_range[1];
+      this.links_min_value = link_data_range[0];
+      this.links_max_value = link_data_range[1];
     } else {
-      this.links_max_value = d3.min(links.map((l) => l.value));
-      this.links_min_value = d3.max(links.map((l) => l.value));
+      this.links_min_value = d3.min(links.map((l) => l.value));
+      this.links_max_value = d3.max(links.map((l) => l.value));
     }
+
+    console.log(this.links_min_value, this.links_max_value);
 
     this.update_links_var(lstyle);
     this.update_link_scales_types(lstyle);
