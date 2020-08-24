@@ -581,6 +581,10 @@ export default class Controller {
 
     let group = dimension.group();
 
+    let complete_data;
+    if (target === "nodes") complete_data = this.model.data.nodes;
+    else if (target === "links") complete_data = this.model.data.links;
+
     let f = new BarChartFilter(
       id,
       filter_id,
@@ -592,7 +596,8 @@ export default class Controller {
       this.model.config.styles.links,
       this.model.config.styles.nodes,
       this.update_bars.bind(this),
-      filtered_range
+      filtered_range,
+      complete_data
     );
     let filter_div = f.render();
 

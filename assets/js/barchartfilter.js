@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import React from "react";
 import { measureTextWidths } from "ol/render/canvas";
 import { style } from "d3";
+import { cssNumber } from "jquery";
 
 export default class BarChartFilter {
   constructor(
@@ -15,7 +16,8 @@ export default class BarChartFilter {
     lstyle,
     nstyle,
     update_bars,
-    filtered_range
+    filtered_range,
+    complete_data
   ) {
     this.variable = variable;
     this.filter_id = filter_id;
@@ -40,13 +42,7 @@ export default class BarChartFilter {
       .scaleLinear()
       .range([0, 250])
       .domain([this.domain[0], this.domain[1]]);
-    this.y = d3
-      .scaleLinear()
-      .range([100, 0])
-      .domain([
-        d3.min(ga.map((g) => Math.round(g.value))),
-        d3.max(ga.map((g) => Math.round(g.value))),
-      ]);
+    this.y = d3.scaleLog().range([100, 0]);
 
     this.axis = d3.axisBottom().ticks(5);
     this.brush = d3.brushX();
@@ -62,6 +58,7 @@ export default class BarChartFilter {
 
     this.lstyle = lstyle;
     this.nstyle = nstyle;
+    this.complete_data = complete_data;
 
     this.brush.on("brush.chart", this.brush_listener(this, null));
     this.filter_div = document.createElement("div");
@@ -136,7 +133,10 @@ export default class BarChartFilter {
     let min = this.group.all()[0].key;
     let max = this.group.all()[this.group.all().length - 1].key;
 
-    this.y.domain([0, this.group.top(1)[0].value]);
+    const data_groups = this.group_for_barchart();
+
+    this.y.domain([1, d3.max(data_groups.map((g) => g.value))]);
+    console.log(this.y.domain());
 
     let g = d3.select(div).select("g");
 
@@ -173,18 +173,32 @@ export default class BarChartFilter {
         `url(#clip-${this.filter_id})`
       );
 
+      //X axis
+
       g.append("g")
         .attr("class", "axis")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(this.x).ticks(3));
+
+      //X label
+
+      g.append("text")
+        .attr("class", "axis-title")
+        .attr("y", 140)
+        .attr("x", 150)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .attr("fill", "#000000")
+        .text(this.variable);
 
       //Setting the y label
 
       g.append("g")
         .attr("class", "axis")
         // .attr("transform", `translate(${width},0)`)
-        .call(d3.axisLeft(this.y).ticks(5))
-        .append("text")
+        .call(d3.axisLeft(this.y).ticks(2));
+
+      g.append("text")
         .attr("class", "axis-title")
         .attr("transform", "rotate(-90)")
         .attr("y", -60)
@@ -193,20 +207,6 @@ export default class BarChartFilter {
         .style("text-anchor", "end")
         .attr("fill", "#000000")
         .text("Count");
-
-      //X label
-      g.append("g")
-        .attr("class", "axis")
-        // .attr("transform", `translate(${width},0)`)
-        .call(d3.axisLeft(this.y).ticks(5))
-        .append("text")
-        .attr("class", "axis-title")
-        .attr("y", 140)
-        .attr("x", 150)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .attr("fill", "#000000")
-        .text(this.variable);
     }
 
     // Initialize the brush component with pretty resize handles.
@@ -245,8 +245,8 @@ export default class BarChartFilter {
         this.brush.move(gBrush, range);
       }
     }
-    console.log(this.group.all());
-    g.selectAll(".bar").attr("d", this.barPathF(this, this.group.all()));
+
+    g.selectAll(".bar").attr("d", this.barPathF(this, data_groups));
 
     function resizePath(d) {
       const e = +(d.type === "e");
@@ -270,12 +270,54 @@ export default class BarChartFilter {
         ",",
         height,
         "V",
-        that.y(d.value),
+        that.y(d.value + 1),
         "h9V",
         height
       );
     }
     return path.join(" ");
+  }
+
+  group_for_barchart() {
+    const min = this.domain[0];
+    const max = this.domain[1];
+
+    const nb_groups = 30;
+    let sorted_data = this.complete_data
+      .map((d) => parseFloat(d[this.variable]))
+      .sort((a, b) => a - b);
+
+    let breaks = [];
+    let groups = [];
+    let sorted_data_copy = sorted_data;
+
+    //Compute the breaks of the data (with equal amplitudes method)
+    for (let i = 0; i <= nb_groups; i++) {
+      let break_i = ((max - min) / nb_groups) * i;
+      breaks.push(break_i);
+    }
+    console.log(breaks);
+
+    for (let i = 0; i < nb_groups; i++) {
+      console.log(i);
+
+      let group = [];
+      console.log(sorted_data_copy);
+
+      for (let d of sorted_data_copy) {
+        if (d >= breaks[i] && d < breaks[i + 1]) {
+          group.push(d);
+          continue;
+        } else {
+          groups.push({ key: breaks[i], value: group.length });
+          sorted_data_copy = sorted_data_copy.slice(group.length);
+          break;
+        }
+      }
+    }
+    console.log(groups);
+
+    return groups;
   }
 
   onFilterMinChange(event) {
