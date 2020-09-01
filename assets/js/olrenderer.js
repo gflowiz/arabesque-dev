@@ -1,5 +1,5 @@
 import { Map, View, Feature } from "ol";
-import { defaults as defaultControls, Control } from "ol/control";
+import { ScaleLine, defaults as defaultControls, Control } from "ol/control";
 import FullScreen from "ol/control/FullScreen";
 import TileLayer from "ol/layer/Tile";
 import { Polygon, Circle, Point } from "ol/geom.js";
@@ -17,6 +17,8 @@ import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import { get as getProjection } from "ol/proj";
 import smooth from "chaikin-smooth";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 export default class OlRenderer {
   constructor(divid) {
@@ -24,30 +26,13 @@ export default class OlRenderer {
     projs.forEach((p) => proj4.defs(p, global.projections[p].proj4));
     register(proj4);
 
-    //Create export button
-    var exportButtonDiv = document.createElement("div");
-    exportButtonDiv.id = "ExportMap";
-    exportButtonDiv.className = "custom-control";
-    var exportButtonControl = new Control({ element: exportButtonDiv });
-
-    var legendDiv = document.createElement("div");
-    legendDiv.id = "legendButton";
-    legendDiv.className = "custom-control";
-    var legendButtonControl = new Control({ element: legendDiv });
-
-    // Define a new legend
-    var legend = new Legend({
-      title: "Legend",
-      // style: new Style({ fill: new Fill({ color: "blue" }) }),
-      element: legendDiv,
-      collapsed: false,
-    });
-
     this.map = new Map({
       controls: defaultControls().extend([
-        exportButtonControl,
+        this.exportButton(),
         new FullScreen(),
-        legendButtonControl,
+        this.toggleLegendButton(),
+        this.scaleLine(),
+        this.exportPNGButton(),
       ]),
       target: "Mapcontainer",
       layers: [],
@@ -95,7 +80,90 @@ export default class OlRenderer {
     this._scale_link_size = d3.scaleLinear();
     this._scale_link_opacity = d3.scaleLinear();
     this._link_color_groups = {};
+    //Initializing a hash link object to store radius in px
+    this.proj_links_hash = {};
   }
+
+  //CONTROLS //
+
+  scaleLine() {
+    let control = new ScaleLine({
+      units: "metric",
+      bar: true,
+      minWidth: 140,
+      target: document.getElementById("scaleLine"),
+    });
+    return control;
+  }
+  exportButton() {
+    //Create export button
+    var exportButtonDiv = document.createElement("div");
+    exportButtonDiv.id = "ExportMap";
+    exportButtonDiv.className = "custom-control";
+    var exportButtonControl = new Control({ element: exportButtonDiv });
+
+    return exportButtonControl;
+  }
+  toggleLegendButton() {
+    //Toggle legend button
+    var legendDiv = document.createElement("div");
+    legendDiv.id = "legendButton";
+    legendDiv.className = "custom-control";
+    var legendButtonControl = new Control({ element: legendDiv });
+
+    return legendButtonControl;
+  }
+  exportPNGButton() {
+    //Create export button
+    var exportButtonDiv = document.createElement("div");
+    exportButtonDiv.id = "ExportMapPNG";
+    exportButtonDiv.className = "custom-control";
+    exportButtonDiv.onclick = this.exportPNG.bind(this);
+    var exportButtonControl = new Control({ element: exportButtonDiv });
+
+    const downloadDiv = document.createElement("a");
+    downloadDiv.id = "image-download";
+    downloadDiv.crossOrigin = "Anonymous";
+    exportButtonDiv.appendChild(downloadDiv);
+
+    return exportButtonControl;
+  }
+  exportPNG(e) {
+    let map = this.map;
+    var canvas = $(".ol-viewport canvas")[0];
+    console.log(canvas);
+    var img = canvas.toDataURL("image/png");
+    // var canvas_height = canvas.height;
+    // console.log(canvas_height);
+
+    var legend = document.getElementById("legend");
+    var [legend_height, legend_width] = [
+      window.getComputedStyle(legend).height,
+      window.getComputedStyle(legend).width,
+    ];
+
+    var doc = new jsPDF("p", "px");
+    // doc.addImage(img, "PNG", 10, 10);
+
+    html2canvas(legend).then((legend_canvas) => {
+      console.log(legend_canvas);
+      let legend_img = legend_canvas.toDataURL("image/png");
+
+      doc.addImage(
+        legend_img,
+        "JPEG",
+        10,
+        10,
+        legend_canvas.width + 5,
+        legend_canvas.height
+      );
+      doc.save("map.pdf");
+    });
+
+    // $("#elememt-to-write-to").html('<img src="' + img + '"/>');
+  }
+
+  // ON ZOOM //
 
   update_circles_radius() {
     let resolution_m = this.map.getView().getResolution();
@@ -113,6 +181,7 @@ export default class OlRenderer {
       let height_m = this.linkSize(link, lstyle);
 
       let height_px = height_m / resolution_m;
+
       this.proj_links_hash[link.key] = {
         value: link.value,
         height_m: height_m,
@@ -167,6 +236,9 @@ export default class OlRenderer {
     this.map.updateSize();
     this.map.render();
   }
+
+  // TOOLS FUNCTIONS //
+
   getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
   }
@@ -202,6 +274,9 @@ export default class OlRenderer {
 
     return color + hex_opacity;
   }
+
+  //NODES //
+
   nodeStyle(node, nstyle) {
     //OPACITY
     let opacity;
@@ -670,6 +745,8 @@ export default class OlRenderer {
       .domain([min_opa, max_opa]);
   }
 
+  //LINKS //
+
   //Creates color groups according to qualitative variable
   create_link_color_groups(links) {
     this._color_groups = {};
@@ -1038,9 +1115,6 @@ export default class OlRenderer {
     this.update_link_scales_types(lstyle);
     this.update_links_scales(links, lstyle);
 
-    //Initializing a hash link object to store radius in px
-    this.proj_links_hash = {};
-
     //Useful for qualitative color grouping
     if (lstyle.color.varied.type === "qualitative") {
       this.create_link_color_groups(links);
@@ -1158,6 +1232,8 @@ export default class OlRenderer {
     this.update_links(links, lstyle);
   }
 
+  //LAYERS //
+
   get_layer(name) {
     let layers = this.map.getLayers().getArray();
     for (let i = 0; i < layers.length; i++) {
@@ -1181,7 +1257,7 @@ export default class OlRenderer {
     else if (layer.name === "Öpnvkarte_Transport_Map")
       url = "http://tile.memomaps.de/tilegen/{z}/{x}/{y}.png";
 
-    const source = new XYZ({ url: url });
+    const source = new XYZ({ url: url, crossOrigin: "Anonymous" });
     let tileLayer = new TileLayer({
       source: source,
       name: layer.name,
@@ -1250,6 +1326,8 @@ export default class OlRenderer {
     );
   }
 }
+
+//LINKS SHAPE //
 
 function tranposeLine(point_ori, point_dest, distance) {
   var startX = point_ori[0];

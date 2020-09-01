@@ -101,6 +101,24 @@ nav {
   height: 100%;
   position: relative;
 }
+#scaleLine {
+  position: absolute;
+  top: 95%;
+  right: 5%;
+  width: 30%;
+  height: 5%;
+  z-index: 5;
+}
+
+.ol-scale-line {
+  max-width: 100%;
+}
+.ol-scale-line-inner {
+  max-width: 100%;
+  color: black !important;
+  border: 1px solid black !important;
+  border-top: none !important;
+}
 
 .icon-button-ol {
   width: 16px;
@@ -186,6 +204,18 @@ nav {
   left: 0.5em;
   background-image: url("/assets/svg/si-glyph-end-page.svg");
 }
+#ExportMapPNG {
+  top: 7em;
+  left: 0.5em;
+  background-image: url("/assets/svg/si-glyph-image.svg");
+}
+#ExportMapPNG:hover {
+  opacity: 0.85;
+}
+
+#ExportMap:hover {
+  opacity: 0.85;
+}
 
 /* LEGEND */
 
@@ -202,7 +232,8 @@ nav {
 }
 #legend {
   position: absolute;
-  bottom: 0;
+  bottom: 0.7em;
+  left: 0.7em;
   width: 45%;
   height: 35%;
   z-index: 50;
@@ -236,7 +267,7 @@ nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(128, 128, 179, 0.497);
+  background: rgba(128, 128, 179, 0.7);
 
   width: 50%;
   height: 100%;
@@ -435,10 +466,10 @@ chart {
 }
 
 .filterMinInput {
-  width: 60%;
+  width: 50%;
 }
 .filterMaxInput {
-  width: 60%;
+  width: 50%;
 }
 
 .barchart {

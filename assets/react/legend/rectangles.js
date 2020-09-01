@@ -195,6 +195,7 @@ export const Rectangles = (props) => {
       );
   }, [smallRectangleHeight > minimum_height]);
 
+  //If the biggest rectangles is too small to be displayed
   if (max_height < minimum_height)
     return (
       <div class="zoomOutMessage">

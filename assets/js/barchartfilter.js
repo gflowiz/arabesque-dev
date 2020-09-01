@@ -45,7 +45,7 @@ export default class BarChartFilter {
     this.y = d3.scaleLog().range([100, 0]);
 
     this.axis = d3.axisBottom().ticks(5);
-    this.brush = d3.brushX();
+    this.brush = d3.brushX().extent([0, 0], [250, 100]);
     this.brushDirty = false;
     this.dimension = dimension;
     this.group = group;
@@ -66,14 +66,12 @@ export default class BarChartFilter {
     this.filter_div.className = "barchartFilter";
   }
 
-  brush_listener(that, activeRange, mode = "update") {
+  brush_listener(that) {
     return function () {
       const g = d3.select(this.parentNode);
 
-      if (activeRange === null) {
-        const brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
-        activeRange = brushRange;
-      }
+      const brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
+      let activeRange = brushRange;
 
       const hasRange =
         activeRange &&
@@ -103,6 +101,7 @@ export default class BarChartFilter {
         return parseFloat(d) >= extents[0] && d <= extents[1];
       });
 
+      //Update the min and max inputs when the brush moves
       document.getElementById(
         "filterMinInput-" + that.filter_id
       ).value = Math.round(extents[0]);
@@ -110,8 +109,8 @@ export default class BarChartFilter {
         "filterMaxInput-" + that.filter_id
       ).value = Math.round(extents[1]);
 
-      // re-render the other charts accordingly, only if not called
-      if (mode === "update") that.render_all();
+      // re-render the other charts accordingly
+      that.render_all();
 
       //Reset the active range to null so it can be both called by brush move listener
       //Or onFilterMinChange and onFilterMaxChange functions
@@ -121,6 +120,7 @@ export default class BarChartFilter {
 
   //Creates chart
   chart(div) {
+    let that = this;
     const width = this.x.range()[1] + this.margin.left + this.margin.right;
     const height = this.y.range()[0];
 
@@ -224,12 +224,13 @@ export default class BarChartFilter {
 
     // Only redraw the brush if set externally.
     if (this.brushDirty !== false) {
-      const filterVal = brushDirty;
+      const filterVal = this.brushDirty;
       this.brushDirty = false;
 
-      div
-        .select(".title a")
-        .style("display", d3.brushSelection(div) ? null : "none");
+      d3.select(".title a").style(
+        "display",
+        d3.brushSelection(div) ? null : "none"
+      );
 
       if (!filterVal) {
         g.call(this.brush);
@@ -241,7 +242,7 @@ export default class BarChartFilter {
         g.selectAll(".brush-handle").style("display", "none");
         renderAll();
       } else {
-        const range = filterVal.map(x);
+        const range = filterVal.map(this.x);
         this.brush.move(gBrush, range);
       }
     }
@@ -299,27 +300,25 @@ export default class BarChartFilter {
     console.log(breaks);
 
     for (let i = 0; i < nb_groups; i++) {
-      console.log(i);
-
       let group = [];
-      console.log(sorted_data_copy);
-
+      //While the data is between the first two breaks, we add it to group
       for (let d of sorted_data_copy) {
         if (d >= breaks[i] && d < breaks[i + 1]) {
           group.push(d);
           continue;
         } else {
+          //If it's not (as data are sorted), the group is full
           groups.push({ key: breaks[i], value: group.length });
           sorted_data_copy = sorted_data_copy.slice(group.length);
           break;
         }
       }
     }
-    console.log(groups);
 
     return groups;
   }
 
+  //On filter minimum input change
   onFilterMinChange(event) {
     //Get min and max from inputs
     let min = parseFloat(event.target.value);
@@ -338,18 +337,8 @@ export default class BarChartFilter {
     let max = parseFloat(
       document.getElementById("filterMaxInput-" + this.filter_id).value
     );
-    //Convert it to the chart scale
-    let brush_range = [min, max].map(this.x);
 
-    //Execute the brush_listener function to display handles and selected range properly
-    const brush = document.getElementsByClassName("brush")[0];
-    const brush_listener = this.brush_listener(this, brush_range).bind(brush);
-    brush_listener();
-
-    //Update the selection range on the graph
-    let chart_selection = document.getElementsByClassName("selection")[0];
-    chart_selection.setAttribute("x", brush_range[0]);
-    chart_selection.setAttribute("width", brush_range[1] - brush_range[0]);
+    this.update_brush_extent([min, max]);
   }
   onFilterMaxChange(event) {
     //Get min and max from inputs
@@ -367,18 +356,8 @@ export default class BarChartFilter {
     let min = parseFloat(
       document.getElementById("filterMinInput-" + this.filter_id).value
     );
-    //Convert it to the chart scale
-    let brush_range = [min, max].map(this.x);
 
-    //Execute the brush_listener function
-    const brush = document.getElementsByClassName("brush")[0];
-    const brush_listener = this.brush_listener(this, brush_range).bind(brush);
-    brush_listener();
-
-    //Update the selection range on the graph
-    let chart_selection = document.getElementsByClassName("selection")[0];
-    chart_selection.setAttribute("x", brush_range[0]);
-    chart_selection.setAttribute("width", brush_range[1] - brush_range[0]);
+    this.update_brush_extent([min, max]);
   }
   render_title() {
     let title_icon = document.createElement("img");
@@ -470,18 +449,10 @@ export default class BarChartFilter {
   }
 
   update_brush_extent(data_range) {
-    console.log("update_brush");
-    //Convert data_range received to brush rrange in pixels
+    //Convert data_range received to brush range in pixels
     let brush_range = data_range.map(this.x);
 
-    const brush = document.getElementsByClassName("brush")[0];
-
-    //Executing the brush listener function to set the brush position
-    let brush_listener = this.brush_listener(
-      this,
-      brush_range,
-      "non-update"
-    ).bind(brush);
-    brush_listener();
+    let brush = document.getElementsByClassName("brush")[0];
+    d3.select(brush).call(this.brush.move, [brush_range[0], brush_range[1]]);
   }
 }

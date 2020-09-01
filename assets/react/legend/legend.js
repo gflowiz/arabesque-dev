@@ -280,7 +280,7 @@ export const LegendComponent = (props) => {
   function node_size_container() {
     //Compute the size of the direct parent of the circles (#legendCircleContainer),
     // in order to prevent overflowing. We can't directly compute its width
-    //as it's not rendered yet
+    //as it's not rendered yet. Therefore we have to calculate it
     let container_width =
       ((document.getElementById("Mapcontainer").clientWidth * 0.45) / 4) * 0.64;
 
@@ -298,13 +298,6 @@ export const LegendComponent = (props) => {
 
     return (
       <div id="legendCircleContainer">
-        {/* <div
-          class="subContainerLabel"
-          style={{ left: placeLabels("node", "size") }}
-        >
-          {props.nstyle.size.varied.var.substring(0, 10)}
-        </div> */}
-        {/* {getCircles(min_radius, max_radius, container_width)} */}
         <Circles
           map={props.map}
           node_size_scale={props.node_size_scale}
@@ -411,9 +404,18 @@ export const LegendComponent = (props) => {
       ];
   }
 
+  //Moving the close button if the link part of the legend is hidden
+  let right;
+  if (linkContainer.props.children === undefined) right = "50%";
+  else right = "0";
+
   return (
     <div id="legend">
-      <label id="legendClose" onClick={props.toggle_legend}>
+      <label
+        id="legendClose"
+        style={{ right: right }}
+        onClick={props.toggle_legend}
+      >
         x
       </label>
       {get_nodes_var_labels()}

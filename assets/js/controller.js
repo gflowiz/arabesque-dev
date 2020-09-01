@@ -557,7 +557,7 @@ export default class Controller {
     document.getElementById("Filters").removeChild(filter_div);
 
     //Update other charts's bar with only filtered values
-    this.update_bars();
+    // this.update_bars();
 
     this.render_all();
   }

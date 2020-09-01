@@ -89,7 +89,7 @@ export const NewTileLayerModal = (props) => {
               </div>
             </div>
             <hr></hr>
-            <div class="row">
+            {/* <div class="row">
               <div class="col-md-6 m-2">
                 <button
                   type="button"
@@ -101,7 +101,7 @@ export const NewTileLayerModal = (props) => {
                   I Have My Tiles
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
           <button
             class="modal-footer btn btn-dark justify-content-center"
