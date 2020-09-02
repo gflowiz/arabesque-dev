@@ -46,7 +46,12 @@ export const NewGeojsonLayerModal = (props) => {
   }
 
   function on_file_loaded(e) {
-    document.getElementById("label_geoJson").innerHTML = e.target.files[0].name;
+    let name = e.target.files[0].name;
+    console.log(name);
+    document.getElementById("label_geoJson").innerHTML = name.substring(0, 15);
+    document.getElementById("nameGeoJson").value = name
+      .split(".")[0]
+      .substring(0, 15);
   }
   return (
     <div

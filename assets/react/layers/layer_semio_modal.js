@@ -15,10 +15,12 @@ export const LayerSemioModal = (props) => {
       border: border_color,
       opacity: opacity,
     };
+    console.log(config);
 
     //Sending back the style to the view and to the controller
     props.update_geojson(props.layer_name, config);
   }
+
   return (
     <div
       class="modal fade show"
@@ -59,7 +61,7 @@ export const LayerSemioModal = (props) => {
                   max="1"
                   step="0.05"
                   id="opacityLayerChange"
-                  defaultValue={props.semio[props.layer_name].opacity}
+                  defaultValue={props.semio.opacity}
                 ></input>
               </div>
             </div>
@@ -72,8 +74,8 @@ export const LayerSemioModal = (props) => {
                 <input
                   type="color"
                   id="fillColorpickerChange"
-                  onchange="clickColor(0, -1, -1, 5)"
-                  defaultValue={props.semio[props.layer_name].fill}
+                  // onchange="clickColor(0, -1, -1, 5)"
+                  defaultValue={props.semio.fill}
                 ></input>
               </div>
               <div class="col-md-6">
@@ -84,8 +86,8 @@ export const LayerSemioModal = (props) => {
                 <input
                   type="color"
                   id="layerStrokeColorPickerChange"
-                  onchange="clickColor(0, -1, -1, 5)"
-                  defaultValue={props.semio[props.layer_name].border}
+                  // onchange="clickColor(0, -1, -1, 5)"
+                  defaultValue={props.semio.border}
                 ></input>
               </div>
             </div>

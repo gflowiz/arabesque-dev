@@ -336,10 +336,11 @@ export default class Controller {
       layer_name = e.target.parentNode.id.split("buttonChangeGeojsonSemio")[1];
     else if (e.target.tagName === "BUTTON")
       layer_name = e.target.id.split("buttonChangeGeojsonSemio")[1];
-    const geojsons_style = this.model.config.styles.geojson;
+    let layer_style = this.model.config.styles.geojson[layer_name];
+
     this.view.update_geojson_semio(
       layer_name,
-      geojsons_style,
+      layer_style,
       this.save_geojson_semio.bind(this)
     );
   }
@@ -700,14 +701,18 @@ export default class Controller {
       );
   }
   saveLayer(type, name, config = null) {
+    console.log(config);
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
+    console.log(z_index);
     const layer_object = {
       name: name,
       type: type,
       z_index: z_index,
     };
     this.model.config.layers.push(layer_object);
+
+    console.log(config);
 
     //Add the style to the model config (tiles don't have styles)
     if (type !== "tile") {
@@ -729,22 +734,25 @@ export default class Controller {
     this.model.config.layers = this.model.config.layers.filter(
       (layer) => layer.name !== layer_name
     );
+    console.log(this.model.config);
 
     //delete style (if it's a geojson or baselayer)
-    if (type === "geojson")
-      this.model.config.styles.geojson = this.model.config.layers.filter(
-        (layer) => layer.name !== layer_name
-      );
+    if (type === "geojson") delete this.model.config.styles.geojson[layer_name];
+
     if (type === "baselayer")
-      this.model.config.styles.baselayer = this.model.config.layers.filter(
-        (layer) => layer.name !== layer_name
-      );
+      delete this.model.config.styles.baselayer[layer_name];
 
     //Delete layers from map
     for (let layer of this.view.renderer.map.getLayers().array_) {
       if (layer.values_.name === layer_name)
         this.view.renderer.map.removeLayer(layer);
     }
+
+    //Update z_indexes in model
+    this.update_model_z_indexes();
+
+    //Update z-indexes in map
+    this.view.renderer.update_map_z_indexes(this.model.config.layers);
 
     //Re-render the cards
     this.render_layers_cards();
@@ -787,5 +795,13 @@ export default class Controller {
       />,
       document.getElementById("accordionLayerControl")
     );
+  }
+
+  update_model_z_indexes() {
+    this.model.config.layers = this.model.config.layers.map((l, i) => {
+      if (i === 0) l.z_index = 0;
+      else l.z_index = -i;
+      return l;
+    });
   }
 }

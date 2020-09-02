@@ -5,6 +5,7 @@ import TileLayer from "ol/layer/Tile";
 import { Polygon, Circle, Point } from "ol/geom.js";
 import { Fill, Stroke, Text, Style, RegularShape } from "ol/style.js";
 import CircleStyle from "ol/style/Circle";
+
 import { Tile, Vector as VectorLayer } from "ol/layer.js";
 import { OSM, Vector as VectorSource, XYZ } from "ol/source.js";
 import LayerGroup from "ol/layer/Group";
@@ -1265,30 +1266,109 @@ export default class OlRenderer {
     tileLayer.setZIndex(layer.z_index);
     this.map.addLayer(tileLayer);
   }
-  add_geojson_layer(layer, style) {
-    console.log(layer, style);
-    var olstyle = new Style({
-      stroke: new Stroke({
-        color: style.border,
-        width: 1,
-      }),
+  geojson_styles(style, type) {
+    var image = new CircleStyle({
+      radius: 5,
       fill: new Fill({
         color: this.add_opacity_to_color(style.fill, style.opacity),
       }),
+      stroke: new Stroke({
+        color: this.add_opacity_to_color(style.border, style.opacity),
+        width: 1,
+      }),
     });
 
+    let styles = {
+      Point: new Style({
+        image: image,
+      }),
+      LineString: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+          width: 1,
+        }),
+      }),
+      MultiLineString: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+          width: 1,
+        }),
+      }),
+      MultiPoint: new Style({
+        image: image,
+      }),
+      MultiPolygon: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.border, style.opacity),
+          width: 1,
+        }),
+        fill: new Fill({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+        }),
+      }),
+      Polygon: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.border, style.opacity),
+          lineDash: [4],
+          width: 3,
+        }),
+        fill: new Fill({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+        }),
+      }),
+      GeometryCollection: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.border, style.opacity),
+          width: 2,
+        }),
+        fill: new Fill({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+        }),
+        image: new CircleStyle({
+          radius: 10,
+          fill: new Fill({ color: style.fill }),
+          stroke: new Stroke({
+            color: this.add_opacity_to_color(style.border, style.opacity),
+          }),
+        }),
+      }),
+      Circle: new Style({
+        stroke: new Stroke({
+          color: this.add_opacity_to_color(style.border, style.opacity),
+          width: 2,
+        }),
+        fill: new Fill({
+          color: this.add_opacity_to_color(style.fill, style.opacity),
+        }),
+      }),
+    };
+
+    return styles[type];
+  }
+  add_geojson_layer(layer, style) {
+    let type;
+    if ((style.type = "FeatureCollection"))
+      type = style.file.features[0].geometry.type;
+    else type = style.type;
+
+    let features = new GeoJSON({
+      extractGeometryName: true,
+      featureProjection: this.map.getView().getProjection().getCode(),
+    }).readFeatures(style.file);
+
+    let geostyle = this.geojson_styles(style, type);
+
     var vectorSource = new VectorSource({
-      features: new GeoJSON({
-        extractGeometryName: true,
-        featureProjection: this.map.getView().getProjection().getCode(),
-      }).readFeatures(style.file),
+      features: features,
     });
+
     var vectorLayer = new VectorLayer({
       source: vectorSource,
-      style: olstyle,
+      style: geostyle,
       name: layer.name,
     });
     vectorLayer.setZIndex(layer.z_index);
+
     this.map.addLayer(vectorLayer);
   }
 
@@ -1312,18 +1392,18 @@ export default class OlRenderer {
     let layer = this.map
       .getLayers()
       .array_.filter((lay) => lay.values_.name === layer_name)[0];
-    console.log(layer);
-    layer.setStyle(
-      new Style({
-        stroke: new Stroke({
-          color: new_semio.border,
-          width: 1,
-        }),
-        fill: new Fill({
-          color: this.add_opacity_to_color(new_semio.fill, new_semio.opacity),
-        }),
-      })
-    );
+    let type = layer.getSource().getFeatures()[0].getGeometry().getType();
+    layer.setStyle(this.geojson_styles(new_semio, type));
+  }
+  update_map_z_indexes(layers) {
+    let z_indexes = {};
+    for (let l of layers) {
+      z_indexes[l.name] = l.z_index;
+    }
+    console.log(z_indexes);
+    for (let layer of this.map.getLayers().array_) {
+      layer.setZIndex(z_indexes[layer.values_.name]);
+    }
   }
 }
 

@@ -216,6 +216,12 @@ export default class View {
       document.getElementById("ModalSemioLayer")
     );
     $("#changeLayerSemioModal").modal();
+
+    //Setting color pickers values
+    document.getElementById("fillColorpickerChange").value = gstyle.fill;
+    document.getElementById("layerStrokeColorPickerChange").value =
+      gstyle.border;
+    document.getElementById("opacityLayerChange").value = gstyle.opacity;
   }
 
   render_legend(
