@@ -1,6 +1,20 @@
 import React, { useState } from "react";
 import { round_and_shorten, pxToMeters, pixelWidthToValue } from "./legend";
 
+function getCircleContainerWidth() {
+  let parent_container_width = parseFloat(
+    window
+      .getComputedStyle(document.getElementById("legendCircleContainer"))
+      .width.split("px")[0]
+  );
+
+  let parent_container_height = parseFloat(
+    window
+      .getComputedStyle(document.getElementById("legendCircleContainer"))
+      .height.split("px")[0]
+  );
+  return "100px";
+}
 function smallCircle(smallCircleRadiusM, scale, map) {
   return (
     <>

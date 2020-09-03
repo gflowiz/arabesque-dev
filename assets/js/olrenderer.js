@@ -20,6 +20,8 @@ import { get as getProjection } from "ol/proj";
 import smooth from "chaikin-smooth";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import { easeBack } from "d3";
+import canvg from "canvg";
 
 export default class OlRenderer {
   constructor(divid) {
@@ -131,37 +133,76 @@ export default class OlRenderer {
   }
   exportPNG(e) {
     let map = this.map;
-    var canvas = $(".ol-viewport canvas")[0];
-    console.log(canvas);
-    var img = canvas.toDataURL("image/png");
-    // var canvas_height = canvas.height;
-    // console.log(canvas_height);
-
-    var legend = document.getElementById("legend");
-    var [legend_height, legend_width] = [
-      window.getComputedStyle(legend).height,
-      window.getComputedStyle(legend).width,
-    ];
 
     var doc = new jsPDF("p", "px");
-    // doc.addImage(img, "PNG", 10, 10);
+    var doc_width = doc.internal.pageSize.getWidth();
+    console.log(doc_width);
+    var doc_height = doc.internal.pageSize.getHeight();
 
-    html2canvas(legend).then((legend_canvas) => {
+    //Excluding the close button from rendering
+    document
+      .getElementById("legendClose")
+      .setAttribute("data-html2canvas-ignore", "");
+
+    //Adding a width and height to svg elements so they will be rendered
+
+    var svgElements = document.body.querySelectorAll("#legendShapes");
+    svgElements.forEach(function (item) {
+      item.setAttribute("width", item.getBoundingClientRect().width);
+      item.setAttribute("height", item.getBoundingClientRect().height);
+      console.log(
+        item,
+        item.getBoundingClientRect().width,
+        item.getBoundingClientRect().height
+      );
+    });
+
+    var map_canvas = $(".ol-viewport canvas")[0];
+    var map_img = map_canvas.toDataURL("image/png");
+    const map_div = document.getElementById("Mapcontainer");
+    const map_height = parseFloat(
+      window.getComputedStyle(map_div).height.split(".")[0]
+    );
+    const map_width = parseFloat(
+      window.getComputedStyle(map_div).width.split(".")[0]
+    );
+    const map_ratio = map_height / map_width;
+
+    let margin_left = 10;
+    let margin_right = 10;
+
+    //Adapting map size in case the map is to big to fit the document
+    let map_final_width, map_final_height;
+    if (map_width > doc_width - margin_left - margin_right) {
+      map_final_width = doc_width - margin_left - margin_right;
+      map_final_height = map_final_width * map_ratio;
+      if (map_final_height > doc_height * 0.66) {
+        map_final_height = doc_height * 0.66;
+        map_final_width = map_final_height * (1 / map_ratio);
+      }
+    }
+
+    //Add map to doc
+    doc.addImage(map_img, "PNG", 10, 10, map_final_width, map_final_height);
+
+    var legend = document.getElementById("legend");
+
+    //Converting legend to canvas and add it to doc
+    html2canvas(legend, {
+      scrollX: -window.scrollX,
+      scrollY: -window.scrollY,
+      allowTaint: true,
+    }).then((legend_canvas) => {
       console.log(legend_canvas);
       let legend_img = legend_canvas.toDataURL("image/png");
 
-      doc.addImage(
-        legend_img,
-        "JPEG",
-        10,
-        10,
-        legend_canvas.width + 5,
-        legend_canvas.height
-      );
+      doc.addImage(legend_img, "JPEG", 10, map_final_height + 20);
       doc.save("map.pdf");
+      svgElements.forEach(function (item) {
+        item.removeAttribute("width");
+        item.removeAttribute("height");
+      });
     });
-
-    // $("#elememt-to-write-to").html('<img src="' + img + '"/>');
   }
 
   // ON ZOOM //

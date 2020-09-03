@@ -34,6 +34,12 @@ export const NewGeojsonLayerModal = (props) => {
       reader.readAsText(file, "UTF-8");
       reader.onload = function (e) {
         let geojson_file = JSON.parse(e.target.result);
+        //Dealing with unsupported geometries
+        if (geojson_file.features[0].type === "Features") {
+          document.getElementById("geoJson").classList.add("is-invalid");
+          return;
+        } else
+          document.getElementById("geoJson").classList.remove("is-invalid");
 
         config.file = geojson_file;
         props.save_layer("geojson", name, config);
@@ -97,7 +103,9 @@ export const NewGeojsonLayerModal = (props) => {
                     onChange={on_file_loaded}
                   ></input>
                   <div class="invalid-feedback">
-                    File must be at geojson format
+                    File is not geojson format or invalid or has unrecognized
+                    geometries (ex FeatureCollection with "Features" elements
+                    instead of "Feature" )
                   </div>
                   <label
                     class="custom-file-label"
