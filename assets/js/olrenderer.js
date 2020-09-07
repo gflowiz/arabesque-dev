@@ -185,7 +185,13 @@ export default class OlRenderer {
     //Add map to doc
     doc.addImage(map_img, "PNG", 10, 10, map_final_width, map_final_height);
 
-    var legend = document.getElementById("legend");
+    var legendDiv = document.getElementById("legend");
+    let legendButtonDiv = document.getElementById("legendButton");
+    let style = getComputedStyle(legendDiv);
+    if (style.display === "none") {
+      legendDiv.style.display = "flex";
+      legendButtonDiv.style.display = "none";
+    }
 
     //Converting legend to canvas and add it to doc
     html2canvas(legend, {
@@ -193,7 +199,6 @@ export default class OlRenderer {
       scrollY: -window.scrollY,
       allowTaint: true,
     }).then((legend_canvas) => {
-      console.log(legend_canvas);
       let legend_img = legend_canvas.toDataURL("image/png");
 
       doc.addImage(legend_img, "JPEG", 10, map_final_height + 20);

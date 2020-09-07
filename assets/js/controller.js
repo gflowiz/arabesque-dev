@@ -387,7 +387,6 @@ export default class Controller {
       legendButtonDiv.style.display = "flex";
     } else {
       legendDiv.style.display = "flex";
-
       legendButtonDiv.style.display = "none";
     }
   }
