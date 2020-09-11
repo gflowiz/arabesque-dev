@@ -3,9 +3,6 @@ import saveAs from "file-saver";
 import { parse as papaparse } from "papaparse";
 import * as turf from "@turf/turf";
 import crossfilter from "crossfilter2";
-import BarChart from "./barchartfilter.js";
-import React from "react";
-import ReactDOM from "react-dom";
 
 export default class Model {
   constructor() {

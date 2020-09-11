@@ -1,20 +1,6 @@
 import React, { useState } from "react";
 import { round_and_shorten, pxToMeters, pixelWidthToValue } from "./legend";
 
-function getCircleContainerWidth() {
-  let parent_container_width = parseFloat(
-    window
-      .getComputedStyle(document.getElementById("legendCircleContainer"))
-      .width.split("px")[0]
-  );
-
-  let parent_container_height = parseFloat(
-    window
-      .getComputedStyle(document.getElementById("legendCircleContainer"))
-      .height.split("px")[0]
-  );
-  return "100px";
-}
 function smallCircle(smallCircleRadiusM, scale, map) {
   return (
     <>
@@ -58,6 +44,7 @@ function bigCircle(max_radius, scale, map) {
 }
 
 function smallAndBigCircles(smallCircleRadius, max_radius, scale, map) {
+  console.log(smallCircleRadius);
   return [
     <svg id="legendShapes">
       <circle
@@ -144,6 +131,7 @@ function searchBiggerSmallCircle(
       max_radius - quantile_i_radius > min_vis_diff &&
       quantile_i_radius < max_radius_allowed
     ) {
+      console.log(quantile_i_radius + " ok");
       smallCircleGoodSize = quantile_i_radius;
       break;
     }
@@ -156,6 +144,7 @@ export const Circles = (props) => {
   let max_radius = props.max_radius;
   let container_width = props.container_width;
   let [smallCircleRadius, setSmallCircleRadius] = useState(min_radius);
+
   //radius of the small circle in meters
   let [smallCircleRadiusM, setSmallCircleRadiusM] = useState(
     pxToMeters(min_radius, props.map)

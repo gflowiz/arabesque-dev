@@ -1,16 +1,11 @@
 import BarChartFilter from "./barchartfilter.js";
 import { CategorialFilter } from "../react/filters/categorial_filter";
-import { render } from "ol/control/Attribution";
 import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
 import { NewGeojsonLayerModal } from "../react/layers/new_geojson_layer_modal";
 import ReactDOM from "react-dom";
 import React from "react";
 import { LayerCardsContainer } from "../react/layers/layers_container";
-import { tickStep } from "d3";
-import { filter } from "jszip/lib/object";
 import crossfilter from "crossfilter2";
-import { contains } from "jquery";
-import { concave } from "@turf/turf";
 
 export default class Controller {
   constructor(model, view) {
@@ -150,9 +145,6 @@ export default class Controller {
 
     //Add filters
     this.render_filters(this.render_all.bind(this));
-
-    //Update filters bars everytime there is a change in the filtered data
-    // this.model.data.crossfilters.onChange(this.update_bars.bind(this));
 
     //Render layer cards
     this.render_layers_cards();
@@ -349,6 +341,7 @@ export default class Controller {
     this.model.config.styles.geojson[layer_name] = new_semio;
     this.view.renderer.update_layer_style(layer_name, new_semio);
   }
+
   // LEGEND //
 
   render_legend() {
@@ -700,7 +693,6 @@ export default class Controller {
       );
   }
   saveLayer(type, name, config = null) {
-    console.log(config);
     //We'll add it in the background
     const z_index = -this.model.config.layers.length;
     console.log(z_index);
@@ -710,8 +702,6 @@ export default class Controller {
       z_index: z_index,
     };
     this.model.config.layers.push(layer_object);
-
-    console.log(config);
 
     //Add the style to the model config (tiles don't have styles)
     if (type !== "tile") {
@@ -733,7 +723,6 @@ export default class Controller {
     this.model.config.layers = this.model.config.layers.filter(
       (layer) => layer.name !== layer_name
     );
-    console.log(this.model.config);
 
     //delete style (if it's a geojson or baselayer)
     if (type === "geojson") delete this.model.config.styles.geojson[layer_name];

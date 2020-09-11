@@ -35,7 +35,7 @@ export default class OlRenderer {
         new FullScreen(),
         this.toggleLegendButton(),
         this.scaleLine(),
-        this.exportPNGButton(),
+        this.exportPdfButton(),
       ]),
       target: "Mapcontainer",
       layers: [],
@@ -116,12 +116,12 @@ export default class OlRenderer {
 
     return legendButtonControl;
   }
-  exportPNGButton() {
+  exportPdfButton() {
     //Create export button
     var exportButtonDiv = document.createElement("div");
-    exportButtonDiv.id = "ExportMapPNG";
+    exportButtonDiv.id = "ExportMapPdf";
     exportButtonDiv.className = "custom-control";
-    exportButtonDiv.onclick = this.exportPNG.bind(this);
+    exportButtonDiv.onclick = this.exportPdf.bind(this);
     var exportButtonControl = new Control({ element: exportButtonDiv });
 
     const downloadDiv = document.createElement("a");
@@ -131,12 +131,11 @@ export default class OlRenderer {
 
     return exportButtonControl;
   }
-  exportPNG(e) {
+  exportPdf(e) {
     let map = this.map;
 
     var doc = new jsPDF("p", "px");
     var doc_width = doc.internal.pageSize.getWidth();
-    console.log(doc_width);
     var doc_height = doc.internal.pageSize.getHeight();
 
     //Excluding the close button from rendering
@@ -150,11 +149,6 @@ export default class OlRenderer {
     svgElements.forEach(function (item) {
       item.setAttribute("width", item.getBoundingClientRect().width);
       item.setAttribute("height", item.getBoundingClientRect().height);
-      console.log(
-        item,
-        item.getBoundingClientRect().width,
-        item.getBoundingClientRect().height
-      );
     });
 
     var map_canvas = $(".ol-viewport canvas")[0];

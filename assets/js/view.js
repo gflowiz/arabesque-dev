@@ -6,7 +6,6 @@ import { LinksShapeModalComponent } from "../react/links_shape_semio";
 import { LayerSemioModal } from "../react/layers/layer_semio_modal";
 import { LegendComponent } from "../react/legend/legend";
 import { NewFilterModal } from "../react/filters/filters_modal";
-import { NewTileLayerModal } from "../react/layers/new_tile_layer_modal";
 
 export default class View {
   constructor(renderer) {

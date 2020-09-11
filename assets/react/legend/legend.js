@@ -34,6 +34,8 @@ export const LegendComponent = (props) => {
   let linksColorMode = props.lstyle.color.mode;
   let linksSizeMode = props.lstyle.size.mode;
   let important_values = extract_important_values();
+  let nodes_colors = props.nstyle.color.varied.colors;
+  let links_colors = props.lstyle.color.varied.colors;
 
   //Defining and filling the different containers of the legend
   let [nodeContainer, linkContainer] = get_containers();
@@ -131,10 +133,9 @@ export const LegendComponent = (props) => {
     };
   }
 
+  //MAIN FUNCTION
   function get_containers() {
     let nodesColorDiv, nodesSizeDiv, linksColorDiv, linksSizeDiv;
-    let nodes_colors = props.nstyle.color.varied.colors;
-    let links_colors = props.lstyle.color.varied.colors;
 
     if (nodesColorMode === "varied") {
       nodesColorDiv = (
@@ -265,7 +266,7 @@ export const LegendComponent = (props) => {
                 style={{
                   width: "34%",
                   height: "100%",
-                  background: col,
+                  background: colors[colors.length - 1 - i],
                 }}
               ></div>
               <div class="legendColorLabel" style={{ visibility: visibility }}>

@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-
 import { ColorContainerComponent } from "./node_color_container";
 import { SizeContainerComponent } from "./node_size_container";
 import { OpacityContainerComponent } from "./node_opacity_container";
